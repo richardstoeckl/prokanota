@@ -1,0 +1,4 @@
+include prokanota/prokanota.LICENSE
+include prokanota/prokanota.CITATION
+include prokanota/prokanota.VERSION
+recursive-include prokanota *
