@@ -7,14 +7,14 @@ Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic *
 ## About
 There are great tools available for (mostly bacterial) prokaryotic genome annotation. [Prokka](https://github.com/tseemann/prokka) has been the de facto default for many years, and [Bakta](https://github.com/oschwengers/bakta) is not only great overall, but gets regular updates making it even better.
 
-Unfortunately, at least in my experience, annotation for archaeal species is often not perfect when done with these tools that are specialised for bacteria. Also, while the hierarchial annotation employed by these tools creates annotations that are easy to interpret, sometimes nuances get lost with them.
+Unfortunately, at least in my experience, annotation for archaeal species is often not perfect when done with these tools that are specialized for bacteria. Also, while the hierarchical annotation employed by these tools creates annotations that are easy to interpret, sometimes nuances get lost with them.
 
 This is why I developed this pipeline. Inspired by the annotation approach by [Dombrowski, Nina, et al. Nature Communications, vol. 11, no. 1, Aug. 2020, p. 3939](https://doi.org/10.1038/s41467-020-17408-w), this snakemake pipeline returns the top hits from multiple databases for each predicted protein, allowing the user to make more informed decisions which annotation might be the best.
 
 ## Features
 
 1. To ensure that the results are consistent and changes easily identifiable, the gene_ids are created by calculating a hash from the DNA content supplied genome AND the supplied sampleID. Check the "FAQ" section for more information.
-2. CDS are predicted using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes some bugs from prodigal. Results can differ very slighly in these edge-cases.
+2. CDS are predicted using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes some bugs from prodigal. Results can differ very slightly in these edge-cases.
 3. To facilitate use with pangenome analyses or similar analysis, the pipeline outputs the predicted gene positions as `.gff`,`.tsv`, and `.gbk` files; the gene sequences as `.fna` files; and the protein sequences as `.faa` files. All files utilize the exact same gene_ids. Use these files as input for your favorite downstream tool and cross-reference your results with the annotations from this pipeline!
 4. Currently, the genes are annotated using the [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains), [COG](https://www.ncbi.nlm.nih.gov/COG/), [arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/), and [PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) databases. More are planned in the future.
 
@@ -52,7 +52,8 @@ snakemake --sdm conda --cores
 
 ## FAQ
 
-- **How is the gene_id determined?**
+- **How is the gene_id determined? What do the letters mean?**
+  - The gene_id is determined by the contig_id, which is determined by hashing the DNA sequence of the genome and the user supplied sampleID. This ensures that the gene_id is consistent across runs. This is important for downstream analyses, as it allows you to cross-reference your results with the annotations from this pipeline. Changes in the contig_id indicate either changes in the sampleID or changes in the genome sequence and should probably investigated. The hashing algorithm is found in [`prokanota/workflow/scripts/cds.py`](https://github.com/richardstoeckl/prokanota/blob/97462102247b8059d4556bd9fd16e7bc85e4714d/prokanota/workflow/scripts/cds.py#L58-L84).
 
 ```
 Copyright Richard Stöckl 2025.
