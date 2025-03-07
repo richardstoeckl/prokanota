@@ -1,24 +1,45 @@
+"""
 
-# Update default config with runtime config
+Copyright Richard Stöckl 2025.
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE or copy at 
+https://www.boost.org/LICENSE_1_0.txt)
+
+"""
+
+import pandas as pd
+import re
+import os
+import glob
+from pathlib import Path
+from snakemake.utils import validate
+from snakemake.utils import min_version
+
+########## check minimum snakemake version ##########
+min_version("8.27.1")
+
+########## load config and metadata sheets ##########
+
 configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
-configfile: os.path.join(workflow.basedir, "../", "config", "system_config.yaml")
-config.update(config["prokanota"]) # convenience if using namespaced config
+metadataFile = os.path.join(workflow.basedir, "../", "config", config["global"]["metadataFile"])
 
+metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
+NAMES = metadata.sample_id.to_list()
+path = {k: v for (k, v) in metadata.path.to_dict().items()}
 
-# Rules files
-include: os.path.join(workflow.basedir, "rules", "preflight.smk")
-include: os.path.join(workflow.basedir, "rules", "example.smk")
+LOGPATH = os.path.normpath(config["global"]["logPath"])
+INTERIMPATH = os.path.normpath(config["global"]["interimPath"])
+RESULTPATH = os.path.normpath(config["global"]["resultPath"])
+DBPATH = os.path.normpath(config["global"]["dbPath"])
 
+include: os.path.join(workflow.basedir,"rules", "prepProteins.smk")
+include: os.path.join(workflow.basedir,"rules", "prepDBs.smk")
+include: os.path.join(workflow.basedir,"rules", "searchDBs.smk")
+include: os.path.join(workflow.basedir,"rules", "parseSearchResults.smk")
 
-# Target rules
-@targetRule
+########## Target Rule ##########
+
 rule all:
     input:
-        targets
-
-
-@targetRule
-rule print_targets:
-    run:
-        print("\nTop level rules are: \n", file=sys.stderr)
-        print("* " + "\n* ".join(target_rules) + "\n\n", file=sys.stderr)
+        expand(os.path.join(RESULTPATH, "{id}", "annotation", "{id}_finalAnnotation.tsv"), id=NAMES),
+        os.path.join(RESULTPATH,"common","annotation","finalAnnotation.tsv"),

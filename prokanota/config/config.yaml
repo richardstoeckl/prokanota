@@ -1,6 +1,12 @@
-# Namespaced config file example
-prokanota:
-    args: # Command line args will be (over)written here at runtime
-        input:
-        output:
-    # Add customisable config here
+global:
+  resultPath: "results/"
+  interimPath: "interim/"
+  logPath: "logs/"
+  dbPath: "db/"
+  metadataFile: "metadata.csv"
+
+searches:
+  cdd: true
+  cog: true
+  arcog: true
+  pgap: true
