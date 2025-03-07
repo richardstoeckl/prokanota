@@ -13,8 +13,10 @@ This is why I developed this pipeline. Inspired by the annotation approach by [D
 
 ## Features
 
-1. To ensure that the results are consistent and changes easily identifiable, the gene_ids are created by calculating a hash from the DNA content supplied genome AND the supplied sampleID. Check the "In detail" section for more information.
-2. To facilitate use with pangenome analyses or similar analysis, the pipeline outputs the predicted gene positions as `.gff`,`.tsv`, and `.gbk` files; the gene sequences as `.fna` files; and the protein sequences as `.faa` files. All files utilize the exact same gene_ids.
+1. To ensure that the results are consistent and changes easily identifiable, the gene_ids are created by calculating a hash from the DNA content supplied genome AND the supplied sampleID. Check the "FAQ" section for more information.
+2. CDS are predicted using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes some bugs from prodigal. Results can differ very slighly in these edge-cases.
+3. To facilitate use with pangenome analyses or similar analysis, the pipeline outputs the predicted gene positions as `.gff`,`.tsv`, and `.gbk` files; the gene sequences as `.fna` files; and the protein sequences as `.faa` files. All files utilize the exact same gene_ids. Use these files as input for your favorite downstream tool and cross-reference your results with the annotations from this pipeline!
+4. Currently, the genes are annotated using the [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains), [COG](https://www.ncbi.nlm.nih.gov/COG/), [arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/), and [PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) databases. More are planned in the future.
 
 ## Usage
 
@@ -26,7 +28,7 @@ But here is a rough overview:
 ```bash
 conda install -c conda-forge -c bioconda snakemake
 ```
-3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it
+3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
 4. Edit the `config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
 5. Edit the `config/metadata.csv` file with the specific details for each assembly you want to annotate. Please note, that the sampleID you enter here will influence the naming of the contig and gene IDs!
 5. Open a terminal in the main dir and start a dry-run of the pipeline with the following command. This will show you if you set up the paths correctly:
@@ -47,6 +49,10 @@ snakemake --sdm conda --cores
     - **[PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) - HMMs are used by the [NCBI Prokaryotic Genome Annotation Pipeline (PGAP)](https://pubmed.ncbi.nlm.nih.gov/33270901/).** *Since most submissions of novel prokaryotic genomes are evaluated by the PGAP tool, it makes sense to include its DB.*
 
 
+
+## FAQ
+
+- **How is the gene_id determined?**
 
 ```
 Copyright Richard Stöckl 2025.
