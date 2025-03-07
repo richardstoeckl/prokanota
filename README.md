@@ -54,6 +54,12 @@ snakemake --sdm conda --cores
 
 - **How is the gene_id determined? What do the letters mean?**
   - The gene_id is determined by the contig_id, which is determined by hashing the DNA sequence of the genome and the user supplied sampleID. This ensures that the gene_id is consistent across runs. This is important for downstream analyses, as it allows you to cross-reference your results with the annotations from this pipeline. Changes in the contig_id indicate either changes in the sampleID or changes in the genome sequence and should probably investigated. The hashing algorithm is found in [`prokanota/workflow/scripts/cds.py`](https://github.com/richardstoeckl/prokanota/blob/97462102247b8059d4556bd9fd16e7bc85e4714d/prokanota/workflow/scripts/cds.py#L58-L84).
+- **How is the predicted protein molecular weight estimated?**
+  - The molecular weight is estimated by summing the average residue masses in the protein sequence and adding the mass of one water molecule, as described in [GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607](https://doi.org/10.1385/1-59259-890-0:571). The molecular weights are taken from the [here](https://web.expasy.org/findmod/findmod_masses.html#AA) and the function can be found in [`prokanota/workflow/scripts/cds.py`](https://github.com/richardstoeckl/prokanota/blob/97462102247b8059d4556bd9fd16e7bc85e4714d/prokanota/workflow/scripts/cds.py#L240-L258)
+
+
+
+
 
 ```
 Copyright Richard Stöckl 2025.
