@@ -39,9 +39,6 @@ snakemake --sdm conda -n --cores
 snakemake --sdm conda --cores
 ```
 
-
-
-
 ## Databases and Tools used in the pipeline and reasoning. Consider citing these if you use this pipeline.
 - **Databases**
     - **[CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains) - The Conserved Domains Database curated by NCBI.** *Sources information from the [SMART](http://smart.embl-heidelberg.de/), [Pfam](http://pfam.sanger.ac.uk/), [COG](https://www.ncbi.nlm.nih.gov/COG/), [TIGR](https://www.ncbi.nlm.nih.gov/Structure/cdd/docs/tigrfams.html), and [PRK](https://www.ncbi.nlm.nih.gov/proteinclusters) databases. This makes it a good consolidated database for annotation purposes.*
@@ -49,8 +46,6 @@ snakemake --sdm conda --cores
     - **[arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/) - The archaea specific version of the COG database.** *This is included to serve more up-to-date and accurate annotation of archaeal genomes.*
     - **[PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) - HMMs are used by the [NCBI Prokaryotic Genome Annotation Pipeline (PGAP)](https://pubmed.ncbi.nlm.nih.gov/33270901/).** *Since most submissions of novel prokaryotic genomes are evaluated by the PGAP tool, it makes sense to include its DB.*
 
-- **General stats, file manipulation, alignment, and reporting**
-    - **[seqkit v2.8.2](https://github.com/shenwei356/seqkit) - ultrafast toolkit for FASTA/Q file manipulation.** *Used for quick and easy general stat gathering and sequence concatination.*
 
 
 ```
