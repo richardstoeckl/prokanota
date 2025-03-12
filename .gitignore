@@ -1,5 +1,5 @@
 *.DS_Store
 .vscode/*
-prokanota/.snakemake/*
-prokanota/logs*/*
-prokanota/config/metadata-*.csv
+.snakemake/*
+logs*/*
+config/metadata-*.csv
