@@ -94,9 +94,9 @@ rule downloadPGAPdb:
         "Downloading PGAP database to {output.db}",
     shell:
         """
-        curl -L -o {output.db} https://ftp.ncbi.nlm.nih.gov/hmm/16.0/hmm_PGAP.LIB
-        curl -L -o {output.mapping} https://ftp.ncbi.nlm.nih.gov/hmm/16.0/hmm_PGAP.tsv
-        curl -L -o {output.version} https://ftp.ncbi.nlm.nih.gov/hmm/16.0/RELEASE_NOTES.txt
+        curl -L -o {output.db} https://ftp.ncbi.nlm.nih.gov/hmm/17.0/hmm_PGAP.LIB
+        curl -L -o {output.mapping} https://ftp.ncbi.nlm.nih.gov/hmm/17.0/hmm_PGAP.tsv
+        curl -L -o {output.version} https://ftp.ncbi.nlm.nih.gov/hmm/17.0/RELEASE_NOTES.txt
         """
 
 rule preparePGAPdb:
