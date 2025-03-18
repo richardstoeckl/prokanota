@@ -16,10 +16,12 @@ rule predict_cds:
         gbk=os.path.join(RESULTPATH, "{id}", "cds", "{id}.gbk"),
         fna=os.path.join(RESULTPATH, "{id}", "cds", "{id}.fna"),
         tsv=os.path.join(RESULTPATH, "{id}", "cds", "{id}.tsv"),
+        rrna=os.path.join(RESULTPATH, "{id}", "cds", "{id}_rrna.tsv"),
     log:
         os.path.join(LOGPATH, "{id}", "logs", "{id}_predict_cds.log"),
     message:
         "Predicting CDS for {wildcards.id}",
+    threads: 1
     params:
         sample_id="{id}",
         meta=False,
@@ -37,5 +39,6 @@ rule predict_cds:
         """
         python {params.scriptpath} {params.sample_id} {input.fasta} {output.faa} {output.gff} {output.gbk} {output.fna} {output.tsv} \
         --translation_table {params.translation_table} \
-        --write_faa --write_gff --write_gbk --write_fna --write_tsv > {log} 2>&1
+        --write_faa --write_gff --write_gbk --write_fna --write_tsv \
+        --run_rrna --rrna_tsv {output.rrna} > {log} 2>&1
         """

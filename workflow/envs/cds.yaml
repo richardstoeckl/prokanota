@@ -4,8 +4,10 @@ channels:
     - bioconda
 dependencies:
     - python>=3.10
+    - infernal==1.1.5
     - pip>=25.0.1
     - pip:
         - gb-io==0.3.4
         - pyrodigal==3.6.3
         - polars==1.23.0
+        - pybarrnap==0.5.1
