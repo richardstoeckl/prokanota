@@ -17,6 +17,8 @@ rule downloadCDDdb:
         os.path.join(LOGPATH, "common", "downloadCDDdb.log"),
     message:
         "Downloading CDD database to {output.db}",
+    conda:
+        os.path.join(workflow.basedir, "envs","environment.yaml"),
     shell:
         """
         curl -L -o {output.db} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz
@@ -55,6 +57,8 @@ rule downloadCOGdb:
         os.path.join(LOGPATH, "common", "downloadCOGdb.log"),
     message:
         "Downloading COG database to {output.db}",
+    conda:
+        os.path.join(workflow.basedir, "envs","environment.yaml"),
     shell:
         """
         curl -L -o {output.db} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cog_LE.tar.gz
@@ -92,6 +96,8 @@ rule downloadPGAPdb:
         os.path.join(LOGPATH, "common", "downloadPGAPdb.log"),
     message:
         "Downloading PGAP database to {output.db}",
+    conda:
+        os.path.join(workflow.basedir, "envs","environment.yaml"),
     shell:
         """
         curl -L -o {output.db} https://ftp.ncbi.nlm.nih.gov/hmm/17.0/hmm_PGAP.LIB
@@ -125,6 +131,8 @@ rule downloadARCOGdb:
         "Downloading arCOG database to {output.db}",
     log:
         os.path.join(LOGPATH, "common", "downloadARCOGdb.log"),
+    conda:
+        os.path.join(workflow.basedir, "envs","environment.yaml"),
     shell:
         """
         curl -L -o {output.db} https://ftp.ncbi.nih.gov/pub/wolf/COGs/arCOG/zip.aliar14.tgz 2>{log}
