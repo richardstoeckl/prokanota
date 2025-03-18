@@ -8,3 +8,4 @@ dependencies:
   - seqkit==2.9.0
   - csvtk==0.31.0
   - gawk==5.3.1
+  - curl==8.12.1
