@@ -11,7 +11,7 @@ rule downloadCDDdb:
     output:
         db=protected(os.path.join(DBPATH, "CDD","Cdd_LE.tar.gz")),
         mapping=protected(os.path.join(DBPATH, "CDD", "cddid_all.tbl.gz")),
-        version=protected(os.path.join(DBPATH, "CDD", "cdd.info")),
+        version=os.path.join(DBPATH, "CDD", "cdd.info"),
         done=os.path.join(DBPATH, "CDD", "download.done"),
     log:
         os.path.join(LOGPATH, "common", "downloadCDDdb.log"),
