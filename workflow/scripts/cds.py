@@ -6,9 +6,13 @@ Distributed under the Boost Software License, Version 1.0.
 https://www.boost.org/LICENSE_1_0.txt)
 
 """
-
+# tRNAscan-SE is assumed to be available in the PATH
 import hashlib
 import os
+import sys
+import subprocess as sp
+from pathlib import Path
+import platform
 import pyrodigal
 import argparse
 import logging
@@ -18,13 +22,71 @@ from gb_io import Record, Feature, Qualifier
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-# Configure logging at the INFO level
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger('GENERAL')
-# pybarrnap.barrnap
+# ---------------------------
+# Logging
+# ---------------------------
 
-cds_logger = logging.getLogger("CDS")
-rrna_logger = logging.getLogger("rRNA")
+def setup_logging(verbose=False):
+    """
+    Configure logging with timestamps and different levels based on verbosity.
+    
+    Args:
+        verbose (bool): If True, show debug messages from all loggers
+    """
+    # Define log format with timestamp
+    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    date_format = '%Y-%m-%d %H:%M:%S'
+    
+    # Configure root logger
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.INFO,
+        format=log_format,
+        datefmt=date_format
+    )
+    
+    # Configure specific loggers
+    log = logging.getLogger('GENERAL')
+    cds_logger = logging.getLogger("CDS")
+    rrna_logger = logging.getLogger("rRNA")
+    trna_logger = logging.getLogger("tRNA")
+    
+    # Configure pybarrnap logger
+    pybarrnap_logger = logging.getLogger("pybarrnap.barrnap")
+    if not verbose:
+        pybarrnap_logger.setLevel(logging.WARNING)
+    
+    return log, cds_logger, rrna_logger, trna_logger
+
+def get_trnascan_version():
+    """Get tRNAscan-SE version."""
+    try:
+        result = sp.run(['tRNAscan-SE', '--help'], 
+                              capture_output=True, 
+                              text=True)
+        lines = result.stderr.split('\n')
+        if len(lines) > 1:
+            trna_logger.debug(f"tRNAscan-SE version line: '{lines[1]}'")  # Debug output
+            version_line = lines[1].strip()  # Get complete second line
+            if 'tRNAscan-SE' in version_line:
+                return version_line.split()[1]  # Get second word
+    except Exception as e:
+        trna_logger.debug(f"Error getting tRNAscan-SE version: {str(e)}")
+        return "unknown"
+
+def log_versions(log):
+    """Log versions of all dependencies."""
+    log.info(f"Operating System: {sys.platform}")
+    log.info(f"Python Version: v{platform.python_version()}")
+    
+    # Core dependencies
+    log.info(f"Pyrodigal Version: v{pyrodigal.__version__}")
+    log.info(f"gb_io Version: v{gb_io.__version__}")
+    
+    # RNA prediction tools
+    log.info(f"Pybarrnap Version: v{pybarrnap.__version__}")
+    trna_version = get_trnascan_version()
+    log.info(f"tRNAscan-SE Version: v{trna_version}")
+
 
 # ---------------------------
 # Data Classes
@@ -52,27 +114,37 @@ class GenePrediction:
         self.protein_seq = protein_seq
         self.dna_seq = dna_seq
 
-class RrnaPrediction:
+class RNAPrediction:
     """
-    Container for rRNA prediction.
+    Container for RNA predictions (tRNA and rRNA).
     
     Attributes:
-        contig_id (str): Custom contig name.
-        rrna_id (str): Unique rRNA ID.
-        start (int): Start coordinate.
-        end (int): End coordinate.
-        strand (str): '+' or '-'.
-        rrna_type (str): Type of rRNA (e.g. 16S_rRNA, 23S_rRNA, etc.).
-        sequence (str): Predicted rRNA nucleotide sequence.
+        contig_id (str): Custom contig name
+        rna_id (str): Unique RNA ID 
+        start (int): Start coordinate
+        end (int): End coordinate
+        strand (str): '+' or '-'
+        rna_type (str): Type of RNA (e.g. '16S_rRNA', 'tRNA-Ala')
+        sequence (str): RNA sequence
+        score (float, optional): Prediction score
+        anti_codon (str, optional): Anti-codon sequence (only for tRNAs)
     """
-    def __init__(self, contig_id, rrna_id, start, end, strand, rrna_type, sequence=""):
+    def __init__(self, contig_id, rna_id, start, end, strand, rna_type, 
+                 sequence="", score=None, anti_codon=None):
         self.contig_id = contig_id
-        self.rrna_id = rrna_id
+        self.rna_id = rna_id
         self.start = start
         self.end = end
         self.strand = strand
-        self.rrna_type = rrna_type
+        self.rna_type = rna_type
         self.sequence = sequence
+        self.score = score
+        self.anti_codon = anti_codon
+
+    @property
+    def length(self):
+        """calculate RNA length"""
+        return self.end - self.start + 1
 
 # ---------------------------
 # Output Functions
@@ -89,6 +161,7 @@ def write_faa(genome_id, gene_records, faa_path):
         gene_records (list): A list of GenePrediction objects.
         faa_path (str): Path to the output .faa file.
     """
+    log.debug(f"Writing {len(gene_records)} protein sequences to {faa_path}")
     with open(faa_path, "w") as faa_file:
         for record in gene_records:
             faa_file.write(f">{record.gene_id}\n{record.protein_seq}\n")
@@ -103,11 +176,12 @@ def write_gff(genome_id, gene_records, gff_path):
         gene_records (list): A list of GenePrediction objects.
         gff_path (str): Path to the output .gff file.
     """
-
-    # Write GFF3 version header as some downstream tools require it
-    gff_file.write("##gff-version 3\n")
-
+    log.debug(f"Writing {len(gene_records)} gene locations to {gff_path}")
     with open(gff_path, "w") as gff_file:
+
+        # Write GFF3 version header as some downstream tools require it
+        gff_file.write("##gff-version 3\n")
+
         for record in gene_records:
             gff_file.write(
                 f"{record.contig_id}\tPyrodigal\tgene\t"
@@ -126,6 +200,7 @@ def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path):
         contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
         gbk_path (str): The output path for the GenBank file.
     """
+    log.debug(f"Writing {len(gene_records)} genes and {len(contigs)} contigs to {gbk_path}")
     records = []
     for contig_tag, header_id in contig_mapping.items():
         # Hole die Sequenz über contig_tag
@@ -180,6 +255,7 @@ def write_fna(genome_id, gene_records, fna_path):
     For genes on the minus strand, reverse-complements the predicted sequence,
     then trims the last nucleotide to correct for coordinate discrepancies.
     """
+    log.debug(f"Writing {len(gene_records)} gene sequences to {fna_path}")
     with open(fna_path, "w") as fna_file:
         for record in gene_records:
             if record.strand == '-':
@@ -201,6 +277,7 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
         contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
         tsv_path (str): The output path for the TSV file.
     """
+    log.debug(f"Writing {len(gene_records)} gene locations to {tsv_path}")
     with open(tsv_path, "w") as tsv_file:
         # Write header with the new columns
         tsv_file.write("sample_id\torig_cont_header\tcontig_id\tcontig_length\t"
@@ -231,19 +308,33 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
                         f"{gene.gene_id}\t{gene.start}\t{gene.end}\t{gene.strand}\t"
                         f"{gene_length}\t{protein_length}\t{mw_kda:.1f}\n"
                     )
-    log.info(f"TSV summary written to {tsv_path}")
 
-def write_rrna_tsv(rrna_records, tsv_rrna_path):
+def write_rna_tsv(rna_records, tsv_path):
     """
-    Writes a TSV file summarizing rRNA predictions.
-    Columns: contig_id, rrna_id, rrna_type, start, end, strand, length.
+    Writes a TSV file summarizing RNA (rRNA and tRNA) predictions.
+    Columns: contig_id, rna_id, rna_type, start, end, strand, length, score, anti_codon, sequence.
+    
+    Args:
+        rna_records (list): List of RNAPrediction objects
+        tsv_path (str): path for tsv file
     """
-    with open(tsv_rrna_path, "w") as tsv_file:
-        tsv_file.write("contig_id\trrna_id\trrna_type\tstart\tend\tstrand\tlength\tsequence\n")
-        for rrna in rrna_records:
-            length = rrna.end - rrna.start + 1
-            tsv_file.write(f"{rrna.contig_id}\t{rrna.rrna_id}\t{rrna.rrna_type}\t{rrna.start}\t{rrna.end}\t{rrna.strand}\t{length}\t{rrna.sequence}\n")
-    log.info(f"rRNA TSV summary written to {tsv_rrna_path}")
+    log.debug(f"Writing {len(rna_records)} RNA predictions to {tsv_path}")
+
+    # Sort records by start position
+    sorted_records = sorted(rna_records, key=lambda x: x.start)
+
+    with open(tsv_path, "w") as tsv_file:
+        tsv_file.write("contig_id\trna_id\trna_type\tstart\tend\tstrand\tlength\tscore\tanti_codon\tsequence\n")
+        for rna in sorted_records:
+            # Use "." for empty score and anti_codon fields in rRNA records
+            score = rna.score if rna.score is not None else "."
+            anti_codon = rna.anti_codon if rna.anti_codon is not None else "."
+            
+            tsv_file.write(
+                f"{rna.contig_id}\t{rna.rna_id}\t{rna.rna_type}\t"
+                f"{rna.start}\t{rna.end}\t{rna.strand}\t{rna.length}\t"
+                f"{score}\t{anti_codon}\t{rna.sequence}\n"
+            )
 
 # ---------------------------
 # Helper Functions
@@ -283,11 +374,113 @@ def get_rrna_sequence(contig_seq, start, end, strand):
         seq = reverse_complement(seq)
     return seq
 
+def predict_trnas(tagged_contigs, tmp_dir, threads):
+    """
+    prediction of tRNAs via tRNAscan-SE.
+    
+    Args:
+        tagged_contigs (dict): Dictionary with contig_tag -> sequence
+        tmp_dir (str): Path to tmp dir
+        threads (int): Number of threads to use
+    
+    Returns:
+        list: List of RNAPrediction objects
+        
+    Raises:
+        Exception: If tRNAscan-SE fails
+    """
+    trna_logger.info(f"Starting tRNA prediction on %d contigs: %s", len(tagged_contigs), list(tagged_contigs.keys()))
+
+    # writing contigs to tmp file
+    trna_logger.debug(f"Writing contigs to {tmp_dir}")
+    tmp_fasta = Path(tmp_dir) / "input.fasta"
+    with open(tmp_fasta, "w") as f:
+        for contig_id, seq in tagged_contigs.items():
+            f.write(f">{contig_id}\n{seq}\n")
+            
+    # Run tRNAscan-SE
+    txt_output = Path(tmp_dir) / "trna.tsv"
+    fasta_output = Path(tmp_dir) / "trna.fasta"
+    
+    cmd = [
+        'tRNAscan-SE',
+        '-G',  # General mode for all three domains of life
+        '--output', str(txt_output),
+        '--fasta', str(fasta_output),
+        '--thread', str(threads),
+        str(tmp_fasta)
+    ]
+    
+    trna_logger.debug(f"Running command: {' '.join(cmd)}")
+    
+    proc = sp.run(
+        cmd,
+        stdout=sp.PIPE,
+        stderr=sp.PIPE,
+        universal_newlines=True
+    )
+    
+    if proc.returncode != 0:
+        trna_logger.debug('stdout=\'%s\', stderr=\'%s\'', proc.stdout, proc.stderr)
+        trna_logger.warning('tRNAs failed! tRNAscan-SE-error-code=%d', proc.returncode)
+        raise Exception(f'tRNAscan-SE error! error code: {proc.returncode}')
+
+    # Parse Ergebnisse
+    trna_records = []
+    with open(txt_output) as fh:
+        # Überspringe Header
+        for _ in range(3):
+            next(fh)
+            
+        for line in fh:
+            fields = line.strip().split('\t')
+            contig_id = fields[0].strip()
+            trna_number = fields[1]
+            start = int(fields[2])
+            end = int(fields[3])
+            trna_type = fields[4]
+            anti_codon = fields[5].lower()
+            score = float(fields[8])
+            
+            # Handle reverse strand
+            if start > end:
+                start, end = end, start
+                strand = '-'
+            else:
+                strand = '+'
+                
+            rna_id = f"{contig_id}_trna_{int(trna_number):03d}"
+            
+            # Get sequence from FASTA output if available
+            sequence = ""
+            if fasta_output.exists():
+                from Bio import SeqIO
+                for record in SeqIO.parse(str(fasta_output), "fasta"):
+                    if record.id == f"{contig_id}.trna{trna_number}":
+                        sequence = str(record.seq)
+                        break
+            
+            trna_records.append(
+                RNAPrediction(
+                    contig_id=contig_id,
+                    rna_id=rna_id,
+                    start=start,
+                    end=end,
+                    strand=strand,
+                    rna_type=f"tRNA-{trna_type}",
+                    sequence=sequence,
+                    score=score,
+                    anti_codon=anti_codon
+                )
+            )
+    return trna_records
+
 # ---------------------------
 # Main Parsing and Prediction Function
 # ---------------------------
 
-def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_table, run_rrna=False):
+def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_table, 
+                          run_rrna=False, run_trna=False, threads=1):
     """
     Reads the FASTA file, computes a genome ID using MD5 hashing and a custom mapping,
     then uses Pyrodigal to predict genes.
@@ -305,6 +498,11 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
             - contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
             - rrna_records (list): List of RrnaPrediction objects (empty if run_rrna is False).
     """
+
+    log.info(f"Processing {filename}.")
+
+    log.info(f"Using {threads} threads for RNA predictions.")
+
     # Initialize MD5 hash object with the sample_id
     hash_obj = hashlib.md5(sample_id.encode('utf-8'))
 
@@ -332,6 +530,8 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
     # Compute the genome ID from the first 8 hex digits
     hexdigest = hash_obj.hexdigest()
     genome_id = ''.join(mapping[c] for c in hexdigest[:8])
+
+    log.info(f"The internal contig_id is {genome_id}.")
 
     # Create new dictionaries: one mapping contig_tag -> sequence and one for contig_tag -> original header id
     tagged_contigs = {}
@@ -376,6 +576,7 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
                 )
             )
 
+    cds_logger.info(f"Predicted {len(gene_records)} genes")
 
     # ---------------------------
     # rRNA Prediction using pybarrnap (if requested)
@@ -390,39 +591,62 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
             raise
 
         rrna_logger.info(f"Starting rRNA prediction on %d contigs: %s", len(tagged_contigs), list(tagged_contigs.keys()))
-        # Build list of SeqRecord objects directly from tagged_contigs
-        seq_records = [SeqRecord(Seq(dna_sequence), id=contig_tag,name=contig_tag, description="") for contig_tag, dna_sequence in tagged_contigs.items()]
+        seq_records = [SeqRecord(Seq(dna_sequence), id=contig_tag, name=contig_tag, description="") 
+                      for contig_tag, dna_sequence in tagged_contigs.items()]
         
         rrna_predictor = Barrnap(
             seq_records,
             evalue=1e-6,
             lencutoff=0.8,
             reject=0.25,
-            threads=1,
+            threads=threads,
             kingdom="all",
             accurate=True,
             quiet=False,
         )
         rrna_result = rrna_predictor.run()
 
-        # Parse pybarrnap results; iterate over each SeqRecord and its features.
+        # Parse pybarrnap results using RNAPrediction class
         for record in rrna_result.seq_records:
-            contig_id = record.id  # should match our tagged contig name
+            contig_id = record.id
             for i, feature in enumerate(record.features):
-                rrna_id = f"{contig_id}_rrna_{i+1:03d}"
-                rrna_type = str(feature.qualifiers.get("gene", [None])[0]) # feature.type  # e.g., "16S_rRNA"
-                # TODO:Adjust start/end positions; assume feature.location uses 0-based indexing.
+                rna_id = f"{contig_id}_rrna_{i+1:03d}"
+                rna_type = str(feature.qualifiers.get("gene", [None])[0])
                 start = feature.location.start + 1
                 end = feature.location.end
                 strand = '+' if getattr(feature.location, 'strand', 1) >= 0 else '-'
-                seq = str(feature.extract(str(record.seq))) # get_rrna_sequence(tagged_contigs[contig_id], start, end, strand)
-                rrna_records.append(RrnaPrediction(contig_id, rrna_id, start, end, strand, rrna_type, seq))
+                seq = str(feature.extract(str(record.seq)))
+                rrna_records.append(
+                    RNAPrediction(
+                        contig_id=contig_id,
+                        rna_id=rna_id,
+                        start=start,
+                        end=end,
+                        strand=strand,
+                        rna_type=rna_type,
+                        sequence=seq
+                    )
+                )
+        rrna_logger.info(f"Predicted {len(rrna_records)} rRNAs")
 
-    return genome_id, tagged_contigs, gene_records, contig_mapping, rrna_records
+    # ---------------------------
+    # tRNA Prediction using tRNAscan-SE (if requested)
+    # ---------------------------
+
+    trna_records = []
+    if run_trna:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            trna_records = predict_trnas(tagged_contigs, tmp_dir, threads)
+
+    trna_logger.info(f"Predicted {len(trna_records)} tRNAs")
+
+    return genome_id, tagged_contigs, gene_records, contig_mapping, rrna_records, trna_records
 
 def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, tsv_path, 
                    meta_mode, closed, translation_table, 
-                   write_faa_flag, write_gff_flag, write_gbk_flag, write_fna_flag, write_tsv_flag, run_rrna, rrna_tsv):
+                   write_faa_flag, write_gff_flag, write_gbk_flag, write_fna_flag, write_tsv_flag,
+                   run_rrna, run_trna, rna_tsv, threads=1):
     """
     Master function to process a single genome. Parses the FASTA, runs predictions,
     and writes .faa, .gff, .gbk, .fna files, and .tsv files based on flags.
@@ -443,10 +667,17 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
         write_gbk_flag (bool): Flag to write .gbk file.
         write_fna_flag (bool): Flag to write .fna file.
         write_tsv_flag (bool): Flag to write .tsv file.
+        run_rrna (bool): Flag to run rRNA prediction.
+        run_trna (bool): Flag to run tRNA prediction.
+        rna_tsv (str): Output path for the RNA TSV file.
+        threads (int): Number of threads to use for RNA predictions.
     """
+    # Log versions of all tools
+    log_versions(log)
+
     # Parse the FASTA and get predictions
-    genome_id, contigs, gene_records, contig_mapping, rrna_records = parse_fasta_and_predict(
-        sample_id, filename, meta_mode, closed, translation_table, run_rrna
+    genome_id, contigs, gene_records, contig_mapping, rrna_records, trna_records = parse_fasta_and_predict(
+        sample_id, filename, meta_mode, closed, translation_table, run_rrna, run_trna, threads
     )
 
     # Write outputs based on flags
@@ -460,11 +691,14 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
         write_fna(genome_id, gene_records, fna_path)
     if write_tsv_flag:
         write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path)
-    if run_rrna and rrna_records:
-        write_rrna_tsv(rrna_records, rrna_tsv)
+    
+    # Write RNA predictions if any exist
+    if (run_rrna and rrna_records) or (run_trna and trna_records):
+        all_rna_records = rrna_records + trna_records
+        write_rna_tsv(all_rna_records, rna_tsv)
 
     # Log processed file info
-    log.info(f"Processed {filename} => {genome_id}")
+    log.info(f"Finished processing {filename} => {genome_id}.")
 
 # ---------------------------
 # Command-line Interface
@@ -492,15 +726,25 @@ if __name__ == "__main__":
     parser.add_argument("--write_gbk", action="store_true", help="Write .gbk file")
     parser.add_argument("--write_fna", action="store_true", help="Write .fna file")
     parser.add_argument("--write_tsv", action="store_true", help="Write .tsv file")
-    # Options for rRNA prediction
+    # Options for RNA prediction
     parser.add_argument("--run_rrna", action="store_true", help="Run rRNA prediction using pybarrnap")
-    parser.add_argument("--rrna_tsv", default="rrna.tsv",help="Output path for rRNA TSV file (default: rrna.tsv)")
+    parser.add_argument("--run_trna", action="store_true", help="Run tRNA prediction using tRNAscan-SE")
+    parser.add_argument("--rna_tsv", default="rna.tsv", help="Output path for RNA TSV file (default: rna.tsv)")
+    # Logging options
+    parser.add_argument("--verbose", action="store_true", help="Show debug messages from all components")
+    # Performance options
+    parser.add_argument("--threads", type=int, default=1, help="Number of threads to use for RNA predictions (default: 1)")
+    
+
 
     a = parser.parse_args()
+
+    # Setup logging based on verbose flag
+    log, cds_logger, rrna_logger, trna_logger = setup_logging(a.verbose)
 
     # Run process_genome with the given arguments
     process_genome(a.sample_id, a.input_fasta, 
                  a.faa_path, a.gff_path, a.gbk_path, a.fna_path, a.tsv_path,
                  a.meta, a.closed, a.translation_table, 
                  a.write_faa, a.write_gff, a.write_gbk, a.write_fna, a.write_tsv,
-                 a.run_rrna, a.rrna_tsv)
+                 a.run_rrna, a.run_trna, a.rna_tsv, a.threads)

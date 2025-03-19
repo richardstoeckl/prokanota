@@ -5,6 +5,7 @@ channels:
 dependencies:
     - python>=3.10
     - infernal==1.1.5
+    - trnascan-se==2.0.12
     - pip>=25.0.1
     - pip:
         - gb-io==0.3.4
