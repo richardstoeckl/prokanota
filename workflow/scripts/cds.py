@@ -103,6 +103,10 @@ def write_gff(genome_id, gene_records, gff_path):
         gene_records (list): A list of GenePrediction objects.
         gff_path (str): Path to the output .gff file.
     """
+
+    # Write GFF3 version header as some downstream tools require it
+    gff_file.write("##gff-version 3\n")
+
     with open(gff_path, "w") as gff_file:
         for record in gene_records:
             gff_file.write(
