@@ -166,7 +166,7 @@ def write_faa(genome_id, gene_records, faa_path):
         for record in gene_records:
             faa_file.write(f">{record.gene_id}\n{record.protein_seq}\n")
 
-def write_gff(genome_id, gene_records, gff_path):
+def write_gff(genome_id, gene_records, gff_path, contigs):
     """
     Writes all predicted gene locations to a GFF file.
     Each record includes the contig_id, start, end, and gene ID as an attribute.
@@ -175,16 +175,21 @@ def write_gff(genome_id, gene_records, gff_path):
         genome_id (str): The unique genome ID, used as the file name prefix.
         gene_records (list): A list of GenePrediction objects.
         gff_path (str): Path to the output .gff file.
+        contigs (dict): Dictionary mapping contig_ids to their sequences.
     """
     log.debug(f"Writing {len(gene_records)} gene locations to {gff_path}")
     with open(gff_path, "w") as gff_file:
-
-        # Write GFF3 version header as some downstream tools require it
+        # Write GFF3 version header
         gff_file.write("##gff-version 3\n")
-
+        
+        # Write sequence-region pragmas for each contig
+        for contig_id, sequence in contigs.items():
+            gff_file.write(f"##sequence-region {contig_id} 1 {len(sequence)}\n")
+        
+        # Write feature entries
         for record in gene_records:
             gff_file.write(
-                f"{record.contig_id}\tPyrodigal\tgene\t"
+                f"{record.contig_id}\tPyrodigal\tCDS\t"
                 f"{record.start}\t{record.end}\t.\t"
                 f"{record.strand}\t.\tID={record.gene_id}\n"
             )
@@ -684,7 +689,7 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
     if write_faa_flag:
         write_faa(genome_id, gene_records, faa_path)
     if write_gff_flag:
-        write_gff(genome_id, gene_records, gff_path)
+        write_gff(genome_id, gene_records, gff_path, contigs)
     if write_gbk_flag:
         write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path)
     if write_fna_flag:
