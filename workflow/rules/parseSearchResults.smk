@@ -18,7 +18,7 @@ if config["searches"]["cdd"]:
     rule parseCDDResults:
         input:
             tblout=rules.searchCDDs.output.tab,
-            prevDF=rules.predict_cds.output.tsv, # rules.createStartingAnnotDF.output.mainProkka,
+            prevDF=rules.predict_features.output.tsv, # rules.createStartingAnnotDF.output.mainProkka,
             mapping=rules.prepareCDDdb.output.mapping,
         output:
             finalDF=os.path.join(INTERIMPATH, "{id}", "annotation", "mainDF_AB.tsv"),
@@ -61,7 +61,7 @@ if config["searches"]["cdd"]:
 else:
     rule skipCDDResults:
         input:
-            prevDF=rules.predict_cds.output.tsv, #rules.createStartingAnnotDF.output.mainProkka,
+            prevDF=rules.predict_features.output.tsv, #rules.createStartingAnnotDF.output.mainProkka,
         output:
             finalDF=os.path.join(INTERIMPATH, "{id}", "annotation", "mainDF_AB.tsv"),
         message:

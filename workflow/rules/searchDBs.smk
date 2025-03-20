@@ -9,7 +9,7 @@ https://www.boost.org/LICENSE_1_0.txt)
 
 rule searchCDDs:
     input:
-        allFaa=rules.predict_cds.output.faa, # rules.concatinateFaa.output.allFaa,
+        allFaa=rules.predict_features.output.faa, # rules.concatinateFaa.output.allFaa,
         db=rules.prepareCDDdb.output.db,
         version=rules.prepareCDDdb.output.version,
     output:
@@ -37,7 +37,7 @@ rule searchCDDs:
  
 rule searchCOGs:
     input:
-        allFaa=rules.predict_cds.output.faa, # rules.concatinateFaa.output.allFaa,
+        allFaa=rules.predict_features.output.faa, # rules.concatinateFaa.output.allFaa,
         db=rules.prepareCOGdb.output.db,
         version=rules.prepareCOGdb.output.version,
     output:
@@ -65,7 +65,7 @@ rule searchCOGs:
 
 rule searchArCOGs:
     input:
-        allFaa=rules.predict_cds.output.faa, #rules.concatinateFaa.output.allFaa,
+        allFaa=rules.predict_features.output.faa, #rules.concatinateFaa.output.allFaa,
         db=rules.prepareARCOGdb.output.h3m,
         version=rules.downloadARCOGdb.output.version,
     output:
@@ -98,7 +98,7 @@ rule searchArCOGs:
 
 rule searchPGAP:
     input:
-        allFaa=rules.predict_cds.output.faa, #rules.concatinateFaa.output.allFaa,
+        allFaa=rules.predict_features.output.faa, #rules.concatinateFaa.output.allFaa,
         db=rules.downloadPGAPdb.output.db,
         version=rules.downloadPGAPdb.output.version,
     output:

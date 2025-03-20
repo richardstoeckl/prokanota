@@ -341,6 +341,24 @@ def write_rna_tsv(rna_records, tsv_path):
                 f"{score}\t{anti_codon}\t{rna.sequence}\n"
             )
 
+def write_genome(genome_id, tagged_contigs, genome_path):
+    """
+    Writes contigs to a FASTA file using the internal contig IDs as headers.
+    This basically creates a copy of the input fasta file, but with the internal contig IDs.
+    
+    Args:
+        genome_id (str): The unique genome ID
+        tagged_contigs (dict): Dictionary mapping contig_tag -> sequence
+        genome_path (str): Path to output FASTA file
+    """
+    log.debug(f"Writing {len(tagged_contigs)} contigs to {genome_path}")
+    with open(genome_path, "w") as genome_file:
+        for contig_tag, sequence in tagged_contigs.items():
+            genome_file.write(f">{contig_tag}\n")
+            # Write sequence in lines of 60 characters
+            for i in range(0, len(sequence), 60):
+                genome_file.write(f"{sequence[i:i+60]}\n")
+
 # ---------------------------
 # Helper Functions
 # ---------------------------
@@ -651,6 +669,7 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
 def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, tsv_path, 
                    meta_mode, closed, translation_table, 
                    write_faa_flag, write_gff_flag, write_gbk_flag, write_fna_flag, write_tsv_flag,
+                   write_genome_flag, genome_path,
                    run_rrna, run_trna, rna_tsv, threads=1):
     """
     Master function to process a single genome. Parses the FASTA, runs predictions,
@@ -672,6 +691,8 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
         write_gbk_flag (bool): Flag to write .gbk file.
         write_fna_flag (bool): Flag to write .fna file.
         write_tsv_flag (bool): Flag to write .tsv file.
+        write_genome_flag (bool): Flag to write genome FASTA file.
+        genome_path (str): Output path for the genome FASTA file.
         run_rrna (bool): Flag to run rRNA prediction.
         run_trna (bool): Flag to run tRNA prediction.
         rna_tsv (str): Output path for the RNA TSV file.
@@ -696,6 +717,8 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
         write_fna(genome_id, gene_records, fna_path)
     if write_tsv_flag:
         write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path)
+    if write_genome_flag:
+        write_genome(genome_id, contigs, genome_path)
     
     # Write RNA predictions if any exist
     if (run_rrna and rrna_records) or (run_trna and trna_records):
@@ -731,6 +754,9 @@ if __name__ == "__main__":
     parser.add_argument("--write_gbk", action="store_true", help="Write .gbk file")
     parser.add_argument("--write_fna", action="store_true", help="Write .fna file")
     parser.add_argument("--write_tsv", action="store_true", help="Write .tsv file")
+    # Options for Genome output
+    parser.add_argument("--write_genome", action="store_true", help="Write genome FASTA file with internal contig IDs")
+    parser.add_argument("--genome_path", default="genome.fasta", help="Output path for genome FASTA file (default: genome.fasta)")
     # Options for RNA prediction
     parser.add_argument("--run_rrna", action="store_true", help="Run rRNA prediction using pybarrnap")
     parser.add_argument("--run_trna", action="store_true", help="Run tRNA prediction using tRNAscan-SE")
@@ -752,4 +778,5 @@ if __name__ == "__main__":
                  a.faa_path, a.gff_path, a.gbk_path, a.fna_path, a.tsv_path,
                  a.meta, a.closed, a.translation_table, 
                  a.write_faa, a.write_gff, a.write_gbk, a.write_fna, a.write_tsv,
+                 a.write_genome, a.genome_path,
                  a.run_rrna, a.run_trna, a.rna_tsv, a.threads)
