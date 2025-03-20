@@ -666,36 +666,29 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
 
     return genome_id, tagged_contigs, gene_records, contig_mapping, rrna_records, trna_records
 
-def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, tsv_path, 
-                   meta_mode, closed, translation_table, 
-                   write_faa_flag, write_gff_flag, write_gbk_flag, write_fna_flag, write_tsv_flag,
-                   write_genome_flag, genome_path,
-                   run_rrna, run_trna, rna_tsv, threads=1):
+def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=None, 
+                  fna_path=None, tsv_path=None, meta_mode=False, closed=False, 
+                  translation_table=11, genome_path=None, run_rrna=False, 
+                  run_trna=False, rna_tsv_path=None, threads=1):
     """
     Master function to process a single genome. Parses the FASTA, runs predictions,
-    and writes .faa, .gff, .gbk, .fna files, and .tsv files based on flags.
+    and writes output files if their paths are provided.
 
     Args:
         sample_id (str): The user-provided sample ID.
         filename (str): Path to the genome FASTA file.
-        faa_path (str): Output path for the predicted .faa file.
-        gff_path (str): Output path for the .gff file.
-        gbk_path (str): Output path for the .gbk file.
-        fna_path (str): Output path for the .fna file.
-        tsv_path (str): Output path for the .tsv file.
+        faa_path (str, optional): Output path for the predicted .faa file.
+        gff_path (str, optional): Output path for the .gff file.
+        gbk_path (str, optional): Output path for the .gbk file.
+        fna_path (str, optional): Output path for the .fna file.
+        tsv_path (str, optional): Output path for the .tsv file.
         meta_mode (bool): True if running Pyrodigal in metagenomic mode.
         closed (bool): True if the genome is closed-ended.
         translation_table (int): Translation table used to decode the DNA into proteins.
-        write_faa_flag (bool): Flag to write .faa file.
-        write_gff_flag (bool): Flag to write .gff file.
-        write_gbk_flag (bool): Flag to write .gbk file.
-        write_fna_flag (bool): Flag to write .fna file.
-        write_tsv_flag (bool): Flag to write .tsv file.
-        write_genome_flag (bool): Flag to write genome FASTA file.
-        genome_path (str): Output path for the genome FASTA file.
+        genome_path (str, optional): Output path for the genome FASTA file.
         run_rrna (bool): Flag to run rRNA prediction.
         run_trna (bool): Flag to run tRNA prediction.
-        rna_tsv (str): Output path for the RNA TSV file.
+        rna_tsv_path (str, optional): Output path for the RNA TSV file.
         threads (int): Number of threads to use for RNA predictions.
     """
     # Log versions of all tools
@@ -706,24 +699,24 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
         sample_id, filename, meta_mode, closed, translation_table, run_rrna, run_trna, threads
     )
 
-    # Write outputs based on flags
-    if write_faa_flag:
+    # Write outputs if paths are provided
+    if faa_path:
         write_faa(genome_id, gene_records, faa_path)
-    if write_gff_flag:
+    if gff_path:
         write_gff(genome_id, gene_records, gff_path, contigs)
-    if write_gbk_flag:
+    if gbk_path:
         write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path)
-    if write_fna_flag:
+    if fna_path:
         write_fna(genome_id, gene_records, fna_path)
-    if write_tsv_flag:
+    if tsv_path:
         write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path)
-    if write_genome_flag:
+    if genome_path:
         write_genome(genome_id, contigs, genome_path)
     
-    # Write RNA predictions if any exist
-    if (run_rrna and rrna_records) or (run_trna and trna_records):
+    # Write RNA predictions if path is provided and predictions exist
+    if rna_tsv_path and (rrna_records or trna_records):
         all_rna_records = rrna_records + trna_records
-        write_rna_tsv(all_rna_records, rna_tsv)
+        write_rna_tsv(all_rna_records, rna_tsv_path)
 
     # Log processed file info
     log.info(f"Finished processing {filename} => {genome_id}.")
@@ -735,38 +728,35 @@ def process_genome(sample_id, filename, faa_path, gff_path, gbk_path, fna_path, 
 if __name__ == "__main__":
     # Set up command-line argument parsing
     parser = argparse.ArgumentParser(
-        description="Predict genes and write results to .faa, .gff, .gbk, .fna, and .tsv files. Optionally predict rRNAs."
+        description="Predict genes in prokaryotic genomes. Outputs are written only if their respective paths are provided."
     )
-    # Required positional arguments for CDS predictions:
+    # Required positional arguments
     parser.add_argument("sample_id", help="Sample ID")
     parser.add_argument("input_fasta", help="Input FASTA file")
-    parser.add_argument("faa_path", help="Output path for .faa file")
-    parser.add_argument("gff_path", help="Output path for .gff file")
-    parser.add_argument("gbk_path", help="Output path for .gbk file")
-    parser.add_argument("fna_path", help="Output path for .fna file")
-    parser.add_argument("tsv_path", help="Output path for .tsv file")
-    # Options for CDS predictions
+    
+    # Optional output paths
+    parser.add_argument("--faa_path", help="Output path for protein FASTA (.faa) file")
+    parser.add_argument("--gff_path", help="Output path for GFF3 (.gff) file")
+    parser.add_argument("--gbk_path", help="Output path for GenBank (.gbk) file")
+    parser.add_argument("--fna_path", help="Output path for nucleotide FASTA (.fna) file")
+    parser.add_argument("--tsv_path", help="Output path for tab-separated (.tsv) file")
+    parser.add_argument("--genome_path", help="Output path for genome FASTA file with internal contig IDs")
+    parser.add_argument("--rna_tsv_path", help="Output path for RNA predictions TSV file")
+    
+    # Prediction options
     parser.add_argument("--meta", action="store_true", help="Metagenomic mode")
     parser.add_argument("--closed", action="store_true", help="Closed ends")
-    parser.add_argument("--translation_table", type=int, default=11, help="Translation table to use")
-    parser.add_argument("--write_faa", action="store_true", help="Write .faa file")
-    parser.add_argument("--write_gff", action="store_true", help="Write .gff file")
-    parser.add_argument("--write_gbk", action="store_true", help="Write .gbk file")
-    parser.add_argument("--write_fna", action="store_true", help="Write .fna file")
-    parser.add_argument("--write_tsv", action="store_true", help="Write .tsv file")
-    # Options for Genome output
-    parser.add_argument("--write_genome", action="store_true", help="Write genome FASTA file with internal contig IDs")
-    parser.add_argument("--genome_path", default="genome.fasta", help="Output path for genome FASTA file (default: genome.fasta)")
-    # Options for RNA prediction
-    parser.add_argument("--run_rrna", action="store_true", help="Run rRNA prediction using pybarrnap")
-    parser.add_argument("--run_trna", action="store_true", help="Run tRNA prediction using tRNAscan-SE")
-    parser.add_argument("--rna_tsv", default="rna.tsv", help="Output path for RNA TSV file (default: rna.tsv)")
-    # Logging options
-    parser.add_argument("--verbose", action="store_true", help="Show debug messages from all components")
-    # Performance options
-    parser.add_argument("--threads", type=int, default=1, help="Number of threads to use for RNA predictions (default: 1)")
-    
-
+    parser.add_argument("--translation_table", type=int, default=11, 
+                       help="Translation table to use (default: 11)")
+    parser.add_argument("--run_rrna", action="store_true", 
+                       help="Run rRNA prediction using pybarrnap")
+    parser.add_argument("--run_trna", action="store_true", 
+                       help="Run tRNA prediction using tRNAscan-SE")
+    # Other options
+    parser.add_argument("--verbose", action="store_true", 
+                       help="Show debug messages from all components")
+    parser.add_argument("--threads", type=int, default=1,
+                       help="Number of threads to use for RNA predictions (default: 1)")
 
     a = parser.parse_args()
 
@@ -774,9 +764,20 @@ if __name__ == "__main__":
     log, cds_logger, rrna_logger, trna_logger = setup_logging(a.verbose)
 
     # Run process_genome with the given arguments
-    process_genome(a.sample_id, a.input_fasta, 
-                 a.faa_path, a.gff_path, a.gbk_path, a.fna_path, a.tsv_path,
-                 a.meta, a.closed, a.translation_table, 
-                 a.write_faa, a.write_gff, a.write_gbk, a.write_fna, a.write_tsv,
-                 a.write_genome, a.genome_path,
-                 a.run_rrna, a.run_trna, a.rna_tsv, a.threads)
+    process_genome(
+        sample_id=a.sample_id,
+        filename=a.input_fasta,
+        faa_path=a.faa_path,
+        gff_path=a.gff_path,
+        gbk_path=a.gbk_path,
+        fna_path=a.fna_path,
+        tsv_path=a.tsv_path,
+        meta_mode=a.meta,
+        closed=a.closed,
+        translation_table=a.translation_table,
+        genome_path=a.genome_path,
+        run_rrna=a.run_rrna,
+        run_trna=a.run_trna,
+        rna_tsv_path=a.rna_tsv_path,
+        threads=a.threads
+    )

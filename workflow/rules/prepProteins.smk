@@ -16,7 +16,7 @@ rule predict_features:
         gbk=os.path.join(RESULTPATH, "{id}", "features", "{id}.gbk"),
         fna=os.path.join(RESULTPATH, "{id}", "features", "{id}.fna"),
         tsv=os.path.join(RESULTPATH, "{id}", "features", "{id}.tsv"),
-        rrna=os.path.join(RESULTPATH, "{id}", "features", "{id}_rna.tsv"),
+        rna=os.path.join(RESULTPATH, "{id}", "features", "{id}_rna.tsv"),
         genome=os.path.join(RESULTPATH, "{id}", "features", "{id}.fasta"),
     log:
         os.path.join(LOGPATH, "{id}", "logs", "{id}_predict_features.log"),
@@ -38,9 +38,16 @@ rule predict_features:
         os.path.join(workflow.basedir, "envs","features.yaml"),
     shell:
         """
-        python {params.scriptpath} {params.sample_id} {input.fasta} {output.faa} {output.gff} {output.gbk} {output.fna} {output.tsv} \
+        python {params.scriptpath} \
+        {params.sample_id} {input.fasta} \
+        --faa_path {output.faa} \
+        --gff_path {output.gff} \
+        --gbk_path {output.gbk} \
+        --fna path {output.fna} \
+        --tsv_path {output.tsv} \
+        --genome_path {output.genome} \
+        --run_rrna --run_trna \
+        --rna_tsv_path {output.rna} \
         --translation_table {params.translation_table} \
-        --write_genome --genome_path {output.genome} \
-        --write_faa --write_gff --write_gbk --write_fna --write_tsv \
-        --run_rrna --run_trna --rna_tsv {output.rrna} --threads {threads} > {log} 2>&1
+        --threads {threads} > {log} 2>&1
         """
