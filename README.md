@@ -22,7 +22,7 @@ This is why I developed this pipeline. Inspired by the annotation approach by [D
 
 ## Usage
 
-**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog?usage=richardstoeckl/prokanota)**
+**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl%20prokanota.html)**
 
 But here is a rough overview:
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
