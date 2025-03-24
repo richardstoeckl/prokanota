@@ -16,11 +16,11 @@ from snakemake.utils import validate
 from snakemake.utils import min_version
 
 ########## check minimum snakemake version ##########
-min_version("8.27.1")
+min_version("8.25.5")
 
 ########## load config and metadata sheets ##########
 
-configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
+configfile: os.path.join(workflow.basedir, "../", "config", "config-real.yaml")
 metadataFile = os.path.join(workflow.basedir, "../", "config", config["global"]["metadataFile"])
 
 metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
