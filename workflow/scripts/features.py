@@ -21,6 +21,7 @@ import pybarrnap
 from gb_io import Record, Feature, Qualifier
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from Bio import SeqIO
 
 # ---------------------------
 # Logging
@@ -405,7 +406,7 @@ def get_rrna_sequence(contig_seq, start, end, strand):
 
 def predict_trnas(tagged_contigs, tmp_dir, threads):
     """
-    prediction of tRNAs via tRNAscan-SE.
+    Prediction of tRNAs via tRNAscan-SE.
     
     Args:
         tagged_contigs (dict): Dictionary with contig_tag -> sequence
@@ -420,7 +421,7 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
     """
     trna_logger.info(f"Starting tRNA prediction on %d contigs: %s", len(tagged_contigs), list(tagged_contigs.keys()))
 
-    # writing contigs to tmp file
+    # Writing contigs to tmp file
     trna_logger.debug(f"Writing contigs to {tmp_dir}")
     tmp_fasta = Path(tmp_dir) / "input.fasta"
     with open(tmp_fasta, "w") as f:
@@ -454,10 +455,16 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
         trna_logger.warning('tRNAs failed! tRNAscan-SE-error-code=%d', proc.returncode)
         raise Exception(f'tRNAscan-SE error! error code: {proc.returncode}')
 
-    # Parse Ergebnisse
+    # Load all sequences from FASTA output into a dictionary for quick lookup
+    fasta_sequences = {}
+    if fasta_output.exists():
+        for record in SeqIO.parse(str(fasta_output), "fasta"):
+            fasta_sequences[record.id] = str(record.seq)
+    
+    # Parse results
     trna_records = []
     with open(txt_output) as fh:
-        # Überspringe Header
+        # Skip header
         for _ in range(3):
             next(fh)
             
@@ -480,14 +487,11 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
                 
             rna_id = f"{contig_id}_trna_{int(trna_number):03d}"
             
-            # Get sequence from FASTA output if available
+            # Get sequence from our cached FASTA dictionary
             sequence = ""
-            if fasta_output.exists():
-                from Bio import SeqIO
-                for record in SeqIO.parse(str(fasta_output), "fasta"):
-                    if record.id == f"{contig_id}.trna{trna_number}":
-                        sequence = str(record.seq)
-                        break
+            fasta_id = f"{contig_id}.trna{trna_number}"
+            if fasta_id in fasta_sequences:
+                sequence = fasta_sequences[fasta_id]
             
             trna_records.append(
                 RNAPrediction(
