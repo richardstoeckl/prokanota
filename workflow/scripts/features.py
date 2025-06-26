@@ -58,7 +58,13 @@ def setup_logging(verbose=False):
     return log, cds_logger, rrna_logger, trna_logger
 
 def get_trnascan_version():
-    """Get tRNAscan-SE version."""
+    """
+    Get tRNAscan-SE version.
+    Note:   This parsing relies on tRNAscan-SE's --help output format.
+            It assumes the version is the second word on the second line of stderr.
+            This may break if the tRNAscan-SE output format changes in future versions.
+            Confirmed working with tRNAscan-SE 2.0.12.
+    """
     try:
         result = sp.run(['tRNAscan-SE', '--help'], 
                               capture_output=True, 
