@@ -43,7 +43,7 @@ rule predict_features:
         --faa_path {output.faa} \
         --gff_path {output.gff} \
         --gbk_path {output.gbk} \
-        --fna path {output.fna} \
+        --fna_path {output.fna} \
         --tsv_path {output.tsv} \
         --genome_path {output.genome} \
         --run_rrna --run_trna \
