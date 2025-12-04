@@ -19,7 +19,7 @@ rule searchCDDs:
     message:
         "Searching CDDs for {wildcards.id}",
     threads:
-        workflow.cores* 0.5 -1
+        max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
     log: 
         os.path.join(LOGPATH, "{id}", "logs", "searchCDD.log"),
     benchmark: 
@@ -47,7 +47,7 @@ rule searchCOGs:
     message:
         "Searching COGs for {wildcards.id}",
     threads:
-        workflow.cores* 0.5 -1
+        max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
     log: 
         os.path.join(LOGPATH, "{id}", "logs", "searchCOGs.log")
     benchmark: 
@@ -77,7 +77,7 @@ rule searchArCOGs:
     message:
         "Searching ArCOGs for {wildcards.id}",
     threads:
-        workflow.cores* 0.5 -1
+        max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
     log: 
         os.path.join(LOGPATH, "{id}", "logs", "searchArCOGs.log")
     benchmark: 
@@ -110,7 +110,7 @@ rule searchPGAP:
     message:
         "Searching PGAP for {wildcards.id}",
     threads:
-        workflow.cores* 0.5 -1
+        max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
     log: 
         os.path.join(LOGPATH, "{id}", "logs", "searchPGAP.log")
     benchmark: 

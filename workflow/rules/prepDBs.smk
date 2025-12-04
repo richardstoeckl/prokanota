@@ -160,7 +160,7 @@ rule prepareARCOGdb:
     message:
         "Preparing arCOG database",
     threads:
-        workflow.cores* 1 -1
+        max(1, int(workflow.cores * 1))  # Use safe threads calculation
     log:
         os.path.join(LOGPATH, "common", "prepareARCOGdb.log"),
     params:
