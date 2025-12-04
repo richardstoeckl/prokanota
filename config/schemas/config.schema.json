@@ -1,0 +1,61 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Configuration schema for prokanota pipeline",
+    "type": "object",
+    "properties": {
+        "global": {
+            "type": "object",
+            "description": "Global path settings",
+            "properties": {
+                "resultPath": {
+                    "type": "string",
+                    "description": "Directory for final results"
+                },
+                "interimPath": {
+                    "type": "string",
+                    "description": "Directory for intermediate files"
+                },
+                "logPath": {
+                    "type": "string",
+                    "description": "Directory for log files"
+                },
+                "dbPath": {
+                    "type": "string",
+                    "description": "Directory for database files"
+                },
+                "metadataFile": {
+                    "type": "string",
+                    "description": "Path to the metadata CSV file"
+                }
+            },
+            "required": ["resultPath", "interimPath", "logPath", "dbPath", "metadataFile"],
+            "additionalProperties": false
+        },
+        "searches": {
+            "type": "object",
+            "description": "Toggle individual database searches",
+            "properties": {
+                "cdd": {
+                    "type": "boolean",
+                    "description": "Enable CDD (Conserved Domain Database) search"
+                },
+                "cog": {
+                    "type": "boolean",
+                    "description": "Enable COG (Clusters of Orthologous Genes) search"
+                },
+                "arcog": {
+                    "type": "boolean",
+                    "description": "Enable arCOG (archaeal COG) search"
+                },
+                "pgap": {
+                    "type": "boolean",
+                    "description": "Enable PGAP (Prokaryotic Genome Annotation Pipeline) HMM search"
+                }
+            },
+            "required": ["cdd", "cog", "arcog", "pgap"],
+            "additionalProperties": false
+        }
+    },
+    "required": ["global", "searches"],
+    "additionalProperties": false
+}

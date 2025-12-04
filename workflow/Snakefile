@@ -21,11 +21,16 @@ min_version("9.3.5")
 ########## load config and metadata sheets ##########
 
 configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
+# Validate configuration against schema
+validate(config, schema=os.path.join(workflow.basedir, "../", "config","schemas","config.schema.json"))
+
+
 metadataFile = os.path.join(workflow.basedir, "../", "config", config["global"]["metadataFile"])
+validate(metadataFile, schema=os.path.join(workflow.basedir, "../", "config","schemas","metadata.schema.json"))
 
 metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
 NAMES = metadata.sample_id.to_list()
-path = {k: v for (k, v) in metadata.path.to_dict().items()}
+path = metadata.path.to_dict()
 
 LOGPATH = os.path.normpath(config["global"]["logPath"])
 INTERIMPATH = os.path.normpath(config["global"]["interimPath"])
