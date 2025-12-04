@@ -16,7 +16,7 @@ from snakemake.utils import validate
 from snakemake.utils import min_version
 
 ########## check minimum snakemake version ##########
-min_version("8.27.1")
+min_version("8.25.5")
 
 ########## load config and metadata sheets ##########
 
