@@ -5,7 +5,27 @@ Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE or copy at 
 https://www.boost.org/LICENSE_1_0.txt)
 
+
+Feature extraction and GFF manipulation for prokaryotic genome annotation.
+
+This module handles:
+- Parsing annotation from gene prediction tool (Pyrodigal)
+- Extracting and formatting protein/nucleotide sequences
+- Generating unique, reproducible identifiers using MD5 hashing
+- Writing standardized output files (GFF, FASTA, feature tables)
+
+The MD5-based ID generation ensures:
+1. Deterministic IDs: Same input always produces the same ID
+2. Collision resistance: Different sequences get different IDs.
+3. Fixed length: All IDs are 32 characters (hex digest)
+
+This module relies on external tools:
+- Pyrodigal for gene prediction
+- Pybarrnap for rRNA prediction
+- tRNAscan-SE for tRNA prediction (assumed to be in PATH)
 """
+
+
 # tRNAscan-SE is assumed to be available in the PATH
 import hashlib
 import os
