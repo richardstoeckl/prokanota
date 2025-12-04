@@ -1,6 +1,6 @@
 # Snakemake workflow: `Prokanota`
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥8.25.5-brightgreen.svg)](https://snakemake.github.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.3.5-brightgreen.svg)](https://snakemake.github.io)
 
 Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion.
 
