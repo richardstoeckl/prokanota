@@ -576,7 +576,7 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
     contig_mapping = {}
     for i, (header, seq) in enumerate(contigs.items()):
         contig_tag = f"{genome_id}_{i+1}"
-        # Extrahiere nur die erste Spalte des Headers (ohne Beschreibung)
+        # Extract only the first column of the header (without description)
         header_id = header.split()[0]
         tagged_contigs[contig_tag] = seq
         contig_mapping[contig_tag] = header_id
@@ -584,6 +584,18 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
     # ---------------------------
     # CDS Prediction using Pyrodigal
     # ---------------------------
+
+    # Calculate total sequence length to determine if normal mode training is possible
+    total_length = sum(len(seq) for seq in tagged_contigs.values())
+    min_training_length = 20000  # Minimum length required for pyrodigal training
+
+    # Check if we need to force meta mode due to insufficient sequence length
+    original_meta_mode = meta_mode
+    if not meta_mode and total_length < min_training_length:
+        cds_logger.warning(f"Total sequence length ({total_length} bp) is below the minimum required "
+                          f"for normal mode training ({min_training_length} bp). "
+                          f"Automatically switching to metagenomic mode.")
+        meta_mode = True
 
     # Create a Pyrodigal GeneFinder. Train if meta_mode is off
     gene_finder = pyrodigal.GeneFinder(meta=meta_mode, closed=closed)
@@ -593,7 +605,14 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
     gene_records = []
 
     # Iterate through each tagged contig and predict genes
-    cds_logger.info("Starting CDS prediction on %d contigs: %s", len(tagged_contigs), list(tagged_contigs.keys()))
+    mode_description = "metagenomic mode" if meta_mode else "normal mode"
+    if meta_mode != original_meta_mode:
+        cds_logger.info("Starting CDS prediction on %d contigs in %s (auto-switched): %s", 
+                       len(tagged_contigs), mode_description, list(tagged_contigs.keys()))
+    else:
+        cds_logger.info("Starting CDS prediction on %d contigs in %s: %s", 
+                       len(tagged_contigs), mode_description, list(tagged_contigs.keys()))
+
     for contig_tag, dna_sequence in tagged_contigs.items():
         sequence = pyrodigal.Sequence(dna_sequence)
         genes = gene_finder.find_genes(sequence)
