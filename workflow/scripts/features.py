@@ -460,7 +460,7 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
     if fasta_output.exists():
         for record in SeqIO.parse(str(fasta_output), "fasta"):
             fasta_sequences[record.id] = str(record.seq)
-    
+            
     # Parse results
     trna_records = []
     with open(txt_output) as fh:

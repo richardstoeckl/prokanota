@@ -1,11 +1,11 @@
-name: annotate_genomes
+name: prokanota
 channels:
   - conda-forge
   - bioconda
 dependencies:
-  - blast==2.16.0
+  - blast==2.17.0
   - interproscan==5.59_91.0
   - seqkit==2.10.0
-  - csvtk==0.31.0
+  - csvtk==0.35.0
   - gawk==5.3.1
   - curl==8.12.1

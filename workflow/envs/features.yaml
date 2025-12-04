@@ -8,7 +8,7 @@ dependencies:
     - trnascan-se==2.0.12
     - pip>=25.0.1
     - pip:
-        - gb-io==0.3.4
-        - pyrodigal==3.6.3
-        - polars==1.23.0
+        - gb-io==0.3.8
+        - pyrodigal==v3.6.3-post1
+        - polars==1.35.2
         - pybarrnap==0.5.1
