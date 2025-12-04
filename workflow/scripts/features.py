@@ -464,11 +464,16 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
     # Parse results
     trna_records = []
     with open(txt_output) as fh:
-        # Skip header
-        for _ in range(3):
-            next(fh)
-            
-        for line in fh:
+        lines = fh.readlines()
+
+    # Check if we have enough lines (at least 3 headers + 1 data line)
+    if len(lines) <= 3:
+        trna_logger.info("No tRNA predictions found in output")
+        return trna_records
+
+    # Skip the first 3 header lines and process the rest
+    for line in lines[3:]:
+        if line.strip():  # Skip empty lines
             fields = line.strip().split('\t')
             contig_id = fields[0].strip()
             trna_number = fields[1]
@@ -723,8 +728,8 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
     if genome_path:
         write_genome(genome_id, contigs, genome_path)
     
-    # Write RNA predictions if path is provided and predictions exist
-    if rna_tsv_path and (rrna_records or trna_records):
+    # Write RNA predictions if path is provided (even if empty)
+    if rna_tsv_path:
         all_rna_records = rrna_records + trna_records
         write_rna_tsv(all_rna_records, rna_tsv_path)
 
