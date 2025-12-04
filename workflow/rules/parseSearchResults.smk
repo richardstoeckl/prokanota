@@ -22,17 +22,17 @@ if config["searches"]["cdd"]:
             mapping=rules.prepareCDDdb.output.mapping,
         output:
             finalDF=os.path.join(INTERIMPATH, "{id}", "annotation", "mainDF_AB.tsv"),
-            ecutoff=temp(os.path.join(INTERIMPATH, "{id}", "cogs", "sequence_results_red_e_cutoff.tsv")),
-            allResults=temp(os.path.join(INTERIMPATH, "{id}", "cogs", "All_CDD.tsv")),
-            tmp1=temp(os.path.join(INTERIMPATH, "{id}", "cogs", "temp1.tsv")),
-            finalDFtmp=temp(os.path.join(INTERIMPATH, "{id}", "cogs", "cogs_final_tmp.tsv")),
-            finalOut=temp(os.path.join(INTERIMPATH, "{id}", "cogs", "cogs_final.tsv")),
+            ecutoff=temp(os.path.join(INTERIMPATH, "{id}", "cdd", "sequence_results_red_e_cutoff.tsv")),
+            allResults=temp(os.path.join(INTERIMPATH, "{id}", "cdd", "All_CDD.tsv")),
+            tmp1=temp(os.path.join(INTERIMPATH, "{id}", "cdd", "temp1.tsv")),
+            finalDFtmp=temp(os.path.join(INTERIMPATH, "{id}", "cdd", "cdd_final_tmp.tsv")),
+            finalOut=temp(os.path.join(INTERIMPATH, "{id}", "cdd", "cdd_final.tsv")),
         message:
             "Parsing CDD results for {wildcards.id}",
         log:
-            os.path.join(LOGPATH, "{id}", "logs", "parseCOGResults.log")
+            os.path.join(LOGPATH, "{id}", "logs", "parsecddResults.log")
         benchmark: 
-            os.path.join(LOGPATH, "{id}", "benchmarks", "parseCOGResults.tsv")
+            os.path.join(LOGPATH, "{id}", "benchmarks", "parsecddResults.tsv")
         threads: 1
         priority: 10
         params:
