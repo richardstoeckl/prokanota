@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Databases Configuration",
+  "type": "object",
+  "required": ["databases"],
+  "properties": {
+    "databases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "search_tool", "db_path", "mapping_path", "columns"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+            "description": "Unique database identifier (alphanumeric, underscore, must start with letter)"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this database is active"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 100,
+            "description": "Order in final merged table (lower = earlier)"
+          },
+          "search_tool": {
+            "type": "string",
+            "enum": ["pyhmmer", "rpsblast"],
+            "description": "Search tool to use for this database"
+          },
+          "db_path": {
+            "type": "string",
+            "description": "Path to prepared database files"
+          },
+          "mapping_path": {
+            "type": "string",
+            "description": "Path to mapping TSV file"
+          },
+          "evalue_cutoff": {
+            "type": "number",
+            "default": 1e-3,
+            "exclusiveMinimum": 0,
+            "description": "E-value threshold for hit filtering"
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name", "source"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+                  "description": "Output column name"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": ["query_name", "accession", "short_name", "description", "category", "evalue", "score", "bias"],
+                  "description": "Source field from hits or mapping"
+                }
+              }
+            },
+            "description": "Column definitions for output"
+          }
+        }
+      }
+    }
+  }
+}

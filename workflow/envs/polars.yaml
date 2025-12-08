@@ -1,0 +1,8 @@
+name: polars
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.14
+  - polars>=1.35.2
+  - pyyaml
+  - jsonschema

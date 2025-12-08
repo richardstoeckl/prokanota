@@ -1,0 +1,49 @@
+# Database module configuration
+# Each database must specify:
+#   - name: Unique identifier (used in file paths and column prefixes)
+#   - enabled: Whether to use this database
+#   - order: Merge order in final table (lower = earlier)
+#   - search_tool: One of [pyhmmer, rpsblast]
+#   - db_path: Path to prepared database files
+#   - mapping_path: Path to mapping TSV (accession, short_name, description, category)
+#   - evalue_cutoff: E-value threshold for filtering hits
+#   - columns: List of output columns with name and source field
+
+databases:
+  - name: pgap
+    enabled: false
+    order: 10
+    search_tool: pyhmmer
+    db_path: "/path/to/hmm_PGAP.LIB"
+    mapping_path: "/path/to/PGAP_mapping.tsv"
+    evalue_cutoff: 1.0e-3
+    columns:
+      - name: pgap_hit
+        source: query_name
+      - name: pgap_short_name
+        source: short_name
+      - name: pgap_description
+        source: description
+      - name: pgap_category
+        source: category
+      - name: pgap_evalue
+        source: evalue
+
+  - name: cdd
+    enabled: false
+    order: 20
+    search_tool: rpsblast
+    db_path: "/path/to/cdd"
+    mapping_path: "/path/to/CDD_mapping.tsv"
+    evalue_cutoff: 1.0e-3
+    columns:
+      - name: cdd_hit
+        source: accession
+      - name: cdd_short_name
+        source: short_name
+      - name: cdd_description
+        source: description
+      - name: cdd_category
+        source: category
+      - name: cdd_evalue
+        source: evalue

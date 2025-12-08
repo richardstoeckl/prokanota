@@ -1,12 +1,6 @@
 global:
-  resultPath: "results/"
-  interimPath: "interim/"
-  logPath: "logs/"
-  dbPath: "db/"
-  metadataFile: "metadata.csv"
-
-searches:
-  cdd: true
-  cog: true
-  arcog: true
-  pgap: true
+  metadata: "metadata.csv"
+  databases: "databases.yaml"
+  logs: "logs"
+  interim: "interim"
+  results: "results"
