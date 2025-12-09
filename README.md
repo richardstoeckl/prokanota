@@ -17,6 +17,7 @@ On the other end of the spectrum, sophisticated custom annotation pipelines like
 - **A modular, config-driven database system** that allows users to customize their annotations without writing code
 - **Multi-database top-hit reporting** that preserves annotation nuances and allows informed manual curation
 
+This design philosophy means you can start with the well-documented databases ([CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains), [COG](https://www.ncbi.nlm.nih.gov/COG/), [arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/), [PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/); see the the [wiki](https://github.com/richardstoeckl/prokanota/wiki)) and gradually add custom HMM or RPS-BLAST databases as your annotation needs evolve—no Snakemake expertise required.
 
 ## Features
 
@@ -29,8 +30,9 @@ On the other end of the spectrum, sophisticated custom annotation pipelines like
 ### Annotation System
 5. **Modular database architecture:** Add custom HMM or RPS-BLAST databases by editing a config file—no code changes needed.
 6. **Multi-database annotation:** Top hits from each database are reported separately, preserving annotation depth and enabling informed manual curation.
+
 ### Output Formats
-8. **Pangenome-ready outputs:** Annotations are provided in `.gff`, `.tsv`, and `.gbk` formats, with sequences in `.fna` (nucleotide) and `.faa` (protein) formats. All use consistent gene IDs for easy cross-referencing with downstream tools.
+7. **Pangenome-ready outputs:** Annotations are provided in `.gff`, `.tsv`, and `.gbk` formats, with sequences in `.fna` (nucleotide) and `.faa` (protein) formats. All use consistent gene IDs for easy cross-referencing with downstream tools.
 
 ## Modular Database System
 
@@ -40,31 +42,6 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 - **Flexible tool support:** Currently supports `pyhmmer` (for HMM databases) and `rpsblast` (for RPS-BLAST databases) with more to come!
 - **Automatic rule generation:** The Snakemake workflow dynamically generates search and parse rules for each enabled database
 - **Standardized output:** All databases contribute columns to a unified annotation table
-
-### Adding a Custom Database (quick overview)
-
-1. Prepare your database:
-   - For HMM: Press your `.hmm` files using `hmmpress`
-   - For RPS-BLAST: Build your database using `makeprofiledb`
-2. Create a mapping file (TSV, no header): `accession<TAB>short_name<TAB>description<TAB>category`
-3. Add an entry to `config/databases.yaml`:
-   ```yaml
-   databases:
-     - name: MyCustomDB
-       enabled: true
-       order: 50
-       search_tool: pyhmmer  # or rpsblast
-       db_path: "/path/to/db.hmm"
-       mapping_path: "/path/to/mapping.tsv"
-       evalue_cutoff: 1.0e-3
-       columns:
-         - {name: MyDB_hit, source: query_name}
-         - {name: MyDB_description, source: description}
-         - {name: MyDB_evalue, source: evalue}
-   ```
-4. Run the pipeline—your custom database will be searched automatically
-
-See the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed instructions and helper scripts.
 
 ## Usage
 
@@ -90,14 +67,38 @@ snakemake --sdm conda -n --cores
 snakemake --sdm conda --cores
 ```
 
-## Databases and Tools used in the pipeline and reasoning. Consider citing these if you use this pipeline.
+### Adding a Custom Database (quick overview)
+
+1. Prepare your database:
+   - For HMM: Press your `.hmm` files using `hmmpress` or download ready-to-use db.
+   - For RPS-BLAST: Build your database using `makeprofiledb` or download ready-to-use db.
+2. Create a mapping file (TSV, no header): `accession<TAB>short_name<TAB>description<TAB>category`
+3. Add an entry to `config/databases.yaml`:
+   ```yaml
+   databases:
+     - name: MyCustomDB
+       enabled: true
+       order: 50 # lower = earlier
+       search_tool: pyhmmer  # or rpsblast
+       db_path: "/path/to/db.hmm"
+       mapping_path: "/path/to/mapping.tsv"
+       evalue_cutoff: 1.0e-3
+       columns:
+         - {name: MyDB_hit, source: query_name}
+         - {name: MyDB_description, source: description}
+         - {name: MyDB_evalue, source: evalue}
+   ```
+4. Run the pipeline—your custom database will be searched automatically
+
+See the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed instructions and helper scripts.
+
+
+## Recommended Databases to use
 - **Databases**
     - **[CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains) - The Conserved Domains Database curated by NCBI.** *Sources information from the [SMART](http://smart.embl-heidelberg.de/), [Pfam](http://pfam.sanger.ac.uk/), [COG](https://www.ncbi.nlm.nih.gov/COG/), [TIGR](https://www.ncbi.nlm.nih.gov/Structure/cdd/docs/tigrfams.html), and [PRK](https://www.ncbi.nlm.nih.gov/proteinclusters) databases. This makes it a good consolidated database for annotation purposes.*
     - **[COG](https://www.ncbi.nlm.nih.gov/COG/) - The Clusters of Orthologous Genes (COG) database.** *Even though the CDD sources some information from this DB as well, this is such a good resource that it deserves to be included in full and on its own.*
     - **[arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/) - The archaea specific version of the COG database.** *This is included to serve more up-to-date and accurate annotation of archaeal genomes.*
     - **[PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) - HMMs are used by the [NCBI Prokaryotic Genome Annotation Pipeline (PGAP)](https://pubmed.ncbi.nlm.nih.gov/33270901/).** *Since most submissions of novel prokaryotic genomes are evaluated by the PGAP tool, it makes sense to include its DB.*
-
-
 
 ## FAQ
 
@@ -107,8 +108,8 @@ snakemake --sdm conda --cores
   - The molecular weight is estimated by summing the average residue masses in the protein sequence and adding the mass of one water molecule, as described in [GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607](https://doi.org/10.1385/1-59259-890-0:571). The molecular weights are taken from the [here](https://web.expasy.org/findmod/findmod_masses.html#AA) and the function can be found in [`prokanota/workflow/scripts/features.py`](https://github.com/richardstoeckl/prokanota/blob/c2dc89227d3171187cf6949af15b27dddd4aa390/workflow/scripts/features.py#L398-L416)
 - **Can I use this pipeline for bacterial genomes?**
   - Absolutely! While the pipeline was designed with archaeal annotation challenges in mind, it works equally well for bacterial genomes.
-
-
+- **What if I don't want to use all the built-in databases?**
+  - Simply set `enabled: false` for any database in `config/databases.yaml`.
 
 ```
 Copyright Richard Stöckl 2025.

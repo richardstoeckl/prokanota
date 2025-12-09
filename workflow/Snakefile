@@ -1,50 +1,430 @@
 """
+Modular annotation pipeline with dynamic database support.
 
 Copyright Richard Stöckl 2025.
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE or copy at 
 https://www.boost.org/LICENSE_1_0.txt)
-
 """
 
-import pandas as pd
-import re
 import os
-import glob
+import json
 from pathlib import Path
+
+import jsonschema
+import pandas as pd
+import yaml
 from snakemake.utils import validate
 from snakemake.utils import min_version
+from snakemake.logging import logger
+
 
 ########## check minimum snakemake version ##########
 min_version("9.3.5")
 
+
+# =============================================================================
+# Configuration Loading and Validation
+# =============================================================================
+
+def load_and_validate_config(config_path, schema_path):
+    """Load a YAML config and validate against JSON schema."""
+    with open(config_path, "r") as f:
+        cfg = yaml.safe_load(f)
+    with open(schema_path, "r") as f:
+        schema = json.load(f)
+    jsonschema.validate(cfg, schema)
+    return cfg
+
+
 ########## load config and metadata sheets ##########
 
 configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
-# Validate configuration against schema
-validate(config, schema=os.path.join(workflow.basedir, "../", "config","schemas","config.schema.json"))
+validate(config, schema=os.path.join(workflow.basedir, "../", "config", "schemas", "config.schema.json"))
 
-
-metadataFile = os.path.join(workflow.basedir, "../", "config", config["global"]["metadataFile"])
-validate(metadataFile, schema=os.path.join(workflow.basedir, "../", "config","schemas","metadata.schema.json"))
+metadataFile = os.path.join(workflow.basedir, "../", "config", config["global"]["metadata"])
+validate(metadataFile, schema=os.path.join(workflow.basedir, "../", "config", "schemas", "metadata.schema.json"))
 
 metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
 NAMES = metadata.sample_id.to_list()
 path = metadata.path.to_dict()
 
-LOGPATH = os.path.normpath(config["global"]["logPath"])
-INTERIMPATH = os.path.normpath(config["global"]["interimPath"])
-RESULTPATH = os.path.normpath(config["global"]["resultPath"])
-DBPATH = os.path.normpath(config["global"]["dbPath"])
+LOGPATH = os.path.normpath(config["global"]["logs"])
+INTERIMPATH = os.path.normpath(config["global"]["interim"])
+RESULTPATH = os.path.normpath(config["global"]["results"])
 
-include: os.path.join(workflow.basedir,"rules", "prepProteins.smk")
-include: os.path.join(workflow.basedir,"rules", "prepDBs.smk")
-include: os.path.join(workflow.basedir,"rules", "searchDBs.smk")
-include: os.path.join(workflow.basedir,"rules", "parseSearchResults.smk")
 
-########## Target Rule ##########
+# =============================================================================
+# Load and Validate Databases Config
+# =============================================================================
+
+DATABASES_CONFIG_PATH = os.path.join(workflow.basedir, "../", "config", config["global"].get("databases", "databases.yaml"))
+DATABASES_SCHEMA_PATH = os.path.join(workflow.basedir, "../", "config", "schemas", "databases.schema.json")
+databases_config = load_and_validate_config(DATABASES_CONFIG_PATH, DATABASES_SCHEMA_PATH)
+
+
+# =============================================================================
+# Database Registry Helper Functions
+# =============================================================================
+
+def get_enabled_databases():
+    """Return list of enabled databases sorted by order."""
+    dbs = [db for db in databases_config["databases"] if db.get("enabled", True)]
+    return sorted(dbs, key=lambda x: x.get("order", 100))
+
+
+def get_db_by_name(name):
+    """Get database config by name."""
+    for db in databases_config["databases"]:
+        if db["name"] == name:
+            return db
+    raise ValueError(f"Database '{name}' not found in config")
+
+
+def get_columns_json(db_config):
+    """Convert columns config to JSON string for script argument."""
+    return json.dumps(db_config["columns"])
+
+
+ENABLED_DBS = get_enabled_databases()
+HAS_DATABASES = bool(ENABLED_DBS)
+if not HAS_DATABASES:
+    logger.warning(
+        "No annotation databases are enabled (see config/databases.yaml). "
+        "Continuing with feature prediction only."
+    )
+ENABLED_DB_NAMES = [db["name"] for db in ENABLED_DBS]
+
+
+# =============================================================================
+# Validation Functions
+# =============================================================================
+
+def validate_search_tool(tool):
+    """Ensure search tool is in allowed set."""
+    allowed = {"pyhmmer", "rpsblast"}
+    if tool not in allowed:
+        raise ValueError(f"search_tool '{tool}' not in allowed set: {allowed}")
+
+
+def validate_database_files(db_config):
+    """Check that required database files exist."""
+    db_path = Path(db_config["db_path"])
+    mapping_path = Path(db_config["mapping_path"])
+
+    # For pyhmmer, check for pressed HMM files
+    if db_config["search_tool"] == "pyhmmer":
+        # Check if database is a pre-pressed flatfile with .LIB extension
+        lib_path = db_path.with_suffix(".LIB")
+        if lib_path.exists():
+            # Flatfile database, no additional pressed files needed
+            pass
+        else:
+            # Check for standard pressed HMM files
+            required_extensions = [".h3m", ".h3i", ".h3f", ".h3p"]
+            base = db_path.with_suffix("")
+            for ext in required_extensions:
+                if not Path(str(base) + ext).exists():
+                    raise FileNotFoundError(f"Missing pressed HMM file: {base}{ext}")
+
+    if not mapping_path.exists():
+        raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
+
+
+# Validate all enabled databases at workflow start
+for db in ENABLED_DBS:
+    validate_search_tool(db["search_tool"])
+    validate_database_files(db)
+
+
+# =============================================================================
+# Target Rule
+# =============================================================================
+
+FEATURE_TARGETS = [
+    os.path.join(RESULTPATH, sample, "features", f"{sample}.faa")
+    for sample in NAMES
+]
+ANNOTATION_TARGETS = (
+    [
+        os.path.join(RESULTPATH, sample, "annotation", f"{sample}_finalAnnotation.tsv")
+        for sample in NAMES
+    ]
+    + [os.path.join(RESULTPATH, "common", "annotation", "finalAnnotation.tsv")]
+    if HAS_DATABASES
+    else []
+)
 
 rule all:
+    input: FEATURE_TARGETS + ANNOTATION_TARGETS
+
+
+# =============================================================================
+# Feature Prediction Rule
+# =============================================================================
+
+rule predict_features:
     input:
-        expand(os.path.join(RESULTPATH, "{id}", "annotation", "{id}_finalAnnotation.tsv"), id=NAMES),
-        os.path.join(RESULTPATH,"common","annotation","finalAnnotation.tsv"),
+        fasta=lambda wildcards: path[wildcards.id],
+    output:
+        faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"), 
+        gff=os.path.join(RESULTPATH, "{id}", "features", "{id}.gff"),
+        gbk=os.path.join(RESULTPATH, "{id}", "features", "{id}.gbk"),
+        fna=os.path.join(RESULTPATH, "{id}", "features", "{id}.fna"),
+        tsv=os.path.join(RESULTPATH, "{id}", "features", "{id}.tsv"),
+        rna=os.path.join(RESULTPATH, "{id}", "features", "{id}_rna.tsv"),
+        genome=os.path.join(RESULTPATH, "{id}", "features", "{id}.fasta"),
+    log:
+        os.path.join(LOGPATH, "{id}", "logs", "{id}_predict_features.log"),
+    message:
+        "Predicting Features for {wildcards.id}",
+    threads: 4
+    params:
+        sample_id="{id}",
+        meta=False,
+        closed=False,
+        translation_table=11,
+        write_faa=True,
+        write_gff=True,
+        write_gbk=True,
+        write_fna=True,
+        write_tsv=True,
+        scriptpath=os.path.join(workflow.basedir, "scripts", "features.py")
+    conda:
+        os.path.join(workflow.basedir, "envs", "features.yaml"),
+    shell:
+        """
+        python {params.scriptpath} \
+        {params.sample_id} {input.fasta} \
+        --faa_path {output.faa} \
+        --gff_path {output.gff} \
+        --gbk_path {output.gbk} \
+        --fna_path {output.fna} \
+        --tsv_path {output.tsv} \
+        --genome_path {output.genome} \
+        --run_rrna --run_trna \
+        --rna_tsv_path {output.rna} \
+        --translation_table {params.translation_table} \
+        --threads {threads} > {log} 2>&1
+        """
+
+
+# =============================================================================
+# Dynamic Search Rules
+# =============================================================================
+
+for db in ENABLED_DBS:
+    db_name = db["name"]
+
+    if db["search_tool"] == "pyhmmer":
+        rule:
+            name:
+                f"search_{db_name}"
+            input:
+                faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
+            output:
+                tblout=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tblout"),
+                version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            threads:
+                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+            params:
+                db_path=db["db_path"],
+                cpus=config.get("threads", {}).get("pyhmmer", 4),
+                scriptpath=os.path.join(workflow.basedir, "scripts", "pyhmmer_search.py")
+            log:
+                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+            message:
+                f"Searching {{wildcards.id}} against {db_name}"
+            conda:
+                os.path.join(workflow.basedir, "envs", "pyhmmer.yaml")
+            shell:
+                """
+                python {params.scriptpath} \
+                    --db {params.db_path} \
+                    --faa {input.faa} \
+                    --tblout {output.tblout} \
+                    --toolversion {output.version} \
+                    --threads {threads} \
+                    2>&1 | tee {log}
+                """
+
+    elif db["search_tool"] == "rpsblast":
+        rule:
+            name:
+                f"search_{db_name}"
+            input:
+                faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
+            output:
+                tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            params:
+                db_path=db["db_path"],
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                cpus=config.get("threads", {}).get("rpsblast", 4),
+                scriptpath=os.path.join(workflow.basedir, "scripts", "rpsblast_search.py")
+            threads:
+                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+            log:
+                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+            message:
+                f"Searching {{wildcards.id}} against {db_name}"
+            conda:
+                os.path.join(workflow.basedir, "envs", "rpsblast.yaml")
+            shell:
+                """
+                python {params.scriptpath} \
+                    --db {params.db_path} \
+                    --faa {input.faa} \
+                    --output {output.tab} \
+                    --toolversion {output.version} \
+                    --threads {threads} \
+                    --evalue {params.evalue_cutoff} \
+                    2>&1 | tee {log}
+                """
+
+
+
+# =============================================================================
+# Dynamic Parse Rules
+# =============================================================================
+
+for db in ENABLED_DBS:
+    db_name = db["name"]
+
+    if db["search_tool"] == "pyhmmer":
+        rule:
+            name:
+                f"parse_{db_name}"
+            input:
+                tblout=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tblout"),
+                mapping=db["mapping_path"],
+            output:
+                tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            params:
+                db_name=db_name,
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                columns_json=get_columns_json(db),
+            threads:
+                1, # Parsing is single-threaded
+            log:
+                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+            message:
+                f"Parsing {{wildcards.id}} {db_name} results"
+            conda:
+                os.path.join(workflow.basedir, "envs", "polars.yaml")
+            shell:
+                """
+                python {workflow.basedir}/scripts/pyhmmer_parse.py \
+                    --tblout {input.tblout} \
+                    --mapping {input.mapping} \
+                    --output {output.tsv} \
+                    --db-name {params.db_name} \
+                    --evalue-cutoff {params.evalue_cutoff} \
+                    --columns '{params.columns_json}' \
+                    2>&1 | tee {log}
+                """
+
+    elif db["search_tool"] == "rpsblast":
+        rule:
+            name:
+                f"parse_{db_name}"
+            input:
+                rpsblast_output=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                mapping=db["mapping_path"],
+            output:
+                tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            params:
+                db_name=db_name,
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                columns_json=get_columns_json(db),
+            threads:
+                1, # Parsing is single-threaded
+            log:
+                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+            message:
+                f"Parsing {{wildcards.id}} {db_name} results"
+            conda:
+                os.path.join(workflow.basedir, "envs", "polars.yaml")
+            shell:
+                """
+                python {workflow.basedir}/scripts/rpsblast_parse.py \
+                    --rpsblast-output {input.rpsblast_output} \
+                    --mapping {input.mapping} \
+                    --output {output.tsv} \
+                    --db-name {params.db_name} \
+                    --evalue-cutoff {params.evalue_cutoff} \
+                    --columns '{params.columns_json}' \
+                    2>&1 | tee {log}
+                """
+
+# =============================================================================
+# Merge Annotations
+# =============================================================================
+
+def get_all_parsed_annotations(wildcards):
+    """Get paths to all parsed annotation files for a sample."""
+    return [
+        os.path.join(INTERIMPATH, wildcards.id, db["name"], "parsed_annotation.tsv")
+        for db in ENABLED_DBS
+    ]
+
+
+def get_db_results_json(wildcards):
+    """Build JSON array of database results for merge script."""
+    results = []
+    for db in ENABLED_DBS:
+        results.append({
+            "name": db["name"],
+            "path": os.path.join(INTERIMPATH, wildcards.id, db["name"], "parsed_annotation.tsv"),
+            "order": db.get("order", 100),
+        })
+    return json.dumps(results)
+
+
+rule merge_sample_annotations:
+    input:
+        base_table=os.path.join(RESULTPATH, "{id}", "features", "{id}.tsv"),
+        parsed=get_all_parsed_annotations,
+    output:
+        final=os.path.join(RESULTPATH, "{id}", "annotation", "{id}_finalAnnotation.tsv"),
+    params:
+        db_results_json=get_db_results_json,
+        scriptpath=os.path.join(workflow.basedir, "scripts", "merge_annotations.py"),
+    threads:
+        1,  # Merging is single-threaded
+    log:
+        os.path.join(LOGPATH, "{id}", "merge_annotations.log"),
+    message:
+        "Merging annotations for {wildcards.id}"
+    conda:
+        os.path.join(workflow.basedir, "envs", "polars.yaml")
+    shell:
+        """
+        python {params.scriptpath} \
+            --base-table {input.base_table} \
+            --output {output.final} \
+            --db-results '{params.db_results_json}' \
+            2>&1 | tee {log}
+        """
+
+
+rule collect_master_table:
+    input:
+        tables=expand(
+            os.path.join(RESULTPATH, "{id}", "annotation", "{id}_finalAnnotation.tsv"),
+            id=NAMES
+        ),
+    output:
+        final=os.path.join(RESULTPATH, "common", "annotation", "finalAnnotation.tsv"),
+    threads:
+        1,  # Merging is single-threaded
+    log:
+        os.path.join(LOGPATH, "collect_master_table.log"),
+    message:
+        "Collecting master annotation table"
+    run:
+        import pandas as pd
+
+        dfs = [pd.read_csv(path, sep="\t") for path in input.tables]
+        combined = pd.concat(dfs, ignore_index=True)
+        combined.to_csv(output.final, sep="\t", index=False)
