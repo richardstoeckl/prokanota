@@ -102,7 +102,7 @@ ENABLED_DB_NAMES = [db["name"] for db in ENABLED_DBS]
 
 def validate_search_tool(tool):
     """Ensure search tool is in allowed set."""
-    allowed = {"pyhmmer", "rpsblast"}
+    allowed = {"pyhmmer", "rpsblast", "diamond"}
     if tool not in allowed:
         raise ValueError(f"search_tool '{tool}' not in allowed set: {allowed}")
 
@@ -111,6 +111,11 @@ def validate_database_files(db_config):
     """Check that required database files exist."""
     db_path = Path(db_config["db_path"])
     mapping_path = Path(db_config["mapping_path"])
+
+    # For diamond, only check that the user-provided database file exists
+    if db_config["search_tool"] == "diamond":
+        if not db_path.exists():
+            raise FileNotFoundError(f"Database file not found: {db_path}")
 
     # For pyhmmer, check for pressed HMM files
     if db_config["search_tool"] == "pyhmmer":
@@ -282,6 +287,40 @@ for db in ENABLED_DBS:
                     2>&1 | tee {log}
                 """
 
+    elif db["search_tool"] == "diamond":
+        rule:
+            name:
+                f"search_{db_name}"
+            input:
+                faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
+            output:
+                tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            params:
+                db_path=db["db_path"],
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                cpus=config.get("threads", {}).get("diamond", 4),
+                scriptpath=os.path.join(workflow.basedir, "scripts", "diamond_search.py")
+            threads:
+                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+            log:
+                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+            message:
+                f"Searching {{wildcards.id}} against {db_name}"
+            conda:
+                os.path.join(workflow.basedir, "envs", "diamond.yaml")
+            shell:
+                """
+                python {params.scriptpath} \
+                    --db {params.db_path} \
+                    --faa {input.faa} \
+                    --output {output.tab} \
+                    --toolversion {output.version} \
+                    --threads {threads} \
+                    --evalue {params.evalue_cutoff} \
+                    2>&1 | tee {log}
+                """
+
 
 
 # =============================================================================
@@ -349,6 +388,39 @@ for db in ENABLED_DBS:
                 """
                 python {workflow.basedir}/scripts/rpsblast_parse.py \
                     --rpsblast-output {input.rpsblast_output} \
+                    --mapping {input.mapping} \
+                    --output {output.tsv} \
+                    --db-name {params.db_name} \
+                    --evalue-cutoff {params.evalue_cutoff} \
+                    --columns '{params.columns_json}' \
+                    2>&1 | tee {log}
+                """
+
+    elif db["search_tool"] == "diamond":
+        rule:
+            name:
+                f"parse_{db_name}"
+            input:
+                diamond_output=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                mapping=db["mapping_path"],
+            output:
+                tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            params:
+                db_name=db_name,
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                columns_json=get_columns_json(db),
+            threads:
+                1, # Parsing is single-threaded
+            log:
+                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+            message:
+                f"Parsing {{wildcards.id}} {db_name} results"
+            conda:
+                os.path.join(workflow.basedir, "envs", "polars.yaml")
+            shell:
+                """
+                python {workflow.basedir}/scripts/diamond_parse.py \
+                    --diamond-output {input.diamond_output} \
                     --mapping {input.mapping} \
                     --output {output.tsv} \
                     --db-name {params.db_name} \

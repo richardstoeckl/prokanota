@@ -28,7 +28,7 @@
           },
           "search_tool": {
             "type": "string",
-            "enum": ["pyhmmer", "rpsblast"],
+            "enum": ["pyhmmer", "rpsblast", "diamond"],
             "description": "Search tool to use for this database"
           },
           "db_path": {
@@ -59,7 +59,24 @@
                 },
                 "source": {
                   "type": "string",
-                  "enum": ["query_name", "accession", "short_name", "description", "category", "evalue", "score", "bias"],
+                  "enum": [
+                    "query_name",
+                    "accession",
+                    "short_name",
+                    "description",
+                    "category",
+                    "evalue",
+                    "score",
+                    "bias",
+                    "pident",
+                    "length",
+                    "mismatch",
+                    "gapopen",
+                    "qstart",
+                    "qend",
+                    "sstart",
+                    "send"
+                  ],
                   "description": "Source field from hits or mapping"
                 }
               }
