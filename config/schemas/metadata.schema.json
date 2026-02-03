@@ -3,7 +3,7 @@
     "description": "Schema for metadata CSV file (validates each row as an object)",
     "type": "object",
     "properties": {
-        "name": {
+        "sample_id": {
             "type": "string",
             "description": "Sample/genome identifier",
             "minLength": 1
@@ -12,7 +12,16 @@
             "type": "string",
             "description": "Path to input FASTA file",
             "minLength": 1
+        },
+        "input_type": {
+            "type": "string",
+            "description": "Input type for sample (dna or protein)",
+            "enum": ["dna", "protein"]
+        },
+        "comment": {
+            "type": "string",
+            "description": "Optional comment"
         }
     },
-    "required": ["name", "path"]
+    "required": ["sample_id", "path"]
 }

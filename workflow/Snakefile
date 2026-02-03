@@ -49,6 +49,18 @@ metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
 NAMES = metadata.sample_id.to_list()
 path = metadata.path.to_dict()
 
+if "input_type" in metadata.columns:
+    input_type = metadata.input_type.fillna("dna").str.lower().to_dict()
+else:
+    input_type = {sample_id: "dna" for sample_id in NAMES}
+
+invalid_input_types = [sid for sid, itype in input_type.items() if itype not in {"dna", "protein"}]
+if invalid_input_types:
+    raise ValueError(
+        f"Invalid input_type for samples: {invalid_input_types}. "
+        "Allowed values are: dna, protein."
+    )
+
 LOGPATH = os.path.normpath(config["global"]["logs"])
 INTERIMPATH = os.path.normpath(config["global"]["interim"])
 RESULTPATH = os.path.normpath(config["global"]["results"])
@@ -165,14 +177,13 @@ rule all:
 
 
 # =============================================================================
-# Feature Prediction Rule
+# Feature Prediction Rules
 # =============================================================================
-
 rule predict_features:
     input:
         fasta=lambda wildcards: path[wildcards.id],
     output:
-        faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"), 
+        faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
         gff=os.path.join(RESULTPATH, "{id}", "features", "{id}.gff"),
         gbk=os.path.join(RESULTPATH, "{id}", "features", "{id}.gbk"),
         fna=os.path.join(RESULTPATH, "{id}", "features", "{id}.fna"),
@@ -182,18 +193,14 @@ rule predict_features:
     log:
         os.path.join(LOGPATH, "{id}", "logs", "{id}_predict_features.log"),
     message:
-        "Predicting Features for {wildcards.id}",
+        "Predicting features for {wildcards.id}",
     threads: 4
     params:
         sample_id="{id}",
         meta=False,
         closed=False,
         translation_table=11,
-        write_faa=True,
-        write_gff=True,
-        write_gbk=True,
-        write_fna=True,
-        write_tsv=True,
+        input_type=lambda wildcards: input_type[wildcards.id],
         scriptpath=os.path.join(workflow.basedir, "scripts", "features.py")
     conda:
         os.path.join(workflow.basedir, "envs", "features.yaml"),
@@ -201,6 +208,7 @@ rule predict_features:
         """
         python {params.scriptpath} \
         {params.sample_id} {input.fasta} \
+        --input_type {params.input_type} \
         --faa_path {output.faa} \
         --gff_path {output.gff} \
         --gbk_path {output.gbk} \

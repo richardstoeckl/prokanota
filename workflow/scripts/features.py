@@ -42,6 +42,12 @@ from gb_io import Record, Feature, Qualifier
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
+from feature_utils import (
+    ensure_empty_file,
+    hash_sample_id,
+    map_hexdigest_to_id,
+    protein_molecular_weight,
+)
 
 # ---------------------------
 # Logging
@@ -395,25 +401,6 @@ def reverse_complement(seq):
     complement = str.maketrans("ACGT", "TGCA")
     return seq.translate(complement)[::-1]
 
-def protein_molecular_weight(seq):
-    """
-    Estimate the molecular weight of a protein sequence in Daltons.
-    Uses average residue masses (in Da) and adds the mass of one water molecule.
-    This method is described in GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607.
-    The values can be found at https://web.expasy.org/findmod/findmod_masses.html#AA
-    """
-    weights = {
-      'A': 71.0788, 'R': 156.1875, 'N': 114.1038, 'D': 115.0886, 'C': 103.1388,
-      'E': 129.1155, 'Q': 128.1307, 'G': 57.0513, 'H': 137.1411, 'I': 113.1594,
-      'L': 113.1594, 'K': 128.1741, 'M': 131.1926, 'F': 147.1766, 'P': 97.1167,
-      'S': 87.0782, 'T': 101.1051, 'W': 186.2132, 'Y': 163.1733, 'V': 99.1311
-    }
-    mw = 0.0
-    for aa in seq:
-        mw += weights.get(aa, 0.0)  # if an unknown amino acid appears, weight is 0 to alert the user
-    # Add the weight of one water molecule (approximately 18.015 Da) for the free termini
-    mw += 18.01528
-    return mw
 
 def get_rrna_sequence(contig_seq, start, end, strand):
     """
@@ -564,9 +551,6 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
     # Initialize MD5 hash object with the sample_id
     hash_obj = hashlib.md5(sample_id.encode('utf-8'))
 
-    # Define the mapping from hex digits (0-9,a-f) to letters (A-J,K-P)
-    mapping = {str(i): chr(65 + i) for i in range(10)}
-    mapping.update({chr(97 + i): chr(75 + i) for i in range(6)})
 
     # Read the FASTA file to build a dict {original_header: sequence}, updating the hash
     contigs = {}
@@ -587,7 +571,7 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
 
     # Compute the genome ID from the first 8 hex digits
     hexdigest = hash_obj.hexdigest()
-    genome_id = ''.join(mapping[c] for c in hexdigest[:8])
+    genome_id = map_hexdigest_to_id(hexdigest, length=8)
 
     log.info(f"The internal contig_id is {genome_id}.")
 
@@ -775,6 +759,71 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
     # Log processed file info
     log.info(f"Finished processing {filename} => {genome_id}.")
 
+
+def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
+                          gff_path=None, gbk_path=None, fna_path=None,
+                          genome_path=None, rna_tsv_path=None):
+    """
+    Process protein-only FASTA input and write base outputs.
+
+    Args:
+        sample_id (str): The sample ID.
+        filename (str): Input protein FASTA file.
+        faa_path (str, optional): Output path for protein FASTA.
+        tsv_path (str, optional): Output path for base feature table.
+        gff_path (str, optional): Output path for empty GFF file.
+        gbk_path (str, optional): Output path for empty GenBank file.
+        fna_path (str, optional): Output path for empty nucleotide FASTA file.
+        genome_path (str, optional): Output path for empty genome FASTA file.
+        rna_tsv_path (str, optional): Output path for empty RNA TSV file.
+    """
+    if not faa_path or not tsv_path:
+        raise ValueError("Protein input requires --faa_path and --tsv_path.")
+
+    sample_hash = hash_sample_id(sample_id)
+    hashed_sample_id = map_hexdigest_to_id(sample_hash, length=8)
+
+    faa_out = Path(faa_path)
+    tsv_out = Path(tsv_path)
+    faa_out.parent.mkdir(parents=True, exist_ok=True)
+    tsv_out.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(faa_out, "w") as faa_file, open(tsv_out, "w") as tsv_file:
+        tsv_file.write(
+            "sample_id\torig_cont_header\tcontig_id\tcontig_length\t"
+            "gene_id\tstart\tend\tstrand\tgene_length\tprotein_length\tprotein_mw_kDa\n"
+        )
+
+        for idx, record in enumerate(SeqIO.parse(filename, "fasta"), start=1):
+            gene_id = f"{hashed_sample_id}_{idx:05d}"
+            protein_seq = str(record.seq).strip()
+            protein_seq_no_stop = protein_seq[:-1] if protein_seq.endswith("*") else protein_seq
+
+            protein_length = len(protein_seq_no_stop)
+            mw_da = protein_molecular_weight(protein_seq_no_stop)
+            mw_kda = mw_da / 1000.0
+
+            orig_cont_header = record.description
+
+            faa_file.write(f">{gene_id}\n{protein_seq}\n")
+            tsv_file.write(
+                f"{sample_id}\t{orig_cont_header}\t\t\t"
+                f"{gene_id}\t\t\t\t\t{protein_length}\t{mw_kda:.1f}\n"
+            )
+
+    if gff_path:
+        ensure_empty_file(gff_path)
+    if gbk_path:
+        ensure_empty_file(gbk_path)
+    if fna_path:
+        ensure_empty_file(fna_path)
+    if genome_path:
+        ensure_empty_file(genome_path)
+    if rna_tsv_path:
+        ensure_empty_file(rna_tsv_path)
+
+    log.info(f"Finished processing protein input {filename} => {sample_id}.")
+
 # ---------------------------
 # Command-line Interface
 # ---------------------------
@@ -806,6 +855,12 @@ if __name__ == "__main__":
                        help="Run rRNA prediction using pybarrnap")
     parser.add_argument("--run_trna", action="store_true", 
                        help="Run tRNA prediction using tRNAscan-SE")
+    parser.add_argument(
+        "--input_type",
+        choices=["dna", "protein"],
+        default="dna",
+        help="Input type of the FASTA file (default: dna)",
+    )
     # Other options
     parser.add_argument("--verbose", action="store_true", 
                        help="Show debug messages from all components")
@@ -817,21 +872,34 @@ if __name__ == "__main__":
     # Setup logging based on verbose flag
     log, cds_logger, rrna_logger, trna_logger = setup_logging(a.verbose)
 
-    # Run process_genome with the given arguments
-    process_genome(
-        sample_id=a.sample_id,
-        filename=a.input_fasta,
-        faa_path=a.faa_path,
-        gff_path=a.gff_path,
-        gbk_path=a.gbk_path,
-        fna_path=a.fna_path,
-        tsv_path=a.tsv_path,
-        meta_mode=a.meta,
-        closed=a.closed,
-        translation_table=a.translation_table,
-        genome_path=a.genome_path,
-        run_rrna=a.run_rrna,
-        run_trna=a.run_trna,
-        rna_tsv_path=a.rna_tsv_path,
-        threads=a.threads
-    )
+    if a.input_type == "protein":
+        process_protein_input(
+            sample_id=a.sample_id,
+            filename=a.input_fasta,
+            faa_path=a.faa_path,
+            tsv_path=a.tsv_path,
+            gff_path=a.gff_path,
+            gbk_path=a.gbk_path,
+            fna_path=a.fna_path,
+            genome_path=a.genome_path,
+            rna_tsv_path=a.rna_tsv_path,
+        )
+    else:
+        # Run process_genome with the given arguments
+        process_genome(
+            sample_id=a.sample_id,
+            filename=a.input_fasta,
+            faa_path=a.faa_path,
+            gff_path=a.gff_path,
+            gbk_path=a.gbk_path,
+            fna_path=a.fna_path,
+            tsv_path=a.tsv_path,
+            meta_mode=a.meta,
+            closed=a.closed,
+            translation_table=a.translation_table,
+            genome_path=a.genome_path,
+            run_rrna=a.run_rrna,
+            run_trna=a.run_trna,
+            rna_tsv_path=a.rna_tsv_path,
+            threads=a.threads
+        )
