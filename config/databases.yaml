@@ -3,7 +3,7 @@
 #   - name: Unique identifier (used in file paths and column prefixes)
 #   - enabled: Whether to use this database
 #   - order: Merge order in final table (lower = earlier)
-#   - search_tool: One of [pyhmmer, rpsblast, diamond]
+#   - search_tool: One of [pyhmmer, rpsblast, diamond, mmseqs2]
 #   - db_path: Path to prepared database files
 #   - mapping_path: Path to mapping TSV (accession, short_name, description, category)
 #   - evalue_cutoff: E-value threshold for filtering hits
@@ -71,4 +71,34 @@ databases:
       - name: diamond_pident
         source: pident
       - name: diamond_length
+        source: length
+
+  - name: mmseqs2_example
+    enabled: false
+    order: 40
+    search_tool: mmseqs2
+    db_path: "/path/to/mmseqs2_db"
+    mapping_path: "/path/to/MMSEQS2_mapping.tsv"
+    evalue_cutoff: 1.0e-3
+    mmseqs2_sensitivity: 5.7
+    mmseqs2_max_seqs: 300
+    mmseqs2_min_seq_id: 0.3
+    mmseqs2_cov_mode: 0
+    mmseqs2_coverage: 0.8
+    columns:
+      - name: mmseqs2_hit
+        source: accession
+      - name: mmseqs2_short_name
+        source: short_name
+      - name: mmseqs2_description
+        source: description
+      - name: mmseqs2_category
+        source: category
+      - name: mmseqs2_evalue
+        source: evalue
+      - name: mmseqs2_score
+        source: score
+      - name: mmseqs2_pident
+        source: pident
+      - name: mmseqs2_length
         source: length

@@ -28,7 +28,7 @@
           },
           "search_tool": {
             "type": "string",
-            "enum": ["pyhmmer", "rpsblast", "diamond"],
+            "enum": ["pyhmmer", "rpsblast", "diamond", "mmseqs2"],
             "description": "Search tool to use for this database"
           },
           "db_path": {
@@ -44,6 +44,33 @@
             "default": 1e-3,
             "exclusiveMinimum": 0,
             "description": "E-value threshold for hit filtering"
+          },
+          "mmseqs2_sensitivity": {
+            "type": "number",
+            "minimum": 0,
+            "description": "MMseqs2 sensitivity (-s)"
+          },
+          "mmseqs2_max_seqs": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "MMseqs2 maximum number of target sequences"
+          },
+          "mmseqs2_min_seq_id": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "MMseqs2 minimum sequence identity (0-1)"
+          },
+          "mmseqs2_cov_mode": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "MMseqs2 coverage mode"
+          },
+          "mmseqs2_coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "MMseqs2 coverage threshold (0-1)"
           },
           "columns": {
             "type": "array",

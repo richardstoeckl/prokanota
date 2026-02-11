@@ -98,6 +98,29 @@ def get_columns_json(db_config):
     return json.dumps(db_config["columns"])
 
 
+def build_mmseqs2_extra_args(db_config):
+    """Build optional mmseqs2 arguments based on db config."""
+    args = []
+    sensitivity = db_config.get("mmseqs2_sensitivity")
+    max_seqs = db_config.get("mmseqs2_max_seqs")
+    min_seq_id = db_config.get("mmseqs2_min_seq_id")
+    cov_mode = db_config.get("mmseqs2_cov_mode")
+    coverage = db_config.get("mmseqs2_coverage")
+
+    if sensitivity is not None:
+        args.extend(["--sensitivity", str(sensitivity)])
+    if max_seqs is not None:
+        args.extend(["--max-seqs", str(max_seqs)])
+    if min_seq_id is not None:
+        args.extend(["--min-seq-id", str(min_seq_id)])
+    if cov_mode is not None:
+        args.extend(["--cov-mode", str(cov_mode)])
+    if coverage is not None:
+        args.extend(["--coverage", str(coverage)])
+
+    return " ".join(args)
+
+
 ENABLED_DBS = get_enabled_databases()
 HAS_DATABASES = bool(ENABLED_DBS)
 if not HAS_DATABASES:
@@ -114,7 +137,7 @@ ENABLED_DB_NAMES = [db["name"] for db in ENABLED_DBS]
 
 def validate_search_tool(tool):
     """Ensure search tool is in allowed set."""
-    allowed = {"pyhmmer", "rpsblast", "diamond"}
+    allowed = {"pyhmmer", "rpsblast", "diamond", "mmseqs2"}
     if tool not in allowed:
         raise ValueError(f"search_tool '{tool}' not in allowed set: {allowed}")
 
@@ -128,6 +151,11 @@ def validate_database_files(db_config):
     if db_config["search_tool"] == "diamond":
         if not db_path.exists():
             raise FileNotFoundError(f"Database file not found: {db_path}")
+
+    # For mmseqs2, only check that the user-provided database path exists
+    if db_config["search_tool"] == "mmseqs2":
+        if not db_path.exists():
+            raise FileNotFoundError(f"Database path not found: {db_path}")
 
     # For pyhmmer, check for pressed HMM files
     if db_config["search_tool"] == "pyhmmer":
@@ -242,7 +270,6 @@ for db in ENABLED_DBS:
                 max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
-                cpus=config.get("threads", {}).get("pyhmmer", 4),
                 scriptpath=os.path.join(workflow.basedir, "scripts", "pyhmmer_search.py")
             log:
                 os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
@@ -273,7 +300,6 @@ for db in ENABLED_DBS:
             params:
                 db_path=db["db_path"],
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
-                cpus=config.get("threads", {}).get("rpsblast", 4),
                 scriptpath=os.path.join(workflow.basedir, "scripts", "rpsblast_search.py")
             threads:
                 max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
@@ -307,7 +333,6 @@ for db in ENABLED_DBS:
             params:
                 db_path=db["db_path"],
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
-                cpus=config.get("threads", {}).get("diamond", 4),
                 scriptpath=os.path.join(workflow.basedir, "scripts", "diamond_search.py")
             threads:
                 max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
@@ -326,6 +351,41 @@ for db in ENABLED_DBS:
                     --toolversion {output.version} \
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
+                    2>&1 | tee {log}
+                """
+
+    elif db["search_tool"] == "mmseqs2":
+        rule:
+            name:
+                f"search_{db_name}"
+            input:
+                faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
+            output:
+                tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            params:
+                db_path=db["db_path"],
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                extra_args=build_mmseqs2_extra_args(db),
+                scriptpath=os.path.join(workflow.basedir, "scripts", "mmseqs2_search.py")
+            threads:
+                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+            log:
+                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+            message:
+                f"Searching {{wildcards.id}} against {db_name}"
+            conda:
+                os.path.join(workflow.basedir, "envs", "mmseqs2.yaml")
+            shell:
+                """
+                python {params.scriptpath} \
+                    --db {params.db_path} \
+                    --faa {input.faa} \
+                    --output {output.tab} \
+                    --toolversion {output.version} \
+                    --threads {threads} \
+                    --evalue {params.evalue_cutoff} \
+                    {params.extra_args} \
                     2>&1 | tee {log}
                 """
 
@@ -429,6 +489,39 @@ for db in ENABLED_DBS:
                 """
                 python {workflow.basedir}/scripts/diamond_parse.py \
                     --diamond-output {input.diamond_output} \
+                    --mapping {input.mapping} \
+                    --output {output.tsv} \
+                    --db-name {params.db_name} \
+                    --evalue-cutoff {params.evalue_cutoff} \
+                    --columns '{params.columns_json}' \
+                    2>&1 | tee {log}
+                """
+
+    elif db["search_tool"] == "mmseqs2":
+        rule:
+            name:
+                f"parse_{db_name}"
+            input:
+                mmseqs_output=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                mapping=db["mapping_path"],
+            output:
+                tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            params:
+                db_name=db_name,
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
+                columns_json=get_columns_json(db),
+            threads:
+                1, # Parsing is single-threaded
+            log:
+                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+            message:
+                f"Parsing {{wildcards.id}} {db_name} results"
+            conda:
+                os.path.join(workflow.basedir, "envs", "polars.yaml")
+            shell:
+                """
+                python {workflow.basedir}/scripts/mmseqs2_parse.py \
+                    --mmseqs-output {input.mmseqs_output} \
                     --mapping {input.mapping} \
                     --output {output.tsv} \
                     --db-name {params.db_name} \
