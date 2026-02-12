@@ -152,7 +152,7 @@ def main():
     # Process
     filtered_df = filter_and_deduplicate(hits_df, args.evalue_cutoff)
     joined_df = join_with_mapping(filtered_df, mapping_df)
-    output_df = format_output(joined_df, args.db_name, columns_config)
+    output_df = format_output(joined_df, args.db_name, columns_config).sort("gene_id")
 
     # Write output
     output_df.write_csv(args.output, separator="\t")

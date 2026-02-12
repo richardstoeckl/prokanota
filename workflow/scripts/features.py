@@ -804,11 +804,13 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
             mw_kda = mw_da / 1000.0
 
             orig_cont_header = record.description
+            missing_value = "*"
 
             faa_file.write(f">{gene_id}\n{protein_seq}\n")
             tsv_file.write(
-                f"{sample_id}\t{orig_cont_header}\t\t\t"
-                f"{gene_id}\t\t\t\t\t{protein_length}\t{mw_kda:.1f}\n"
+                f"{sample_id}\t{orig_cont_header}\t{missing_value}\t{missing_value}\t"
+                f"{gene_id}\t{missing_value}\t{missing_value}\t{missing_value}\t"
+                f"{missing_value}\t{protein_length}\t{mw_kda:.1f}\n"
             )
 
     if gff_path:

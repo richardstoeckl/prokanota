@@ -1,8 +1,11 @@
 # Snakemake workflow: `Prokanota`
 
 [![Snakemake](https://img.shields.io/badge/snakemake-≥9.3.5-brightgreen.svg)](https://snakemake.github.io)
+[![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml)
 
 Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free* ,modular database architecture.
+
+*Code free if you really force the issue. Some limited knowledge will make your life much easier.
 
 ## About
 
@@ -13,7 +16,7 @@ On the other end of the spectrum, sophisticated custom annotation pipelines like
 **Prokanota fills the gap between these approaches.** It provides:
 
 - **An efficient, well-tested backbone** that handles gene prediction and feature annotation automatically
-- **Detailed documentation** (in the wiki) and helper scripts to facilitate database setup
+- **Detailed documentation** (in the [wiki](https://github.com/richardstoeckl/prokanota/wiki)) and helper scripts to facilitate database setup
 - **A modular, config-driven database system** that allows users to customize their annotations without writing code
 - **Multi-database top-hit reporting** that preserves annotation nuances and allows informed manual curation
 
@@ -28,7 +31,7 @@ This design philosophy means you can start with the well-documented databases ([
 4. **tRNA prediction** using [tRNAscan-SE](https://github.com/UCSC-LoweLab/tRNAscan-SE) in `-G` mode for general tRNA prediction.
 
 ### Annotation System
-5. **Modular database architecture:** Add custom HMM or RPS-BLAST databases by editing a config file—no code changes needed.
+5. **Modular database architecture:** Add custom HMM, RPS-BLAST, DIAMOND, or mmseqs2 databases by editing a config file — no code changes needed.
 6. **Multi-database annotation:** Top hits from each database are reported separately, preserving annotation depth and enabling informed manual curation.
 
 ### Output Formats
@@ -39,7 +42,7 @@ This design philosophy means you can start with the well-documented databases ([
 The pipeline uses a **config-driven modular architecture** that separates database definitions from code. This means:
 
 - **No code editing required:** Add new databases by editing `config/databases.yaml`
-- **Flexible tool support:** Currently supports `pyhmmer` (for HMM databases) and `rpsblast` (for RPS-BLAST databases) with more to come!
+- **Flexible tool support:** Currently supports `pyhmmer` (for HMM databases), `rpsblast` (for RPS-BLAST databases), `DIAMOND` (for BLAST/DIAMOND databases), and `mmseqs2` (for BLAST/mmseqs2 databases), with more to come!
 - **Automatic rule generation:** The Snakemake workflow dynamically generates search and parse rules for each enabled database
 - **Standardized output:** All databases contribute columns to a unified annotation table
 
@@ -113,6 +116,8 @@ See the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed in
 
 - **How is the gene_id determined? What do the letters mean?**
   - The gene_id is determined by the contig_id, which is determined by hashing the DNA sequence of the genome and the user supplied sampleID. This ensures that the gene_id is consistent across runs. This is important for downstream analyses, as it allows you to cross-reference your results with the annotations from this pipeline. Changes in the contig_id indicate either changes in the sampleID or changes in the genome sequence and should probably investigated. The hashing algorithm is found in [`prokanota/workflow/scripts/features.py`](https://github.com/richardstoeckl/prokanota/blob/c2dc89227d3171187cf6949af15b27dddd4aa390/workflow/scripts/features.py#L564-L590).
+- **Can I use this pipeline to annotate protein sequences I optained from another source?**
+  - Yes! There is a "genomic" (default) mode and a "protein" mode, which basically skips the feature prediction parts of the pipeline and simply annotates a supplied multifasta file of protein sequences. The best part is, that you can mix genomic samples and protein samples within the same run!
 - **How is the predicted protein molecular weight estimated?**
   - The molecular weight is estimated by summing the average residue masses in the protein sequence and adding the mass of one water molecule, as described in [GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607](https://doi.org/10.1385/1-59259-890-0:571). The molecular weights are taken from the [here](https://web.expasy.org/findmod/findmod_masses.html#AA) and the function can be found in [`prokanota/workflow/scripts/features.py`](https://github.com/richardstoeckl/prokanota/blob/c2dc89227d3171187cf6949af15b27dddd4aa390/workflow/scripts/features.py#L398-L416)
 - **Can I use this pipeline for bacterial genomes?**

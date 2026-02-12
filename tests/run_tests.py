@@ -7,6 +7,7 @@ import difflib
 import subprocess
 import sys
 from pathlib import Path
+from collections import Counter
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SNAKEFILE = REPO_ROOT / "workflow" / "Snakefile"
@@ -165,6 +166,58 @@ def compare_directory(expected_root: Path, actual_root: Path, label: str) -> boo
     return success
 
 
+def parse_faa_sequences(path: Path) -> list[str]:
+    if not path.exists():
+        raise FileNotFoundError(f"Missing FASTA: {path}")
+    sequences = []
+    current = []
+    for line in path.read_text().splitlines():
+        if line.startswith(">"):
+            if current:
+                sequences.append("".join(current))
+                current = []
+            continue
+        if line.strip():
+            current.append(line.strip())
+    if current:
+        sequences.append("".join(current))
+    return sequences
+
+
+def format_sequence_preview(sequence: str) -> str:
+    preview = sequence[:20]
+    suffix = "..." if len(sequence) > 20 else ""
+    return f"{len(sequence)}aa:{preview}{suffix}"
+
+
+def compare_faa_sequences(genome_faa: Path, protein_faa: Path, label: str) -> bool:
+    try:
+        genome_seqs = parse_faa_sequences(genome_faa)
+        protein_seqs = parse_faa_sequences(protein_faa)
+    except FileNotFoundError as exc:
+        print(str(exc))
+        return False
+
+    genome_counts = Counter(genome_seqs)
+    protein_counts = Counter(protein_seqs)
+    if genome_counts == protein_counts:
+        print(f"OK: {label}")
+        return True
+
+    missing = list((genome_counts - protein_counts).elements())
+    extra = list((protein_counts - genome_counts).elements())
+    print(f"Mismatch in {label}:")
+    print(f"  Genome-only sequences: {len(missing)}")
+    print(f"  Protein-only sequences: {len(extra)}")
+    if missing:
+        previews = ", ".join(format_sequence_preview(seq) for seq in missing[:3])
+        print(f"  Genome-only previews: {previews}")
+    if extra:
+        previews = ", ".join(format_sequence_preview(seq) for seq in extra[:3])
+        print(f"  Protein-only previews: {previews}")
+    return False
+
+
 def main() -> int:
     run_snakemake()
 
@@ -189,6 +242,13 @@ def main() -> int:
         actual_annotation = RESULTS_DIR / sample_id / "annotation"
         if not compare_directory(expected_annotation, actual_annotation, f"annotation:{sample_id}"):
             success = False
+
+    genome_id = SAMPLES[0]
+    protein_id = SAMPLES[1]
+    genome_faa = RESULTS_DIR / genome_id / "features" / f"{genome_id}.faa"
+    protein_faa = RESULTS_DIR / protein_id / "features" / f"{protein_id}.faa"
+    if not compare_faa_sequences(genome_faa, protein_faa, "faa:genome-vs-protein"):
+        success = False
 
     return 0 if success else 1
 
