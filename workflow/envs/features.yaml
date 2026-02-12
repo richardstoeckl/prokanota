@@ -9,6 +9,6 @@ dependencies:
     - pip>=25.0.1
     - pip:
         - gb-io==0.3.8
-        - pyrodigal==v3.6.3-post1
-        - polars==1.35.2
+        - pyrodigal==v3.7.0
+        - polars==1.38.1
         - pybarrnap==0.5.1

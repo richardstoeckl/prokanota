@@ -77,14 +77,14 @@ def main():
 
         # Process results
         for hmm, result in zip(hmms, results):
-            hmm_name = hmm.name.decode("utf-8", errors="ignore")  # Keep .sr in query name
-            hmm_acc = hmm.accession.decode("utf-8", errors="ignore") if hmm.accession else "-"
+            hmm_name = hmm.name  # Keep .sr in query name
+            hmm_acc = hmm.accession if hmm.accession else "-"
             
             if allresults_file:
                 allresults_file.write(f"HMM: {hmm_name} (accession: {hmm_acc})\n")
 
             for hit in result:
-                hit_name = hit.name.decode("utf-8", errors="ignore")
+                hit_name = hit.name
 
                 # Full sequence stats
                 full_evalue = hit.evalue
@@ -96,7 +96,7 @@ def main():
 
                 # Optional outputs
                 if allresults_file:
-                    hit_acc = hit.accession.decode("utf-8", errors="ignore") if hit.accession else "-"
+                    hit_acc = hit.accession if hit.accession else "-"
                     allresults_file.write(f"  Hit: {hit_name} (accession: {hit_acc})  E-value: {hit.evalue}  Score: {hit.score}  Bias: {hit.bias}\n")
                 if domtblout_file:
                     for dom in hit.domains:
