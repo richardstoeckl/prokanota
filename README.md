@@ -67,6 +67,15 @@ snakemake --sdm conda -n --cores
 snakemake --sdm conda --cores
 ```
 
+## Testing
+
+Minimal tests are provided under `tests/` and use a dedicated config file.
+The tests are run with:
+
+```bash
+python tests/run_tests.py
+```
+
 ### Adding a Custom Database (quick overview)
 
 1. Prepare your database:

@@ -3,3 +3,5 @@
 .snakemake/*
 logs*/*
 config/metadata-*.csv
+workflow/scripts/__pycache__
+tests/output

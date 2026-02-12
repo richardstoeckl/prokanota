@@ -1,0 +1,16 @@
+gene_id	test_pyhmmer_hit	test_pyhmmer_accession	test_pyhmmer_short_name	test_pyhmmer_description	test_pyhmmer_category	test_pyhmmer_evalue	test_pyhmmer_score
+JLPIBLAO_1_01500	Ribosomal_S19e	PF01090.20	Ribosomal_S19e	40S ribosomal protein S19	NF013271.6	1e-59	197.1
+JLPIBLAO_1_01801	Ribosomal_S4e	PF00900.21	Ribosomal_S4e	Ribosomal family S4e	NF013095.6	7.4e-23	77.2
+JLPIBLAO_1_00874	Ribosomal_L15e	PF00827.18	Ribosomal_L15e	Ribosomal L15	NF013023.6	1e-91	302.8
+JLPIBLAO_1_01646	Ribosomal_S9	PF00380.20	Ribosomal_S9	30S ribosomal protein S9	NF012598.6	4.6e-32	108.1
+JLPIBLAO_1_01856	GrpE	PF01025.20	GrpE	nucleotide exchange factor GrpE	NF013212.6	0.00042	17.0
+JLPIBLAO_1_01141	EIF_2_alpha	PF07541.13	EIF_2_alpha	Eukaryotic translation initiation factor 2 alpha subunit	NF019179.6	4.7e-26	88.1
+JLPIBLAO_1_00697	Ribosomal_S19e	PF01090.20	Ribosomal_S19e	40S ribosomal protein S19	NF013271.6	0.00058	16.5
+JLPIBLAO_1_01983	Ribosomal_L10	PF00466.21	Ribosomal_L10	50S ribosomal protein L10	NF012679.6	1.8e-22	76.3
+JLPIBLAO_1_01851	DUF655	PF04919.13	DUF655	Protein of unknown function (DUF655)	NF016787.6	5.9e-75	248.1
+JLPIBLAO_1_01368	Ribosomal_S28e	PF01200.19	Ribosomal_S28e	Ribosomal protein S28e	NF013373.6	9.2e-32	105.8
+JLPIBLAO_1_02044	Ribosomal_S3Ae	PF01015.19	Ribosomal_S3Ae	Ribosomal S3Ae family	NF013202.6	2.3e-75	249.4
+JLPIBLAO_1_01798	Ribosomal_S8	PF00410.20	Ribosomal_S8	30S ribosomal protein S8	NF012627.6	1.8e-28	96.0
+JLPIBLAO_1_01795	Ribosomal_L19e	PF01280.21	Ribosomal_L19e	Ribosomal protein L19e, N-terminal domain	NF013448.7	8.8e-60	197.9
+JLPIBLAO_1_01649	RNA_pol_A_bac	PF01000.27	RNA_pol_A_bac	RNA polymerase Rpb3/RpoA insert domain	NF013189.6	2.2e-30	102.3
+JLPIBLAO_1_01982	Ribosomal_L1	PF00687.22	Ribosomal_L1	Ribosomal protein L1p/L10e family	NF012890.6	1.9e-51	171.7

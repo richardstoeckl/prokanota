@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: snakemake
+          create-args: >-
+            python=3.11
+            -c conda-forge
+            -c bioconda
+            snakemake
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: micromamba run -n snakemake python tests/run_tests.py
