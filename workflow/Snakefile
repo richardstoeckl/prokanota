@@ -320,7 +320,7 @@ rule predict_features:
         --run_rrna --run_trna \
         --rna_tsv_path {output.rna} \
         --translation_table {params.translation_table} \
-        --threads {threads} > {log} 2>&1
+        --threads {threads} 2>&1 | tee {log}
         """
 
 

@@ -5,11 +5,13 @@ Uses Polars for efficient data processing.
 """
 
 import argparse
-import logging
+import json
 import polars as pl
 from pathlib import Path
+from datetime import datetime
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics
 
-logger = logging.getLogger(__name__)
+logger = setup_logger("rpsblast_parse")
 
 
 def parse_rpsblast_output(output_path: Path) -> pl.DataFrame:
@@ -142,6 +144,11 @@ def format_output(df, db_name, columns_config):
 
 
 def main():
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("RPS-BLAST Parse Started")
+    logger.info("=" * 60)
+    
     parser = argparse.ArgumentParser(description="Parse RPS-BLAST results and join with mapping")
     parser.add_argument("--rpsblast-output", required=True, help="Path to RPS-BLAST tabular output file")
     parser.add_argument("--mapping", required=True, help="Path to mapping TSV file")
@@ -155,20 +162,87 @@ def main():
     )
     args = parser.parse_args()
 
-    import json
+    # Log input files
+    log_file_paths(
+        logger,
+        search_output=args.rpsblast_output,
+        mapping_file=args.mapping,
+        output_file=args.output,
+    )
+    
+    # Log parameters
+    log_parameters(
+        logger,
+        database=args.db_name,
+        evalue_cutoff=args.evalue_cutoff,
+    )
+
     columns_config = json.loads(args.columns)
 
     # Parse inputs
+    logger.info("Parsing RPS-BLAST search results...")
     hits_df = parse_rpsblast_output(Path(args.rpsblast_output))
+    hits_count = len(hits_df)
+    logger.info(f"Search results rows read: {hits_count}")
+    
+    logger.info("Parsing mapping file...")
     mapping_df = parse_mapping(Path(args.mapping))
+    mapping_count = len(mapping_df)
+    logger.info(f"Mapping file rows read: {mapping_count}")
 
     # Process
+    logger.info("Filtering by e-value and deduplicating...")
     filtered_df = filter_and_deduplicate(hits_df, args.evalue_cutoff)
+    filtered_count = len(filtered_df)
+    filtered_out = hits_count - filtered_count
+    log_statistics(
+        logger,
+        input_hits=hits_count,
+        filtered_out=filtered_out,
+        after_deduplication=filtered_count,
+    )
+    
+    # Check for excessive filtering
+    if hits_count > 0 and filtered_out > (hits_count * 0.95):
+        logger.warning(f"{100*filtered_out/hits_count:.1f}% of hits were filtered by e-value cutoff. Consider checking parameters or cutoff threshold.")
+    
+    logger.info("Joining with mapping file...")
     joined_df = join_with_mapping(filtered_df, mapping_df)
+    matched_count = joined_df.filter(pl.col("short_name").is_not_null()).shape[0]
+    unmatched_count = filtered_count - matched_count
+    log_statistics(
+        logger,
+        matched_with_mapping=matched_count,
+        unmatched_with_mapping=unmatched_count,
+    )
+    
+    # Check mapping match results
+    if filtered_count > 0:
+        if matched_count == 0:
+            logger.warning(f"NO HITS matched the mapping file! Check if accession format is correct in search results vs mapping file.")
+        elif matched_count < (filtered_count * 0.5):
+            logger.warning(f"Low mapping match rate - only {matched_count}/{filtered_count} hits ({100*matched_count/filtered_count:.1f}%) matched. Check accession format consistency.")
+    
+    logger.info("Formatting output...")
     output_df = format_output(joined_df, args.db_name, columns_config)
 
     # Write output
+    logger.info(f"Writing output to {args.output}...")
     output_df.write_csv(args.output, separator="\t")
+    output_count = len(output_df)
+    log_statistics(logger, output_rows=output_count)
+    
+    # Check for empty output if we had input
+    if output_count == 0 and hits_count > 0:
+        logger.warning(f"All {hits_count} input hits were lost during processing. Check data consistency or filtering parameters.")
+    
+    # Log execution time
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    logger.info(f"Execution time: {duration:.2f} seconds")
+    logger.info("=" * 60)
+    logger.info("RPS-BLAST Parse Completed Successfully")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

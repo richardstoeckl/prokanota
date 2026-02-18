@@ -5,9 +5,13 @@ Dynamically handles any number of databases based on config.
 """
 
 import argparse
+import json
 import polars as pl
 from pathlib import Path
-import json
+from datetime import datetime
+from logging_utils import setup_logger, log_file_paths, log_statistics
+
+logger = setup_logger("merge_annotations")
 
 
 def load_base_table(path: Path) -> pl.DataFrame:
@@ -62,6 +66,11 @@ def merge_annotations(
 
 
 def main():
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("Annotation Merge Started")
+    logger.info("=" * 60)
+    
     parser = argparse.ArgumentParser(description="Merge all annotations into final table")
     parser.add_argument("--base-table", required=True, help="Path to base feature table")
     parser.add_argument("--output", required=True, help="Path to output final annotation TSV")
@@ -73,24 +82,53 @@ def main():
     parser.add_argument("--gene-id-column", default="gene_id", help="Column name for gene ID")
     args = parser.parse_args()
 
+    # Log input files
+    log_file_paths(logger, base_table=args.base_table, output_file=args.output)
+
     db_results = json.loads(args.db_results)
 
     # Sort by order
     db_results_sorted = sorted(db_results, key=lambda x: x["order"])
 
     # Load base table
+    logger.info(f"Loading base table from {args.base_table}...")
     base_df = load_base_table(Path(args.base_table))
+    base_count = len(base_df)
+    logger.info(f"Base table rows: {base_count}")
+    log_statistics(logger, base_genes=base_count)
 
     # Prepare list of (name, path) tuples
     db_annotations = [(db["name"], Path(db["path"])) for db in db_results_sorted]
 
+    # Log annotation sources
+    logger.info("Annotation sources:")
+    for db_name, _ in db_annotations:
+        logger.info(f"  - {db_name}")
+
     # Merge
+    logger.info("Merging annotations...")
     final_df = merge_annotations(base_df, db_annotations, args.gene_id_column)
 
     # Write output
+    logger.info(f"Writing final annotation table to {args.output}...")
     final_df.write_csv(args.output, separator="\t")
-    print(f"Final annotation table written to {args.output}")
-    print(f"Shape: {final_df.shape[0]} rows x {final_df.shape[1]} columns")
+    
+    # Log statistics
+    final_count = len(final_df)
+    final_cols = len(final_df.columns)
+    log_statistics(
+        logger,
+        final_genes=final_count,
+        final_columns=final_cols,
+    )
+    
+    # Log execution time
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    logger.info(f"Execution time: {duration:.2f} seconds")
+    logger.info("=" * 60)
+    logger.info("Annotation Merge Completed Successfully")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

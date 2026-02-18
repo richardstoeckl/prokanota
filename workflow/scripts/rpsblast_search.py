@@ -15,9 +15,38 @@ import argparse
 import subprocess
 import sys
 import os
+import time
+from datetime import datetime
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, log_command
+
+
+def count_fasta_sequences(fasta_path: str) -> int:
+    """Count the number of sequences in a FASTA file."""
+    count = 0
+    with open(fasta_path, 'r') as f:
+        for line in f:
+            if line.startswith('>'):
+                count += 1
+    return count
+
+
+def count_tabular_hits(tsv_path: str) -> int:
+    """Count the number of hits in a tabular output file."""
+    if not os.path.isfile(tsv_path) or os.path.getsize(tsv_path) == 0:
+        return 0
+    count = 0
+    with open(tsv_path, 'r') as f:
+        count = sum(1 for _ in f)
+    return count
 
 
 def main():
+    logger = setup_logger("rpsblast_search")
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("RPS-BLAST Search Started")
+    logger.info("=" * 60)
+    
     parser = argparse.ArgumentParser(description="RPS-BLAST search wrapper")
     parser.add_argument("--db", required=True, help="RPS-BLAST database path")
     parser.add_argument("--faa", required=True, help="FASTA file with protein sequences")
@@ -27,13 +56,29 @@ def main():
     parser.add_argument("--evalue", type=float, default=0.001, help="E-value cutoff")
     args = parser.parse_args()
 
+    # Log input files
+    log_file_paths(logger, database=args.db, input_fasta=args.faa, output_file=args.output)
+    
+    # Log parameters
+    log_parameters(logger, threads=args.threads, evalue=args.evalue)
+
     if not os.path.isfile(args.db + ".pal"):
-        sys.exit(f"Error: RPS-BLAST database {args.db} not found")
+        logger.error(f"RPS-BLAST database {args.db} not found")
+        sys.exit(1)
     if not os.path.isfile(args.faa):
-        sys.exit(f"Error: FASTA file {args.faa} does not exist")
+        logger.error(f"FASTA file {args.faa} does not exist")
+        sys.exit(1)
+    
+    # Handle empty input
     if os.path.getsize(args.faa) == 0:
+        logger.warning("Input FASTA file is empty")
         open(args.output, "w").close()
+        logger.info("Created empty output file")
         sys.exit(0)
+
+    # Count input sequences
+    input_count = count_fasta_sequences(args.faa)
+    logger.info(f"Input sequences: {input_count}")
 
     # Record tool version
     try:
@@ -45,8 +90,9 @@ def main():
         )
         with open(args.toolversion, "w") as tv:
             tv.write(version_result.stdout)
+        logger.info(f"Tool version: {version_result.stdout.strip()}")
     except subprocess.CalledProcessError as e:
-        sys.stderr.write(f"Error getting rpsblast version: {e}\n")
+        logger.error(f"Error getting rpsblast version: {e}")
         sys.exit(1)
 
     # Run rpsblast
@@ -62,12 +108,30 @@ def main():
         "-num_threads", str(args.threads)
     ]
 
+    log_command(logger, cmd)
+    
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
-        sys.stderr.write(f"Error running rpsblast: {e}\n")
-        sys.stderr.write(f"stderr: {e.stderr}\n")
+        logger.error(f"Error running rpsblast: {e}")
+        logger.error(f"stderr: {e.stderr}")
         sys.exit(1)
+
+    # Count output hits
+    output_count = count_tabular_hits(args.output)
+    log_statistics(logger, output_hits=output_count)
+    
+    # Check for no hits
+    if output_count == 0 and input_count > 0:
+        logger.warning(f"No hits found in database for {input_count} input sequences. Database may not match data or parameters need adjustment.")
+    
+    # Log execution time
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    logger.info(f"Execution time: {duration:.2f} seconds")
+    logger.info("=" * 60)
+    logger.info("RPS-BLAST Search Completed Successfully")
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

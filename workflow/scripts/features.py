@@ -121,6 +121,45 @@ def log_versions(log):
     log.info(f"tRNAscan-SE Version: v{trna_version}")
 
 
+def log_file_paths(logger, **paths):
+    """
+    Log input and output file paths being used.
+    
+    Args:
+        logger: Logger instance to use
+        **paths: Keyword arguments like input_file="/path/to/file", output_faa="/path/to/file.faa"
+    """
+    for name, path in paths.items():
+        if path:
+            logger.info(f"File path [{name}]: {path}")
+
+
+def log_parameters(logger, **params):
+    """
+    Log processing parameters.
+    
+    Args:
+        logger: Logger instance to use
+        **params: Keyword arguments like meta_mode=True, threads=4, translation_table=11
+    """
+    for name, value in params.items():
+        if value is not None:
+            logger.info(f"Parameter [{name}]: {value}")
+
+
+def log_statistics(logger, **stats):
+    """
+    Log execution statistics (counts, timing, etc.).
+    
+    Args:
+        logger: Logger instance to use
+        **stats: Keyword arguments like genes_predicted=1234, contigs=1
+    """
+    for name, value in stats.items():
+        if value is not None:
+            logger.info(f"Statistic [{name}]: {value}")
+
+
 # ---------------------------
 # Data Classes
 # ---------------------------
@@ -731,11 +770,54 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
     """
     # Log versions of all tools
     log_versions(log)
+    
+    # Log input files
+    log_file_paths(log, input_fasta=filename)
+    
+    # Log output file paths if provided
+    output_files = {
+        'faa': faa_path,
+        'gff': gff_path,
+        'gbk': gbk_path,
+        'fna': fna_path,
+        'tsv': tsv_path,
+        'genome': genome_path,
+        'rna_tsv': rna_tsv_path,
+    }
+    for output_name, output_path in output_files.items():
+        if output_path:
+            log_file_paths(log, **{f'output_{output_name}': output_path})
+    
+    # Log processing parameters
+    log_parameters(
+        log,
+        sample_id=sample_id,
+        meta_mode=meta_mode,
+        closed=closed,
+        translation_table=translation_table,
+        run_rrna=run_rrna,
+        run_trna=run_trna,
+        threads=threads,
+    )
 
     # Parse the FASTA and get predictions
     genome_id, contigs, gene_records, contig_mapping, rrna_records, trna_records = parse_fasta_and_predict(
         sample_id, filename, meta_mode, closed, translation_table, run_rrna, run_trna, threads
     )
+    
+    # Log execution statistics from prediction
+    log_statistics(
+        log,
+        genome_id=genome_id,
+        contigs=len(contigs),
+        predicted_genes=len(gene_records),
+        predicted_rrnas=len(rrna_records),
+        predicted_trnas=len(trna_records),
+    )
+    
+    # Check for no gene predictions
+    if len(gene_records) == 0:
+        log.error("No genes predicted from input. This may indicate invalid input format or a prediction failure.")
 
     # Write outputs if paths are provided
     if faa_path:
@@ -777,6 +859,29 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
         genome_path (str, optional): Output path for empty genome FASTA file.
         rna_tsv_path (str, optional): Output path for empty RNA TSV file.
     """
+    # Log versions of all tools
+    log_versions(log)
+    
+    # Log input files
+    log_file_paths(log, input_fasta=filename)
+    
+    # Log output file paths if provided
+    output_files = {
+        'faa': faa_path,
+        'tsv': tsv_path,
+        'gff': gff_path,
+        'gbk': gbk_path,
+        'fna': fna_path,
+        'genome': genome_path,
+        'rna_tsv': rna_tsv_path,
+    }
+    for output_name, output_path in output_files.items():
+        if output_path:
+            log_file_paths(log, **{f'output_{output_name}': output_path})
+    
+    # Log processing parameters
+    log_parameters(log, sample_id=sample_id, input_type='protein')
+    
     if not faa_path or not tsv_path:
         raise ValueError("Protein input requires --faa_path and --tsv_path.")
 
@@ -788,6 +893,7 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
     faa_out.parent.mkdir(parents=True, exist_ok=True)
     tsv_out.parent.mkdir(parents=True, exist_ok=True)
 
+    protein_count = 0
     with open(faa_out, "w") as faa_file, open(tsv_out, "w") as tsv_file:
         tsv_file.write(
             "sample_id\torig_cont_header\tcontig_id\tcontig_length\t"
@@ -795,6 +901,7 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
         )
 
         for idx, record in enumerate(SeqIO.parse(filename, "fasta"), start=1):
+            protein_count += 1
             gene_id = f"{hashed_sample_id}_{idx:05d}"
             protein_seq = str(record.seq).strip()
             protein_seq_no_stop = protein_seq[:-1] if protein_seq.endswith("*") else protein_seq
@@ -813,6 +920,13 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
                 f"{missing_value}\t{protein_length}\t{mw_kda:.1f}\n"
             )
 
+    # Log statistics
+    log_statistics(log, imported_proteins=protein_count)
+    
+    # Check for no proteins imported
+    if protein_count == 0:
+        log.error("No proteins imported from input file. Check input format or file validity.")
+
     if gff_path:
         ensure_empty_file(gff_path)
     if gbk_path:
@@ -824,7 +938,7 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
     if rna_tsv_path:
         ensure_empty_file(rna_tsv_path)
 
-    log.info(f"Finished processing protein input {filename} => {sample_id}.")
+    log.info(f"Finished processing protein input {filename} => {hashed_sample_id}.")
 
 # ---------------------------
 # Command-line Interface

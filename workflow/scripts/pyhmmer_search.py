@@ -24,8 +24,26 @@ import pyhmmer.plan7
 import sys
 import os
 import psutil
+from datetime import datetime
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics
+
+
+def count_hmm_models(db_path: str) -> int:
+    """Count the number of HMM models in the database."""
+    count = 0
+    with pyhmmer.plan7.HMMFile(db_path) as hmm_file:
+        for _ in hmm_file:
+            count += 1
+    return count
+
 
 def main():
+    logger = setup_logger("pyhmmer_search")
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("pyhmmer Search Started")
+    logger.info("=" * 60)
+    
     parser = argparse.ArgumentParser(
         description="pyhmmer-based hmmsearch replacement with performance optimizations")
     parser.add_argument("--db", required=True, help="Binary HMM database file (e.g., .h3m file)")
@@ -37,30 +55,60 @@ def main():
     parser.add_argument("--threads", type=int, default=1, help="Number of threads (CPUs) to use")
     args = parser.parse_args()
 
+    # Log input files
+    files = {'database': args.db, 'input_fasta': args.faa, 'output_tblout': args.tblout}
+    if args.allresults:
+        files['output_allresults'] = args.allresults
+    if args.domtblout:
+        files['output_domtblout'] = args.domtblout
+    log_file_paths(logger, **files)
+    
+    # Log parameters
+    log_parameters(logger, threads=args.threads)
+
     # Record tool version
     with open(args.toolversion, "w") as tv:
         tv.write(f"pyhmmer version: {pyhmmer.__version__}\n")
+    logger.info(f"Tool version: pyhmmer {pyhmmer.__version__}")
 
     # Validate and load HMMs
     if not os.path.isfile(args.db):
-        sys.exit(f"Error: HMM file {args.db} does not exist")
+        logger.error(f"HMM file {args.db} does not exist")
+        sys.exit(1)
+    
+    logger.info("Loading HMM models...")
     with pyhmmer.plan7.HMMFile(args.db) as hmm_file:
         hmms = list(hmm_file)
+    
+    hmm_count = len(hmms)
+    logger.info(f"HMM models loaded: {hmm_count}")
+    log_statistics(logger, hmm_models=hmm_count)
 
     # Pre-fetch sequences
     if not os.path.isfile(args.faa):
-        sys.exit(f"Error: FASTA file {args.faa} does not exist")
+        logger.error(f"FASTA file {args.faa} does not exist")
+        sys.exit(1)
+    
     file_size = os.path.getsize(args.faa) / (1024 * 1024)  # Size in MB
     available_memory = psutil.virtual_memory().available / (1024 * 1024)  # Available memory in MB
+    logger.info(f"FASTA file size: {file_size:.2f} MB, Available memory: {available_memory:.2f} MB")
+    
     if file_size > available_memory * 0.8:
-        sys.stderr.write(f"Warning: FASTA file size ({file_size:.2f} MB) may exceed available memory ({available_memory:.2f} MB)\n")
+        logger.warning(f"FASTA file size ({file_size:.2f} MB) may exceed available memory ({available_memory:.2f} MB)")
+    
+    logger.info("Loading sequences...")
     with pyhmmer.easel.SequenceFile(args.faa, digital=True) as seq_file:
         sequences = seq_file.read_block()
+    
+    seq_count = len(sequences)
+    logger.info(f"Input sequences loaded: {seq_count}")
 
     # Run hmmsearch
+    logger.info("Running hmmsearch...")
     results = pyhmmer.hmmer.hmmsearch(hmms, sequences, cpus=args.threads)
 
     # Open output files conditionally
+    hit_count = 0
     with open(args.tblout, "w") as tblout:
         # Optional outputs
         allresults_file = open(args.allresults, "w") if args.allresults else None
@@ -84,6 +132,7 @@ def main():
                 allresults_file.write(f"HMM: {hmm_name} (accession: {hmm_acc})\n")
 
             for hit in result:
+                hit_count += 1
                 hit_name = hit.name
 
                 # Full sequence stats
@@ -110,6 +159,21 @@ def main():
             allresults_file.close()
         if domtblout_file:
             domtblout_file.close()
+
+    # Log execution statistics
+    log_statistics(logger, output_hits=hit_count)
+    
+    # Check for no hits
+    if hit_count == 0 and seq_count > 0:
+        logger.warning(f"No hits found in HMM database for {seq_count} input sequences. Database may not match data or parameters need adjustment.")
+    
+    # Log execution time
+    end_time = datetime.now()
+    duration = (end_time - start_time).total_seconds()
+    logger.info(f"Execution time: {duration:.2f} seconds")
+    logger.info("=" * 60)
+    logger.info("pyhmmer Search Completed Successfully")
+    logger.info("=" * 60)
 
 if __name__ == "__main__":
     main()
