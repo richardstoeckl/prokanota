@@ -293,7 +293,7 @@ rule predict_features:
         rna=os.path.join(RESULTPATH, "{id}", "features", "{id}_rna.tsv"),
         genome=os.path.join(RESULTPATH, "{id}", "features", "{id}.fasta"),
     log:
-        os.path.join(LOGPATH, "{id}", "logs", "{id}_predict_features.log"),
+        os.path.join(LOGPATH, "{id}", "features", "{id}_predict_features.log"),
     message:
         "Predicting features for {wildcards.id}",
     threads: 4
@@ -346,7 +346,7 @@ for db in ENABLED_DBS:
                 db_path=db["db_path"],
                 scriptpath=os.path.join(workflow.basedir, "scripts", "pyhmmer_search.py")
             log:
-                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -378,7 +378,7 @@ for db in ENABLED_DBS:
             threads:
                 max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             log:
-                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -411,7 +411,7 @@ for db in ENABLED_DBS:
             threads:
                 max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             log:
-                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -445,7 +445,7 @@ for db in ENABLED_DBS:
             threads:
                 max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             log:
-                os.path.join(LOGPATH, "{id}", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -488,7 +488,7 @@ for db in ENABLED_DBS:
             threads:
                 1, # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -521,7 +521,7 @@ for db in ENABLED_DBS:
             threads:
                 1, # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -554,7 +554,7 @@ for db in ENABLED_DBS:
             threads:
                 1, # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -587,7 +587,7 @@ for db in ENABLED_DBS:
             threads:
                 1, # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -640,7 +640,7 @@ rule merge_sample_annotations:
     threads:
         1,  # Merging is single-threaded
     log:
-        os.path.join(LOGPATH, "{id}", "merge_annotations.log"),
+        os.path.join(LOGPATH, "{id}","finalize", "merge_annotations.log"),
     message:
         "Merging annotations for {wildcards.id}"
     conda:
