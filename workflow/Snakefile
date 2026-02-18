@@ -142,8 +142,82 @@ def validate_search_tool(tool):
         raise ValueError(f"search_tool '{tool}' not in allowed set: {allowed}")
 
 
+def validate_mapping_file(mapping_path):
+    """
+    Validate that mapping file follows the correct TSV structure.
+    
+    Expected format:
+    - TSV file (tab-separated, no header)
+    - Exactly 4 columns per row:
+        1. Accession ID (string)
+        2. Gene symbol / short name (string)
+        3. HMM name / description (string)
+        4. Category (string, can be empty and will be converted to 'NA')
+    
+    Args:
+        mapping_path: Path to the mapping file
+    
+    Raises:
+        ValueError: If the file structure is invalid or malformed
+    """
+    mapping_path = Path(mapping_path)
+    
+    if not mapping_path.exists():
+        raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
+    
+    malformed_rows = []
+    row_count = 0
+    sample_accessions = []
+    
+    try:
+        with open(mapping_path, "r") as f:
+            for line_num, line in enumerate(f, 1):
+                line = line.rstrip("\n\r")
+                
+                # Skip empty lines
+                if not line.strip():
+                    continue
+                
+                row_count += 1
+                columns = line.split("\t")
+                
+                # Validate exactly 4 columns
+                if len(columns) != 4:
+                    malformed_rows.append(
+                        f"Line {line_num}: Expected 4 columns, found {len(columns)}"
+                    )
+                    continue
+                
+                # Collect sample accessions from first column for logging
+                if len(sample_accessions) < 5:
+                    accession = columns[0].strip()
+                    if accession:
+                        sample_accessions.append(accession)
+    
+    except Exception as e:
+        raise ValueError(
+            f"Error reading mapping file {mapping_path}: {e}"
+        )
+    
+    # Report any structural issues
+    if malformed_rows:
+        error_msg = (
+            f"Mapping file {mapping_path} has invalid structure:\n"
+            + "\n".join(malformed_rows[:10])
+        )
+        if len(malformed_rows) > 10:
+            error_msg += f"\n... and {len(malformed_rows) - 10} more errors"
+        raise ValueError(error_msg)
+    
+    # Log successful validation (only in verbose mode)
+    logger.debug(
+        f"Mapping file validated: {mapping_path} "
+        f"(rows: {row_count}, sample accessions: {', '.join(sample_accessions)})"
+    )
+
+
 def validate_database_files(db_config):
-    """Check that required database files exist."""
+    """Check that required database files exist and mapping file is properly structured."""
     db_path = Path(db_config["db_path"])
     mapping_path = Path(db_config["mapping_path"])
 
@@ -172,8 +246,8 @@ def validate_database_files(db_config):
                 if not Path(str(base) + ext).exists():
                     raise FileNotFoundError(f"Missing pressed HMM file: {base}{ext}")
 
-    if not mapping_path.exists():
-        raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
+    # Validate mapping file structure
+    validate_mapping_file(mapping_path)
 
 
 # Validate all enabled databases at workflow start

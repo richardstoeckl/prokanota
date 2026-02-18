@@ -2,6 +2,8 @@
 .vscode
 .snakemake
 logs*/*
+config/config-*.yaml
+config/databases-*.yaml
 config/metadata-*.csv
 workflow/scripts/__pycache__
 tests/output

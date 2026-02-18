@@ -75,11 +75,26 @@ def parse_mapping(mapping_path: Path) -> pl.DataFrame:
                 "category": pl.Utf8,
             }
         )
-    return pl.read_csv(
-        mapping_path,
-        separator="\t",
-        has_header=False,
-        new_columns=["accession", "short_name", "description", "category"],
+    schema = {
+        "accession": pl.Utf8,
+        "short_name": pl.Utf8,
+        "description": pl.Utf8,
+        "category": pl.Utf8,
+    }
+    return (
+        pl.read_csv(
+            mapping_path,
+            separator="\t",
+            has_header=False,
+            new_columns=["accession", "short_name", "description", "category"],
+            schema=schema,
+        )
+        .fill_null("NA")
+        .with_columns(
+            pl.col("short_name").str.replace_all(r"^\s+$", "NA"),
+            pl.col("description").str.replace_all(r"^\s+$", "NA"),
+            pl.col("category").str.replace_all(r"^\s+$", "NA"),
+        )
     )
 
 

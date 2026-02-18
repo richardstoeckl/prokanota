@@ -36,6 +36,20 @@ def parse_diamond_output(output_path: Path) -> pl.DataFrame:
             }
         )
 
+    schema = {
+        "gene_id": pl.Utf8,
+        "accession": pl.Utf8,
+        "pident": pl.Float64,
+        "length": pl.Int64,
+        "mismatch": pl.Int64,
+        "gapopen": pl.Int64,
+        "qstart": pl.Int64,
+        "qend": pl.Int64,
+        "sstart": pl.Int64,
+        "send": pl.Int64,
+        "evalue": pl.Float64,
+        "score": pl.Float64,
+    }
     return pl.read_csv(
         output_path,
         separator="\t",
@@ -44,6 +58,7 @@ def parse_diamond_output(output_path: Path) -> pl.DataFrame:
             "gene_id", "accession", "pident", "length", "mismatch", "gapopen",
             "qstart", "qend", "sstart", "send", "evalue", "score"
         ],
+        schema=schema,
     )
 
 
@@ -63,12 +78,26 @@ def parse_mapping(mapping_path: Path) -> pl.DataFrame:
             }
         )
 
-    return pl.read_csv(
-        mapping_path,
-        separator="\t",
-        has_header=False,
-        new_columns=["accession", "short_name", "description", "category"],
-        schema_overrides=[pl.Utf8, pl.Utf8, pl.Utf8, pl.Utf8],
+    schema = {
+        "accession": pl.Utf8,
+        "short_name": pl.Utf8,
+        "description": pl.Utf8,
+        "category": pl.Utf8,
+    }
+    return (
+        pl.read_csv(
+            mapping_path,
+            separator="\t",
+            has_header=False,
+            new_columns=["accession", "short_name", "description", "category"],
+            schema=schema,
+        )
+        .fill_null("NA")
+        .with_columns(
+            pl.col("short_name").str.replace_all(r"^\s+$", "NA"),
+            pl.col("description").str.replace_all(r"^\s+$", "NA"),
+            pl.col("category").str.replace_all(r"^\s+$", "NA"),
+        )
     )
 
 
