@@ -483,6 +483,7 @@ for db in ENABLED_DBS:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
             params:
                 db_name=db_name,
+                mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
             threads:
@@ -500,6 +501,7 @@ for db in ENABLED_DBS:
                     --mapping {input.mapping} \
                     --output {output.tsv} \
                     --db-name {params.db_name} \
+                    --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
                     2>&1 | tee {log}
@@ -516,6 +518,7 @@ for db in ENABLED_DBS:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
             params:
                 db_name=db_name,
+                mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
             threads:
@@ -533,6 +536,7 @@ for db in ENABLED_DBS:
                     --mapping {input.mapping} \
                     --output {output.tsv} \
                     --db-name {params.db_name} \
+                    --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
                     2>&1 | tee {log}
@@ -549,6 +553,7 @@ for db in ENABLED_DBS:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
             params:
                 db_name=db_name,
+                mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
             threads:
@@ -566,6 +571,7 @@ for db in ENABLED_DBS:
                     --mapping {input.mapping} \
                     --output {output.tsv} \
                     --db-name {params.db_name} \
+                    --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
                     2>&1 | tee {log}
@@ -582,6 +588,7 @@ for db in ENABLED_DBS:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
             params:
                 db_name=db_name,
+                mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
             threads:
@@ -599,6 +606,7 @@ for db in ENABLED_DBS:
                     --mapping {input.mapping} \
                     --output {output.tsv} \
                     --db-name {params.db_name} \
+                    --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
                     2>&1 | tee {log}

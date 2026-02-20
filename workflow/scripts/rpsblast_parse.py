@@ -118,16 +118,43 @@ def filter_and_deduplicate(df: pl.DataFrame, evalue_cutoff: float = 1e-3) -> pl.
     )
 
 
-def join_with_mapping(hits_df: pl.DataFrame, mapping_df: pl.DataFrame) -> pl.DataFrame:
+def join_hits_with_mapping(
+    hits_df: pl.DataFrame, 
+    mapping_df: pl.DataFrame, 
+    join_on: str = "accession"
+) -> pl.DataFrame:
     """
-    Join hits with mapping on accession.
+    Join hits with mapping on specified column.
+    
+    Args:
+        hits_df: DataFrame with gene_id, accession, and other hit columns
+        mapping_df: DataFrame with accession (key), short_name, description, category
+        join_on: Column name to join on. Valid values: "accession" or "query_name".
+                The mapping file must have the same values in its accession column as the selected join_on column.
+                No automatic normalization is performed; keys must match exactly.
+    
+    Returns:
+        Left-joined DataFrame with all columns from hits and mapping annotations.
+        Unmatched hits will have NA values for mapping columns.
     """
+    # Validate join_on parameter
+    if join_on not in ("accession", "query_name"):
+        raise ValueError(f"join_on must be 'accession' or 'query_name', got '{join_on}'")
+    
     return hits_df.join(
         mapping_df,
-        left_on="accession",
+        left_on=join_on,
         right_on="accession",
         how="left",
     )
+
+
+def join_with_mapping(hits_df: pl.DataFrame, mapping_df: pl.DataFrame) -> pl.DataFrame:
+    """
+    Deprecated: Use join_hits_with_mapping() instead.
+    Join hits with mapping on accession (default behavior).
+    """
+    return join_hits_with_mapping(hits_df, mapping_df, join_on="accession")
 
 
 def format_output(df, db_name, columns_config):
@@ -155,6 +182,13 @@ def main():
     parser.add_argument("--output", required=True, help="Path to output TSV file")
     parser.add_argument("--db-name", required=True, help="Database name for column prefixes")
     parser.add_argument("--evalue-cutoff", type=float, default=1e-3, help="E-value cutoff")
+    parser.add_argument(
+        "--mapping-key",
+        type=str,
+        default="accession",
+        choices=["accession", "query_name"],
+        help="Column to join on with mapping file (default: accession)",
+    )
     parser.add_argument(
         "--columns",
         required=True,
@@ -191,7 +225,7 @@ def main():
     logger.info(f"Mapping file rows read: {mapping_count}")
 
     # Process
-    logger.info("Filtering by e-value and deduplicating...")
+    logger.info("Filtering by e-value and selecting unique top hits...")
     filtered_df = filter_and_deduplicate(hits_df, args.evalue_cutoff)
     filtered_count = len(filtered_df)
     filtered_out = hits_count - filtered_count
@@ -199,27 +233,33 @@ def main():
         logger,
         input_hits=hits_count,
         filtered_out=filtered_out,
-        after_deduplication=filtered_count,
+        unique_top_hits=filtered_count,
     )
     
     # Check for excessive filtering
     if hits_count > 0 and filtered_out > (hits_count * 0.95):
         logger.warning(f"{100*filtered_out/hits_count:.1f}% of hits were filtered by e-value cutoff. Consider checking parameters or cutoff threshold.")
     
-    logger.info("Joining with mapping file...")
-    joined_df = join_with_mapping(filtered_df, mapping_df)
+    logger.info(f"Joining with mapping file using mapping_key='{args.mapping_key}'...")
+    joined_df = join_hits_with_mapping(filtered_df, mapping_df, join_on=args.mapping_key)
     matched_count = joined_df.filter(pl.col("short_name").is_not_null()).shape[0]
     unmatched_count = filtered_count - matched_count
     log_statistics(
         logger,
         matched_with_mapping=matched_count,
         unmatched_with_mapping=unmatched_count,
+        mapping_key=args.mapping_key,
     )
     
     # Check mapping match results
     if filtered_count > 0:
         if matched_count == 0:
-            logger.warning(f"NO HITS matched the mapping file! Check if accession format is correct in search results vs mapping file.")
+            example_hit = filtered_df[args.mapping_key][0] if filtered_count > 0 else "<none>"
+            example_map = mapping_df["accession"][0] if mapping_count > 0 else "<none>"
+            logger.warning(
+                f"NO HITS matched the mapping file! Check if accession format is correct in search results vs mapping file. "
+                f"Here, hits with an accession format like '{example_hit}' were unable to be joined with {args.mapping_key}s from the mapping file like '{example_map}'."
+            )
         elif matched_count < (filtered_count * 0.5):
             logger.warning(f"Low mapping match rate - only {matched_count}/{filtered_count} hits ({100*matched_count/filtered_count:.1f}%) matched. Check accession format consistency.")
     

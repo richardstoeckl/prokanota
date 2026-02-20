@@ -39,6 +39,12 @@
             "type": "string",
             "description": "Path to mapping TSV file"
           },
+          "mapping_key": {
+            "type": "string",
+            "enum": ["accession", "query_name"],
+            "default": "accession",
+            "description": "Column to join on with mapping file. For pyhmmer databases, use 'query_name' if the mapping file is keyed by HMM name, or 'accession' if keyed by HMM accession. For other tools, typically use 'accession'. No normalization is performed; keys must match exactly."
+          },
           "evalue_cutoff": {
             "type": "number",
             "default": 1e-3,

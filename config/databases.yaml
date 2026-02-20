@@ -6,6 +6,9 @@
 #   - search_tool: One of [pyhmmer, rpsblast, diamond, mmseqs2]
 #   - db_path: Path to prepared database files
 #   - mapping_path: Path to mapping TSV (accession, short_name, description, category)
+#   - mapping_key: Column to join on with mapping file (default: "accession", allowed: "accession" or "query_name")
+#     For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession.
+#     For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
 #   - evalue_cutoff: E-value threshold for filtering hits
 #   - columns: List of output columns with name and source field
 
@@ -16,6 +19,7 @@ databases:
     search_tool: pyhmmer
     db_path: "/path/to/hmm_PGAP.LIB"
     mapping_path: "/path/to/PGAP_mapping.tsv"
+    mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:
       - name: pgap_hit
@@ -35,6 +39,7 @@ databases:
     search_tool: rpsblast
     db_path: "/path/to/cdd"
     mapping_path: "/path/to/CDD_mapping.tsv"
+    mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:
       - name: cdd_hit
@@ -54,6 +59,7 @@ databases:
     search_tool: diamond
     db_path: "/path/to/diamond.dmnd"
     mapping_path: "/path/to/DIAMOND_mapping.tsv"
+    mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:
       - name: diamond_hit
@@ -79,6 +85,7 @@ databases:
     search_tool: mmseqs2
     db_path: "/path/to/mmseqs2_db"
     mapping_path: "/path/to/MMSEQS2_mapping.tsv"
+    mapping_key: accession
     evalue_cutoff: 1.0e-3
     mmseqs2_sensitivity: 5.7
     mmseqs2_max_seqs: 300
