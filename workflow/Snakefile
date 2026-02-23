@@ -27,6 +27,7 @@ min_version("9.3.5")
 # Configuration Loading and Validation
 # =============================================================================
 
+
 def load_and_validate_config(config_path, schema_path):
     """Load a YAML config and validate against JSON schema."""
     with open(config_path, "r") as f:
@@ -39,11 +40,26 @@ def load_and_validate_config(config_path, schema_path):
 
 ########## load config and metadata sheets ##########
 
-configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
-validate(config, schema=os.path.join(workflow.basedir, "../", "config", "schemas", "config.schema.json"))
 
-metadataFile = os.path.join(workflow.basedir, "../", "config", config["global"]["metadata"])
-validate(metadataFile, schema=os.path.join(workflow.basedir, "../", "config", "schemas", "metadata.schema.json"))
+configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
+
+
+validate(
+    config,
+    schema=os.path.join(
+        workflow.basedir, "../", "config", "schemas", "config.schema.json"
+    ),
+)
+
+metadataFile = os.path.join(
+    workflow.basedir, "../", "config", config["global"]["metadata"]
+)
+validate(
+    metadataFile,
+    schema=os.path.join(
+        workflow.basedir, "../", "config", "schemas", "metadata.schema.json"
+    ),
+)
 
 metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
 NAMES = metadata.sample_id.to_list()
@@ -54,7 +70,9 @@ if "input_type" in metadata.columns:
 else:
     input_type = {sample_id: "dna" for sample_id in NAMES}
 
-invalid_input_types = [sid for sid, itype in input_type.items() if itype not in {"dna", "protein"}]
+invalid_input_types = [
+    sid for sid, itype in input_type.items() if itype not in {"dna", "protein"}
+]
 if invalid_input_types:
     raise ValueError(
         f"Invalid input_type for samples: {invalid_input_types}. "
@@ -70,14 +88,24 @@ RESULTPATH = os.path.normpath(config["global"]["results"])
 # Load and Validate Databases Config
 # =============================================================================
 
-DATABASES_CONFIG_PATH = os.path.join(workflow.basedir, "../", "config", config["global"].get("databases", "databases.yaml"))
-DATABASES_SCHEMA_PATH = os.path.join(workflow.basedir, "../", "config", "schemas", "databases.schema.json")
-databases_config = load_and_validate_config(DATABASES_CONFIG_PATH, DATABASES_SCHEMA_PATH)
+DATABASES_CONFIG_PATH = os.path.join(
+    workflow.basedir,
+    "../",
+    "config",
+    config["global"].get("databases", "databases.yaml"),
+)
+DATABASES_SCHEMA_PATH = os.path.join(
+    workflow.basedir, "../", "config", "schemas", "databases.schema.json"
+)
+databases_config = load_and_validate_config(
+    DATABASES_CONFIG_PATH, DATABASES_SCHEMA_PATH
+)
 
 
 # =============================================================================
 # Database Registry Helper Functions
 # =============================================================================
+
 
 def get_enabled_databases():
     """Return list of enabled databases sorted by order."""
@@ -135,6 +163,7 @@ ENABLED_DB_NAMES = [db["name"] for db in ENABLED_DBS]
 # Validation Functions
 # =============================================================================
 
+
 def validate_search_tool(tool):
     """Ensure search tool is in allowed set."""
     allowed = {"pyhmmer", "rpsblast", "diamond", "mmseqs2"}
@@ -145,7 +174,7 @@ def validate_search_tool(tool):
 def validate_mapping_file(mapping_path):
     """
     Validate that mapping file follows the correct TSV structure.
-    
+
     Expected format:
     - TSV file (tab-separated, no header)
     - Exactly 4 columns per row:
@@ -153,62 +182,59 @@ def validate_mapping_file(mapping_path):
         2. Gene symbol / short name (string)
         3. HMM name / description (string)
         4. Category (string, can be empty and will be converted to 'NA')
-    
+
     Args:
         mapping_path: Path to the mapping file
-    
+
     Raises:
         ValueError: If the file structure is invalid or malformed
     """
     mapping_path = Path(mapping_path)
-    
+
     if not mapping_path.exists():
         raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
-    
+
     malformed_rows = []
     row_count = 0
     sample_accessions = []
-    
+
     try:
         with open(mapping_path, "r") as f:
             for line_num, line in enumerate(f, 1):
                 line = line.rstrip("\n\r")
-                
+
                 # Skip empty lines
                 if not line.strip():
                     continue
-                
+
                 row_count += 1
                 columns = line.split("\t")
-                
+
                 # Validate exactly 4 columns
                 if len(columns) != 4:
                     malformed_rows.append(
                         f"Line {line_num}: Expected 4 columns, found {len(columns)}"
                     )
                     continue
-                
+
                 # Collect sample accessions from first column for logging
                 if len(sample_accessions) < 5:
                     accession = columns[0].strip()
                     if accession:
                         sample_accessions.append(accession)
-    
+
     except Exception as e:
-        raise ValueError(
-            f"Error reading mapping file {mapping_path}: {e}"
-        )
-    
+        raise ValueError(f"Error reading mapping file {mapping_path}: {e}")
+
     # Report any structural issues
     if malformed_rows:
-        error_msg = (
-            f"Mapping file {mapping_path} has invalid structure:\n"
-            + "\n".join(malformed_rows[:10])
+        error_msg = f"Mapping file {mapping_path} has invalid structure:\n" + "\n".join(
+            malformed_rows[:10]
         )
         if len(malformed_rows) > 10:
-            error_msg += f"\n... and {len(malformed_rows) - 10} more errors"
+            error_msg += f"\n... and {len(malformed_rows)-10} more errors"
         raise ValueError(error_msg)
-    
+
     # Log successful validation (only in verbose mode)
     logger.debug(
         f"Mapping file validated: {mapping_path} "
@@ -261,8 +287,7 @@ for db in ENABLED_DBS:
 # =============================================================================
 
 FEATURE_TARGETS = [
-    os.path.join(RESULTPATH, sample, "features", f"{sample}.faa")
-    for sample in NAMES
+    os.path.join(RESULTPATH, sample, "features", f"{sample}.faa") for sample in NAMES
 ]
 ANNOTATION_TARGETS = (
     [
@@ -274,8 +299,10 @@ ANNOTATION_TARGETS = (
     else []
 )
 
+
 rule all:
-    input: FEATURE_TARGETS + ANNOTATION_TARGETS
+    input:
+        FEATURE_TARGETS + ANNOTATION_TARGETS,
 
 
 # =============================================================================
@@ -295,7 +322,7 @@ rule predict_features:
     log:
         os.path.join(LOGPATH, "{id}", "features", "{id}_predict_features.log"),
     message:
-        "Predicting features for {wildcards.id}",
+        "Predicting features for {wildcards.id}"
     threads: 4
     params:
         sample_id="{id}",
@@ -303,9 +330,9 @@ rule predict_features:
         closed=False,
         translation_table=11,
         input_type=lambda wildcards: input_type[wildcards.id],
-        scriptpath=os.path.join(workflow.basedir, "scripts", "features.py")
+        scriptpath=os.path.join(workflow.basedir, "scripts", "features.py"),
     conda:
-        os.path.join(workflow.basedir, "envs", "features.yaml"),
+        os.path.join(workflow.basedir, "envs", "features.yaml")
     shell:
         """
         python {params.scriptpath} \
@@ -332,6 +359,7 @@ for db in ENABLED_DBS:
     db_name = db["name"]
 
     if db["search_tool"] == "pyhmmer":
+
         rule:
             name:
                 f"search_{db_name}"
@@ -340,13 +368,14 @@ for db in ENABLED_DBS:
             output:
                 tblout=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tblout"),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
-            threads:
-                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
-                scriptpath=os.path.join(workflow.basedir, "scripts", "pyhmmer_search.py")
+                scriptpath=os.path.join(
+                    workflow.basedir, "scripts", "pyhmmer_search.py"
+                ),
             log:
-                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -363,6 +392,7 @@ for db in ENABLED_DBS:
                 """
 
     elif db["search_tool"] == "rpsblast":
+
         rule:
             name:
                 f"search_{db_name}"
@@ -374,11 +404,12 @@ for db in ENABLED_DBS:
             params:
                 db_path=db["db_path"],
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
-                scriptpath=os.path.join(workflow.basedir, "scripts", "rpsblast_search.py")
-            threads:
-                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+                scriptpath=os.path.join(
+                    workflow.basedir, "scripts", "rpsblast_search.py"
+                ),
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             log:
-                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -396,6 +427,7 @@ for db in ENABLED_DBS:
                 """
 
     elif db["search_tool"] == "diamond":
+
         rule:
             name:
                 f"search_{db_name}"
@@ -407,11 +439,12 @@ for db in ENABLED_DBS:
             params:
                 db_path=db["db_path"],
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
-                scriptpath=os.path.join(workflow.basedir, "scripts", "diamond_search.py")
-            threads:
-                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+                scriptpath=os.path.join(
+                    workflow.basedir, "scripts", "diamond_search.py"
+                ),
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             log:
-                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -429,6 +462,7 @@ for db in ENABLED_DBS:
                 """
 
     elif db["search_tool"] == "mmseqs2":
+
         rule:
             name:
                 f"search_{db_name}"
@@ -441,11 +475,12 @@ for db in ENABLED_DBS:
                 db_path=db["db_path"],
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 extra_args=build_mmseqs2_extra_args(db),
-                scriptpath=os.path.join(workflow.basedir, "scripts", "mmseqs2_search.py")
-            threads:
-                max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
+                scriptpath=os.path.join(
+                    workflow.basedir, "scripts", "mmseqs2_search.py"
+                ),
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             log:
-                os.path.join(LOGPATH, "{id}","search", f"search_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
             conda:
@@ -464,7 +499,6 @@ for db in ENABLED_DBS:
                 """
 
 
-
 # =============================================================================
 # Dynamic Parse Rules
 # =============================================================================
@@ -473,6 +507,7 @@ for db in ENABLED_DBS:
     db_name = db["name"]
 
     if db["search_tool"] == "pyhmmer":
+
         rule:
             name:
                 f"parse_{db_name}"
@@ -486,10 +521,9 @@ for db in ENABLED_DBS:
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads:
-                1, # Parsing is single-threaded
+            threads: 1  # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -508,6 +542,7 @@ for db in ENABLED_DBS:
                 """
 
     elif db["search_tool"] == "rpsblast":
+
         rule:
             name:
                 f"parse_{db_name}"
@@ -521,10 +556,9 @@ for db in ENABLED_DBS:
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads:
-                1, # Parsing is single-threaded
+            threads: 1  # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -543,6 +577,7 @@ for db in ENABLED_DBS:
                 """
 
     elif db["search_tool"] == "diamond":
+
         rule:
             name:
                 f"parse_{db_name}"
@@ -556,10 +591,9 @@ for db in ENABLED_DBS:
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads:
-                1, # Parsing is single-threaded
+            threads: 1  # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -578,6 +612,7 @@ for db in ENABLED_DBS:
                 """
 
     elif db["search_tool"] == "mmseqs2":
+
         rule:
             name:
                 f"parse_{db_name}"
@@ -591,10 +626,9 @@ for db in ENABLED_DBS:
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads:
-                1, # Parsing is single-threaded
+            threads: 1  # Parsing is single-threaded
             log:
-                os.path.join(LOGPATH, "{id}","parse", f"parse_{db_name}.log"),
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
@@ -612,9 +646,11 @@ for db in ENABLED_DBS:
                     2>&1 | tee {log}
                 """
 
+
 # =============================================================================
 # Merge Annotations
 # =============================================================================
+
 
 def get_all_parsed_annotations(wildcards):
     """Get paths to all parsed annotation files for a sample."""
@@ -628,11 +664,15 @@ def get_db_results_json(wildcards):
     """Build JSON array of database results for merge script."""
     results = []
     for db in ENABLED_DBS:
-        results.append({
-            "name": db["name"],
-            "path": os.path.join(INTERIMPATH, wildcards.id, db["name"], "parsed_annotation.tsv"),
-            "order": db.get("order", 100),
-        })
+        results.append(
+            {
+                "name": db["name"],
+                "path": os.path.join(
+                    INTERIMPATH, wildcards.id, db["name"], "parsed_annotation.tsv"
+                ),
+                "order": db.get("order", 100),
+            }
+        )
     return json.dumps(results)
 
 
@@ -645,10 +685,9 @@ rule merge_sample_annotations:
     params:
         db_results_json=get_db_results_json,
         scriptpath=os.path.join(workflow.basedir, "scripts", "merge_annotations.py"),
-    threads:
-        1,  # Merging is single-threaded
+    threads: 1  # Merging is single-threaded
     log:
-        os.path.join(LOGPATH, "{id}","finalize", "merge_annotations.log"),
+        os.path.join(LOGPATH, "{id}", "finalize", "merge_annotations.log"),
     message:
         "Merging annotations for {wildcards.id}"
     conda:
@@ -667,12 +706,11 @@ rule collect_master_table:
     input:
         tables=expand(
             os.path.join(RESULTPATH, "{id}", "annotation", "{id}_finalAnnotation.tsv"),
-            id=NAMES
+            id=NAMES,
         ),
     output:
         final=os.path.join(RESULTPATH, "common", "annotation", "finalAnnotation.tsv"),
-    threads:
-        1,  # Merging is single-threaded
+    threads: 1  # Merging is single-threaded
     log:
         os.path.join(LOGPATH, "collect_master_table.log"),
     message:
