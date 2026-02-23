@@ -9,6 +9,7 @@ https://www.boost.org/LICENSE_1_0.txt)
 
 import os
 import json
+import sys
 from pathlib import Path
 
 import jsonschema
@@ -17,6 +18,13 @@ import yaml
 from snakemake.utils import validate
 from snakemake.utils import min_version
 from snakemake.logging import logger
+
+# This is required so that Snakefile can import mapping_utils.py during workflow parsing.
+SCRIPTS_DIR = Path(workflow.basedir) / "scripts"
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from mapping_utils import validate_mapping_file as validate_mapping_file_shared
 
 
 ########## check minimum snakemake version ##########
@@ -177,11 +185,12 @@ def validate_mapping_file(mapping_path):
 
     Expected format:
     - TSV file (tab-separated, no header)
+    - empty markers are normalized to '*'
     - Exactly 4 columns per row:
         1. Accession ID (string)
         2. Gene symbol / short name (string)
         3. HMM name / description (string)
-        4. Category (string, can be empty and will be converted to 'NA')
+        4. Category (string)
 
     Args:
         mapping_path: Path to the mapping file
@@ -190,55 +199,10 @@ def validate_mapping_file(mapping_path):
         ValueError: If the file structure is invalid or malformed
     """
     mapping_path = Path(mapping_path)
-
-    if not mapping_path.exists():
-        raise FileNotFoundError(f"Mapping file not found: {mapping_path}")
-
-    malformed_rows = []
-    row_count = 0
-    sample_accessions = []
-
-    try:
-        with open(mapping_path, "r") as f:
-            for line_num, line in enumerate(f, 1):
-                line = line.rstrip("\n\r")
-
-                # Skip empty lines
-                if not line.strip():
-                    continue
-
-                row_count += 1
-                columns = line.split("\t")
-
-                # Validate exactly 4 columns
-                if len(columns) != 4:
-                    malformed_rows.append(
-                        f"Line {line_num}: Expected 4 columns, found {len(columns)}"
-                    )
-                    continue
-
-                # Collect sample accessions from first column for logging
-                if len(sample_accessions) < 5:
-                    accession = columns[0].strip()
-                    if accession:
-                        sample_accessions.append(accession)
-
-    except Exception as e:
-        raise ValueError(f"Error reading mapping file {mapping_path}: {e}")
-
-    # Report any structural issues
-    if malformed_rows:
-        error_msg = f"Mapping file {mapping_path} has invalid structure:\n" + "\n".join(
-            malformed_rows[:10]
-        )
-        if len(malformed_rows) > 10:
-            error_msg += f"\n... and {len(malformed_rows)-10} more errors"
-        raise ValueError(error_msg)
-
-    # Log successful validation (only in verbose mode)
+    stats = validate_mapping_file_shared(mapping_path)
     logger.debug(
         f"Mapping file validated: {mapping_path} "
-        f"(rows: {row_count}, sample accessions: {', '.join(sample_accessions)})"
+        f"(rows: {stats['row_count']}, sample accessions: {', '.join(stats['sample_accessions'])})"
     )
 
 

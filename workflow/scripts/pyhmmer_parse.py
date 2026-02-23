@@ -10,6 +10,7 @@ import polars as pl
 from pathlib import Path
 from datetime import datetime
 from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics
+from mapping_utils import parse_mapping_file
 
 logger = setup_logger("pyhmmer_parse")
 
@@ -64,41 +65,11 @@ def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
 
 
 def parse_mapping(mapping_path: Path) -> pl.DataFrame:
-    """
-    Parse mapping file with schema:
-    accession<TAB>short_name<TAB>description<TAB>category
-    """
-    if mapping_path.stat().st_size == 0:
+    """Parse mapping file with shared robust validation and normalization."""
+    mapping_df = parse_mapping_file(mapping_path)
+    if mapping_df.height == 0:
         logger.warning("Mapping file '%s' is empty; returning no annotations", mapping_path)
-        return pl.DataFrame(
-            schema={
-                "accession": pl.Utf8,
-                "short_name": pl.Utf8,
-                "description": pl.Utf8,
-                "category": pl.Utf8,
-            }
-        )
-    schema = {
-        "accession": pl.Utf8,
-        "short_name": pl.Utf8,
-        "description": pl.Utf8,
-        "category": pl.Utf8,
-    }
-    return (
-        pl.read_csv(
-            mapping_path,
-            separator="\t",
-            has_header=False,
-            new_columns=["accession", "short_name", "description", "category"],
-            schema=schema,
-        )
-        .fill_null("NA")
-        .with_columns(
-            pl.col("short_name").str.replace_all(r"^\s+$", "NA"),
-            pl.col("description").str.replace_all(r"^\s+$", "NA"),
-            pl.col("category").str.replace_all(r"^\s+$", "NA"),
-        )
-    )
+    return mapping_df
 
 
 def filter_and_deduplicate(df: pl.DataFrame, evalue_cutoff: float = 1e-3) -> pl.DataFrame:
@@ -135,6 +106,11 @@ def join_hits_with_mapping(
     # Validate join_on parameter
     if join_on not in ("accession", "query_name"):
         raise ValueError(f"join_on must be 'accession' or 'query_name', got '{join_on}'")
+
+    if join_on not in hits_df.columns:
+        raise ValueError(
+            f"mapping_key '{join_on}' is not present in search results columns: {hits_df.columns}"
+        )
     
     return hits_df.join(
         mapping_df,

@@ -11,6 +11,16 @@ To successfully run the annotation pipeline, you will need to configure the path
 The sample setup is specified via comma-separated tabular file (`.csv`).
 Missing values can be specified by empty columns.
 
+# Mapping file setup
+
+Database mapping files are tab-separated (`.tsv`) with no header and exactly four columns:
+`accession<TAB>short_name<TAB>description<TAB>category`.
+
+- `accession` is the mapping key and must not be empty.
+- In `short_name`, `description`, and `category`, the following values are treated as empty:
+	empty/whitespace-only fields, `NA`, `N/A`, `NULL`/`null`, `-`, and `*`.
+- These empty representations are normalized to `*` in final annotation outputs.
+
 ## Sample sheet
 
 The default sample sheet is `config/metadata.csv` (as configured in `config/config.yaml`).

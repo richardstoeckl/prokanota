@@ -85,6 +85,10 @@ python tests/run_tests.py
    - For HMM: Press your `.hmm` files using `hmmpress` or download ready-to-use db.
    - For RPS-BLAST: Build your database using `makeprofiledb` or download ready-to-use db.
 2. Create a mapping file (TSV, no header): `accession<TAB>short_name<TAB>description<TAB>category`
+  - Exactly 4 tab-separated columns are required for each non-empty line.
+  - The first column (`accession`) is the join key and must not be empty.
+  - For `short_name`, `description`, and `category`, the following values are treated as empty and normalized to `*` in output: empty/whitespace-only fields, `NA`, `N/A`, `NULL`/`null`, `-`, and `*`.
+  - Duplicate values in the first column are rejected.
 3. Add an entry to `config/databases.yaml`:
    ```yaml
    databases:
