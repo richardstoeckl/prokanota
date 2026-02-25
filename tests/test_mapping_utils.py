@@ -102,6 +102,19 @@ class MappingUtilsTests(unittest.TestCase):
 
         self.assertEqual(records[0]["description"], "contains 'single' and \"double\" quotes Ω")
 
+    def test_wrapped_double_quotes_are_stripped(self) -> None:
+        mapping_path = self._write_temp_mapping(
+            '"CDD:XXXXX"\t"gene_1"\t"description with spaces"\t"category"\n'
+        )
+
+        mapping_df = parse_mapping_file(mapping_path)
+        records = self._records(mapping_df)
+
+        self.assertEqual(records[0]["accession"], "CDD:XXXXX")
+        self.assertEqual(records[0]["short_name"], "gene_1")
+        self.assertEqual(records[0]["description"], "description with spaces")
+        self.assertEqual(records[0]["category"], "category")
+
     def test_validate_mapping_file_returns_stats(self) -> None:
         mapping_path = self._write_temp_mapping(
             "ACC001\tGeneA\tDescA\tcatA\n"

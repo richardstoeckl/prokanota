@@ -35,9 +35,16 @@ def _normalize_mapping_value(value: str | None) -> str:
     if value is None:
         return CANONICAL_EMPTY_VALUE
 
-    stripped = value.strip()
+    stripped = _strip_wrapping_quotes(value)
     if stripped.lower() in EMPTY_MARKERS:
         return CANONICAL_EMPTY_VALUE
+    return stripped
+
+
+def _strip_wrapping_quotes(value: str) -> str:
+    stripped = value.strip()
+    if len(stripped) >= 2 and stripped.startswith('"') and stripped.endswith('"'):
+        return stripped[1:-1]
     return stripped
 
 
@@ -45,7 +52,7 @@ def _is_missing_key(value: str | None) -> bool:
     if value is None:
         return True
 
-    stripped = value.strip()
+    stripped = _strip_wrapping_quotes(value)
     return stripped.lower() in EMPTY_MARKERS
 
 
@@ -89,7 +96,7 @@ def parse_mapping_file(mapping_path: str | Path) -> Any:
                 continue
 
             accession_raw, short_name_raw, description_raw, category_raw = columns
-            accession = accession_raw.strip()
+            accession = _strip_wrapping_quotes(accession_raw)
 
             if _is_missing_key(accession):
                 malformed_rows.append(
