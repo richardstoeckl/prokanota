@@ -80,6 +80,10 @@ FEATURES             Location/Qualifiers
                      YDYLVTENLSSLLLYAEFSDLLQKEGGIPEPILNRIMKAEEVSEKIGVLVKFLSILYN
                      KPSALFKVETSLRSLNQLGLRWVEIRHLERETGIKREELEEILEGLTLIGVVEKMNRG
                      GESVYRIRNSGEDKGNI*"
+     repeat_region   10856..14383
+                     /locus_tag="JLPIBLAO_1_crispr_001"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             complement(14578..15917)
                      /locus_tag="JLPIBLAO_1_00008"
                      /translation="MNREDLLSQGDVRTKEIALAMMEEAIKSADPYEAVKRVLRIEGD
@@ -468,6 +472,14 @@ FEATURES             Location/Qualifiers
                      YGGGENTVGLWIKYGDTVIELYNPGAVGEMGVTPYSEGDFNLLNKLSDIEAIYLGWVN
                      FYTFGFWNILEERDIYTNTKGSEGILGYQYNYEINPDGKITLGGLKFRVSNIKWTYQV
                      QGVTGQGEATIAANLPIPIESKGVFIAQGVNVFTHVKIEDIKFEKL*"
+     tRNA            complement(61425..61498)
+                     /locus_tag="JLPIBLAO_1_trna_046"
+                     /product="tRNA-Gly"
+                     /anticodon=tcc
+     tRNA            complement(61510..61582)
+                     /locus_tag="JLPIBLAO_1_trna_045"
+                     /product="tRNA-Phe"
+                     /anticodon=gaa
      CDS             complement(61781..63198)
                      /locus_tag="JLPIBLAO_1_00057"
                      /translation="MKFPKNFMFGYSWSGFQFEMGLPGSEVESDWWVWVHDKENIASG
@@ -953,11 +965,21 @@ FEATURES             Location/Qualifiers
                      LIISVYTPAIEGIDARWGEVTQEKITIIAKIKLYNPNDFLIVVDNLEGYIYVNGFEFG
                      YARIIEGATIRGKSRGEVVVEITTDEIKLYNAIVSHIENGCVSDVKLDIKFHIGSGGF
                      YGWEVKVPLKDVHTRIEFDPLAYITSP*"
+     rRNA            120687..122183
+                     /locus_tag="JLPIBLAO_1_rrna_001"
+                     /product="16S_rRNA"
      CDS             121647..122081
                      /locus_tag="JLPIBLAO_1_00116"
                      /translation="MKARLKVLPDAPRGGAWPPSARTVRRPLKCGNERDPRPQLPVPP
                      AREGGTLGGLPAISRRKGRATVGQYAPKPPGYTRATMGGTMGPDPERGRESPKPALSS
                      DRGLQLARVKLESLVPACHHRAANTSLLLAHTARHSTRAESG*"
+     tRNA            122243..122320
+                     /locus_tag="JLPIBLAO_1_trna_001"
+                     /product="tRNA-Ala"
+                     /anticodon=tgc
+     rRNA            122443..125493
+                     /locus_tag="JLPIBLAO_1_rrna_002"
+                     /product="23S_rRNA"
      CDS             complement(123937..124634)
                      /locus_tag="JLPIBLAO_1_00117"
                      /translation="MGSSLPTGGPWHARQAEVSPGPGRGQRGPRYAIHAGRHLTDKEF
@@ -1778,6 +1800,10 @@ FEATURES             Location/Qualifiers
                      YIQWCWRRAQDGFFVAKVGDKIVGFIVCDCDWYSRFEGKIVGAIHEFVIAKEWQGKGI
                      GKKLLMTCLDFLEKCSDTIELWVGEKNFGAMKLYEKFGFVPVGKKGIWVRMVRRRQNL
                      *"
+     tRNA            224160..224236
+                     /locus_tag="JLPIBLAO_1_trna_002"
+                     /product="tRNA-Arg"
+                     /anticodon=tct
      CDS             complement(224692..226310)
                      /locus_tag="JLPIBLAO_1_00215"
                      /translation="MKEGTEKIISIYLILIAMLITLPYFLTRKTLPGYIIGGDTLVHA
@@ -1932,6 +1958,10 @@ FEATURES             Location/Qualifiers
                      AFEEMEKLQKKGEKFDIVILDPPAFVQHEKDLQAGMRAYFNVNFAGLNLVKDGGILVT
                      CSCSQHVDLQMFKDMIIAAGAKAGKFLKMLEPYRTQAPDHPILMASKDTEYLKCLFLY
                      VEDMKH*"
+     repeat_region   244471..245937
+                     /locus_tag="JLPIBLAO_1_crispr_002"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             complement(246154..246305)
                      /locus_tag="JLPIBLAO_1_00236"
                      /translation="MGQKWKLYEIKDGKVIRKNKFCPRCGPGVFMADHGDRWACGKCG
@@ -2209,6 +2239,10 @@ FEATURES             Location/Qualifiers
                      DKEFAEAFANALKDIGANPRIYFEGSTGRWCVEATSKELYMFLSKPKEELLRIAKMFP
                      REFIRGFFDSEGYVFVDPKDPRMAYISVWNYDRELLEICRRLLLNNFNIHSTIFLKRE
                      KNSEVIIRGKVYKYNGDLYELRIYRRESVKAFGEEIGLTIDRKWRALKSFLLSY*"
+     tRNA            complement(280301..280374)
+                     /locus_tag="JLPIBLAO_1_trna_044"
+                     /product="tRNA-Met"
+                     /anticodon=cat
      CDS             280593..284789
                      /locus_tag="JLPIBLAO_1_00270"
                      /translation="MNKKGLTVLFIAIMLLSVVPVHFVSAGTPPVSSENSTTSILPNQ
@@ -2318,6 +2352,10 @@ FEATURES             Location/Qualifiers
                      VVYRAVNTLDAMIGYRNEKYEYFGKFAARLDDLLNFVPARITVLLFLSLGGRKVIRYY
                      RMAKYKINSDKPIAAMSAVLGVWLEKPNYYKFPGRRPENEDIKRALKVYWIIVVEFLL
                      IVAIILYGG*"
+     repeat_region   295440..297033
+                     /locus_tag="JLPIBLAO_1_crispr_003"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             297297..297719
                      /locus_tag="JLPIBLAO_1_00280"
                      /translation="MPNDLKKELRELKETLEYLKKSFEVISQLAQAYIRLLNVYAEYG
@@ -2415,6 +2453,10 @@ FEATURES             Location/Qualifiers
                      VVFKSFPTRVGAGPFPTEMPMEEADRLGLIEYGTVTGRRRRVGWFDFEMARYAARING
                      ATMLAVTMLDKYDKEAFGITDYDKLPRKAKEFIEEIEERVGVPVGLIKTGPELEHIID
                      LRENI*"
+     tRNA            complement(308251..308324)
+                     /locus_tag="JLPIBLAO_1_trna_043"
+                     /product="tRNA-Glu"
+                     /anticodon=ttc
      CDS             complement(308377..309653)
                      /locus_tag="JLPIBLAO_1_00293"
                      /translation="MSDFWVLVTKELKDLLRDKGLIFGIIIVPLIIYPALGQMLQVGF
@@ -2521,6 +2563,14 @@ FEATURES             Location/Qualifiers
                      /translation="MGIVRFGVSIPKELLEKFDGIIEEMGYTNRSEAIRDLIRDMVVR
                      HEWQLGDEEVAGTITIVYNHDEADVVRELLDLQHEYLNEIVSSLHVHMDEHNCLEVIV
                      VKGRAKKIKKIADRLLSLKGVKHGKLVMTTTGRDIV*"
+     tRNA            complement(320917..321000)
+                     /locus_tag="JLPIBLAO_1_trna_042"
+                     /product="tRNA-Leu"
+                     /anticodon=caa
+     tRNA            complement(321069..321140)
+                     /locus_tag="JLPIBLAO_1_trna_041"
+                     /product="tRNA-Gln"
+                     /anticodon=ctg
      CDS             321340..321780
                      /locus_tag="JLPIBLAO_1_00306"
                      /translation="MTSQKAELSSSTVLGNERRMMIIEYLMKSDTKTAKISDLVDYIC
@@ -2727,6 +2777,14 @@ FEATURES             Location/Qualifiers
                      /translation="MASRKGNWRPGGDLNPGPRGPQPRALSRLGHRGTRKDIIRKLFI
                      KTSEPTRPHHHSAKGGFHIKKRKIVVRWPGFEPGSPPWQGGVLDQARLPPHRSLFTHL
                      KRVYKDFVIVTDTVRITGASPLEATQSHHQADNQTENET*"
+     tRNA            complement(345079..345152)
+                     /locus_tag="JLPIBLAO_1_trna_040"
+                     /product="tRNA-Arg"
+                     /anticodon=gcg
+     tRNA            complement(345263..345336)
+                     /locus_tag="JLPIBLAO_1_trna_039"
+                     /product="tRNA-Gly"
+                     /anticodon=gcc
      CDS             complement(345401..346101)
                      /locus_tag="JLPIBLAO_1_00333"
                      /translation="MKAESILYSLISVLKPFRRNKIPPEKKIRAVELYLRGLSYRQVG
@@ -3034,6 +3092,10 @@ FEATURES             Location/Qualifiers
                      TIRAEYLEFYNQHVVSIEPAQKLPHGIRSIGINPLIVGDSEILTLPYWGMVHEDWEND
                      LKILVMKDEIFDSLLREEYRCPVCFSPLRREGSALVCDRCGFIHTPEEGLEEVIERFT
                      VEEFSF*"
+     tRNA            381543..381618
+                     /locus_tag="JLPIBLAO_1_trna_003"
+                     /product="tRNA-Gln"
+                     /anticodon=ttg
      CDS             381677..382834
                      /locus_tag="JLPIBLAO_1_00374"
                      /translation="MYLTKEEELALSGEYGPAIQKAMEILVALGDIYNADRLIPIKSA
@@ -3903,6 +3965,10 @@ FEATURES             Location/Qualifiers
                      /locus_tag="JLPIBLAO_1_00478"
                      /translation="MEVIIEKFKPKVTRPFKRKNEWWVKLITEDGEYIMKFKSPIEAE
                      DVVYGLLDLQVYGGKVKLKLKEGNVIEDIEVLEIYKPSAKELVDEYLTK*"
+     tRNA            490741..490818
+                     /locus_tag="JLPIBLAO_1_trna_004"
+                     /product="tRNA-Lys"
+                     /anticodon=ttt
      CDS             490877..492856
                      /locus_tag="JLPIBLAO_1_00479"
                      /translation="MGIDIVSENPKKFAVVIWFNGKLERKGEFTLPRLIRYIRTKKPD
@@ -4290,6 +4356,10 @@ FEATURES             Location/Qualifiers
                      LLRDGRITNNEEEGLKYISEMFDIEVVTMDVIKNHPVRAFANMKMYFNLGGAIYLIPH
                      KLKQAKGTPIPIKLAKKRIIKNGKVEKQSITRQDVLDIFILTRLNYGSISADMRLPAP
                      VHYAHKFANAIRNEWKIKEEFLAEGFLYFV*"
+     tRNA            complement(538451..538524)
+                     /locus_tag="JLPIBLAO_1_trna_038"
+                     /product="tRNA-Arg"
+                     /anticodon=cct
      CDS             complement(539157..540592)
                      /locus_tag="JLPIBLAO_1_00525"
                      /translation="MSRRKFLVRVLLLIFLSGNMVNALNYLASNEDSITRILGYDVYK
@@ -4326,6 +4396,10 @@ FEATURES             Location/Qualifiers
                      HAGISIPNIYRPHDNYVLKEGDVFAIEPFATIGAGQVIEVPPTLIYMYVRDVPVRVAQ
                      ARFLLAKIKREYGTLPFAYRWLQNDMPEGQLKLALKTLEKAGAIYGYPVLKEIRNGIV
                      AQFEHTIIVEKDSVIVTTE*"
+     tRNA            543579..543665
+                     /locus_tag="JLPIBLAO_1_trna_005"
+                     /product="tRNA-Ser"
+                     /anticodon=cga
      CDS             543694..544899
                      /locus_tag="JLPIBLAO_1_00530"
                      /translation="MAFLKVVSLEEAISIINSFRLEIGFEEVTLDKALGRIVAEDIYS
@@ -4825,6 +4899,10 @@ FEATURES             Location/Qualifiers
                      VAPQRTTHGLIKKYKEFVISVPSLDMLRDVWIAGTKKGPAKLKEMNITLIPSKNVSVP
                      SIKEALANIECKVIDERDYGDHIWFVGEVVGYSYNEEAFKNGKPNPKAKFLAHLSWTE
                      FVTFSEEIYRAE*"
+     repeat_region   605404..607460
+                     /locus_tag="JLPIBLAO_1_crispr_004"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             607978..608445
                      /locus_tag="JLPIBLAO_1_00591"
                      /translation="MKFIADMMLGRLARWLRLYGYDTLYGIEDDNEILRIAEEEGRII
@@ -5431,6 +5509,10 @@ FEATURES             Location/Qualifiers
                      YSKTEKKEIMKAFRVIVRNLNLTPKMLLARPTDYVDKFADELELSERVRRRTVDILRR
                      ANEEGITSGKNPLSLVAAALYIASLLEGERRSQKEIARVTGVSEMTVRNRYKELVMKL
                      GLKSLWW*"
+     repeat_region   678223..681278
+                     /locus_tag="JLPIBLAO_1_crispr_005"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             681272..681865
                      /locus_tag="JLPIBLAO_1_00678"
                      /translation="MKVLGPDGIADKDGDGIIAGDPDDDAAEVISMSLGGSADDTYLH
@@ -6314,6 +6396,14 @@ FEATURES             Location/Qualifiers
                      ESREVLAVWITTTRNWWIARDFILVVLKSCKGQPVFLVDGGKWYKSAFKSLGLDFVHV
                      TFGPRNCIERWFRTLKERTKRFWNNFRARDWRRVHRFVFLFAFWYNFVRFHSRFGCPP
                      GDVTEWLQEVMPQLS*"
+     tRNA            780251..780328
+                     /locus_tag="JLPIBLAO_1_trna_006"
+                     /product="tRNA-Glu"
+                     /anticodon=ctc
+     tRNA            780332..780409
+                     /locus_tag="JLPIBLAO_1_trna_007"
+                     /product="tRNA-Ile"
+                     /anticodon=gat
      CDS             complement(780427..781433)
                      /locus_tag="JLPIBLAO_1_00814"
                      /translation="MIGSIFYSKKFNLHRPSEYHPENPKRLEIVLSKVRELGLEERIE
@@ -6564,6 +6654,10 @@ FEATURES             Location/Qualifiers
                      IDFTVSRPRTFYDGEESPHERKFVAHVDFTEPYCPEIRKALITAARNLGLPYHPRGTY
                      VCTEGPRFETAAEIRAYRILGGDVVGMTQCPEAILARELEMCYATVAIVTNYAAGMSG
                      KKLTHSEVVELMQKKSEDIVKLILAAIPLIPKERRCGCKDALKGATG*"
+     tRNA            809722..809799
+                     /locus_tag="JLPIBLAO_1_trna_008"
+                     /product="tRNA-Arg"
+                     /anticodon=ccg
      CDS             complement(809947..810905)
                      /locus_tag="JLPIBLAO_1_00850"
                      /translation="MSKKKFVIVSILTILLVQAIYFVEKYHTSEDKSTSNTSSTPPQT
@@ -6580,6 +6674,10 @@ FEATURES             Location/Qualifiers
                      LFVIWVLILTLFSLSVSGLVFPRFVDTRSLREALRVIKYGRRYKASMIGFGALLGLSS
                      FALLMAVGIVEMSVYMFSMNTVARLLASLLTVPLIALLSLFVIIAETIFYENVRADYE
                      ERRALFYTLYSNLTNLEDVQ*"
+     tRNA            812542..812618
+                     /locus_tag="JLPIBLAO_1_trna_009"
+                     /product="tRNA-Ala"
+                     /anticodon=cgc
      CDS             812643..813767
                      /locus_tag="JLPIBLAO_1_00852"
                      /translation="MDEGTRTVLRKFEHIEHCLKRNVEAHATNGFEDVHFVHMSLPEI
@@ -6952,6 +7050,10 @@ FEATURES             Location/Qualifiers
                      RALILALSKNFDYVLMDVKLNALSGDEWDPFIYFSPDADIIAVNERENHIIGIEVKGY
                      RSNKGIIQKANIYEAIGEAMMYLLNPYMKYKGEKIEGSIFDEVWLCYPYKRDFEDFKR
                      VIEITPIGLLSAYEGVVKRPEKNPFVNERAKEIFLENLSTFRSYIQGGRKMHKIV*"
+     tRNA            complement(857666..857749)
+                     /locus_tag="JLPIBLAO_1_trna_037"
+                     /product="tRNA-Leu"
+                     /anticodon=gag
      CDS             857846..858814
                      /locus_tag="JLPIBLAO_1_00903"
                      /translation="MLVITPRRLHLGIIDPTGSLGRRFGSLGVALEGGYEIRITPADS
@@ -7346,6 +7448,14 @@ FEATURES             Location/Qualifiers
                      /translation="MAQRVAKRKYGIGEDLIDYYALVDTNLTFEENIKNIAKIIGKAE
                      KVRKAKDQLIKAIMEFKEYWETYGKRDYAVDKAKKARKVFDLEKATLKQLELWLRHPE
                      RYDIKQIDYPGQKRKRKKN*"
+     tRNA            903162..903239
+                     /locus_tag="JLPIBLAO_1_trna_010"
+                     /product="tRNA-Ala"
+                     /anticodon=ggc
+     tRNA            903252..903329
+                     /locus_tag="JLPIBLAO_1_trna_011"
+                     /product="tRNA-Val"
+                     /anticodon=gac
      CDS             complement(903355..903572)
                      /locus_tag="JLPIBLAO_1_00961"
                      /translation="MKNLRYILFPFLLAVAGSAITFVIWIMWLMERLPNSINILIALS
@@ -7491,6 +7601,10 @@ FEATURES             Location/Qualifiers
                      MIEETAKRIASLGIKKAGLLATTGTIVSGVYHKELEKYGLEILTPTEEEQELVMKGIY
                      EGVKAGNLDLGRNLLLQIARILEERGAEAIIAGCTEVSVVIKESDLRVMLIDPMNVIA
                      EVAVKMALEE*"
+     tRNA            complement(919665..919809)
+                     /locus_tag="JLPIBLAO_1_trna_036"
+                     /product="tRNA-Trp"
+                     /anticodon=cca
      CDS             919905..921158
                      /locus_tag="JLPIBLAO_1_00981"
                      /translation="MNREKAIVIQGLRGRVGKVKRRSTARRNMIFLAIAMFFANISWG
@@ -8471,6 +8585,10 @@ FEATURES             Location/Qualifiers
                      /translation="MPCPFCNPPAENIVYEDDKIRILLDSFPANPGHLLVVPKRHITN
                      IEGLNEEEKVMLMKGVEMAIKALKEALNPDGFNVGINLGKAAGQTVSHLHVHVIPRYK
                      GDCKHPEGGIRKAVLNAKDENLGRQDKRLESKYVEILRGLLNEK*"
+     tRNA            1036856..1036933
+                     /locus_tag="JLPIBLAO_1_trna_012"
+                     /product="tRNA-Tyr"
+                     /anticodon=gta
      CDS             1036972..1038171
                      /locus_tag="JLPIBLAO_1_01109"
                      /translation="MYLSTVLLIAVVSGCISEQTQTQTLESNSPTQTTTTTSPQITVT
@@ -8548,6 +8666,10 @@ FEATURES             Location/Qualifiers
                      /translation="MGDNRKVRVVVGGVFDILHVGHVHFLKMAKELGDELIVIVAHDE
                      TVKRRKGRPPINPAEDRAELLKSIRYVDDVVIGEPGEISIDLIKRLKPDVIALGPDQD
                      FSCEELKKRLRKEGINAEVIRLPYLYKSDRAKTSKIIQRIIETFCE*"
+     repeat_region   1046372..1048873
+                     /locus_tag="JLPIBLAO_1_crispr_006"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             1049355..1049612
                      /locus_tag="JLPIBLAO_1_01118"
                      /translation="MYIVVVYDVGVERVNKVKKFLRMHLNWVQNSVFEGEVTLAEFER
@@ -8747,6 +8869,10 @@ FEATURES             Location/Qualifiers
                      IRLYPDERYVFRRSNPAIVGIEVIEGRIKPGVTLIKQNGQKVGTIKSIKSRDEFLQEA
                      KKGQAVAVAIEGAIVGRHIHPGETLYVDISRDDAITLLKYLRDVLEDSDIKALKIIAQ
                      IKAKEDPFWRAI*"
+     repeat_region   1074417..1075181
+                     /locus_tag="JLPIBLAO_1_crispr_007"
+                     /rpt_family="CRISPR"
+                     /rpt_type=direct
      CDS             complement(1075665..1076926)
                      /locus_tag="JLPIBLAO_1_01139"
                      /translation="MLREIIEKFDDTVIVDKPVKKEYEITKYLLKYKDRPVLFKDVEG
@@ -8991,6 +9117,10 @@ FEATURES             Location/Qualifiers
                      TKDIDLMITIENLSILRENLTNELRKRGFTVQWRSWGLLVKTKSGIEIDINTPMLLLD
                      KEFESRATKIAENLYLPSLEDLIVTKLMSLERKDYSDIKEVFKLAGKIDFDYLCKRIK
                      EANLEKEFNKIAKRIGVKKC*"
+     tRNA            1103638..1103715
+                     /locus_tag="JLPIBLAO_1_trna_013"
+                     /product="tRNA-Gly"
+                     /anticodon=ccc
      CDS             1103737..1104972
                      /locus_tag="JLPIBLAO_1_01172"
                      /translation="MRGIIKRLNDDGFGILYNKILVPFSAPGDEVEVLKTEKQKRAKI
@@ -9705,6 +9835,10 @@ FEATURES             Location/Qualifiers
                      IDVLRYDEQEAVYNEVRMKVIRAGAQFLDASIINWMFLQAITLAPLIDPKNEIKRLIK
                      ERVFSGDLSKKLDEVFSGIWAFYDLIKIVGKGRFELVELRDKILEYRQRLGLEFYPST
                      QDFFEKATVI*"
+     tRNA            1187037..1187124
+                     /locus_tag="JLPIBLAO_1_trna_014"
+                     /product="tRNA-Leu"
+                     /anticodon=tag
      CDS             complement(1187214..1187524)
                      /locus_tag="JLPIBLAO_1_01271"
                      /translation="MKRWGLIFPTLYFFFLFIMIFVFNFPREVTRQWMWIQVGGIVFM
@@ -10427,6 +10561,14 @@ FEATURES             Location/Qualifiers
                      WILNLRDTRKAETKMFWNFVFGFIYISLLGIFRGIKFDIVGILGAIYVGSFEMGLTFL
                      LWLKALESEKAGEVASLVYLTPVLSLVFISILVGEKIMKSTILGLALILLGIIMSRRE
                      *"
+     tRNA            complement(1270626..1270699)
+                     /locus_tag="JLPIBLAO_1_trna_035"
+                     /product="tRNA-Met"
+                     /anticodon=cat
+     tRNA            complement(1270710..1270781)
+                     /locus_tag="JLPIBLAO_1_trna_034"
+                     /product="tRNA-Asn"
+                     /anticodon=gtt
      CDS             1271128..1271361
                      /locus_tag="JLPIBLAO_1_01372"
                      /translation="MTEIRYYKIGEDRFKISEDEVARRELRVAKVSDDVIQIQEEVHG
@@ -10461,6 +10603,10 @@ FEATURES             Location/Qualifiers
                      /translation="MQKARIKIASTNVRSLDEVANQIKQIAERTGVRMSGPIPLPTKR
                      IRITTRKSPDGEGSATFDRWELRVHKRLIDIEADERAMRQIMRIRVPEDVTIEIELIS
                      *"
+     tRNA            1275149..1275235
+                     /locus_tag="JLPIBLAO_1_trna_015"
+                     /product="tRNA-Ser"
+                     /anticodon=gga
      CDS             complement(1275328..1276229)
                      /locus_tag="JLPIBLAO_1_01377"
                      /translation="MNKQKVCPACESAELIYDPERGEIVCAKCGYVIEENIIDMGPEW
@@ -10511,6 +10657,10 @@ FEATURES             Location/Qualifiers
                      VRKVVKALISSGVAMSIAGSSRPASGAEHLFSHALDLLLEKPALHGEQTGIGTIIMAY
                      LHGINWRKIKETLQKVGAPTTAYELGVDPEIIIEALTIAHTIRPERYTILGRDGLTRE
                      AAERAAKITGVI*"
+     tRNA            complement(1281259..1281364)
+                     /locus_tag="JLPIBLAO_1_trna_033"
+                     /product="tRNA-Met"
+                     /anticodon=cat
      CDS             1281448..1282251
                      /locus_tag="JLPIBLAO_1_01383"
                      /translation="MKVGVSIYPHFLNERKTLASILADIKVKNYDFVQIFPHALGVIK
@@ -11271,6 +11421,9 @@ FEATURES             Location/Qualifiers
                      EMTHTRGNRNLEKAILKSLKIFKPYRFEKESELEGQLVVHLRNTIEGAEITPQKAGAK
                      RGDAFVPDIVIENFAVEIKFFKRGTSRAEWDRSIGQAVRYYIDGKYDKVFLFVVDHAG
                      IVPEEDIEKYEELLPWLKVIISKY*"
+     rRNA            1370591..1370712
+                     /locus_tag="JLPIBLAO_1_rrna_003"
+                     /product="5S_rRNA"
      CDS             complement(1370715..1371403)
                      /locus_tag="JLPIBLAO_1_01484"
                      /translation="MRVKLLPERALLLGRNLIISDVHLGYEEVMVQKGDFIPSLLREI
@@ -11278,6 +11431,10 @@ FEATURES             Location/Qualifiers
                      GLGWIKEKFGVEVVEEFELGKWKIAHGHKPFDFNRAIIGHEHPSIRLRDEVGAIIKVP
                      VFLKSEDLIVLPAFSPWAYGNDISREVISPVLASHGVDNMEVIVPIENEVLNFGKYSE
                      LMKALQKLYVG*"
+     tRNA            complement(1371431..1371504)
+                     /locus_tag="JLPIBLAO_1_trna_032"
+                     /product="tRNA-Lys"
+                     /anticodon=ctt
      CDS             1371612..1371908
                      /locus_tag="JLPIBLAO_1_01485"
                      /translation="MSEIKNVITVEKLEKYFKITREALEKLEIAVDERSHLYVVAKDF
@@ -11367,6 +11524,18 @@ FEATURES             Location/Qualifiers
                      /translation="MILLSSLLFYCQKILWSRDRDLNPGKGDLQSPAWPLGYPGITKV
                      GMAPRRGFEPRRDHAHRLSRPAPYQARLPRHTRYCETKSGYLNFLLEPGPGFEPGTWG
                      LRVPRPTRLGYPGSNPFSFNACLSL*"
+     tRNA            complement(1380456..1380529)
+                     /locus_tag="JLPIBLAO_1_trna_031"
+                     /product="tRNA-Cys"
+                     /anticodon=gca
+     tRNA            complement(1380550..1380632)
+                     /locus_tag="JLPIBLAO_1_trna_030"
+                     /product="tRNA-Ser"
+                     /anticodon=gct
+     tRNA            complement(1380679..1380754)
+                     /locus_tag="JLPIBLAO_1_trna_029"
+                     /product="tRNA-Thr"
+                     /anticodon=cgt
      CDS             1381127..1381546
                      /locus_tag="JLPIBLAO_1_01499"
                      /translation="MVTKRLPGKIRRALRARYYDIEPKAWIGKRGLEESVIKEIENQL
@@ -11746,6 +11915,10 @@ FEATURES             Location/Qualifiers
                      /translation="MMPMNPKQLKKLMKQLDMRQLDNVVEVIIRLEDREIIIKNPTVT
                      VIKAMGEKIYQIAGGEEEEKVKLVISEEDIKLVMEQTGVDYETAKKALEEANGDLAEA
                      ILKLTEGSP*"
+     tRNA            complement(1426950..1427033)
+                     /locus_tag="JLPIBLAO_1_trna_028"
+                     /product="tRNA-Leu"
+                     /anticodon=taa
      CDS             complement(1427458..1427798)
                      /locus_tag="JLPIBLAO_1_01547"
                      /translation="MRVLKEWNVKVKLVRTKRGAILHMIELSPNHFYLEQNPLKDSKY
@@ -11909,12 +12082,24 @@ FEATURES             Location/Qualifiers
                      /locus_tag="JLPIBLAO_1_01566"
                      /translation="MAGKKEFSIFDHVLVPEHRVLSEEEKKALLEKYKITLAQLPQIK
                      ASDPAVKALGAKPGDVIEIKRKSPTAGVYYYYRVVVED*"
+     tRNA            complement(1446702..1446777)
+                     /locus_tag="JLPIBLAO_1_trna_027"
+                     /product="tRNA-Thr"
+                     /anticodon=ggt
      CDS             complement(1446828..1447447)
                      /locus_tag="JLPIBLAO_1_01567"
                      /translation="MYFDHFPTFGGYIFSMVLYYTLIPAVLLVTLRIKWNYIVRRYWR
                      SVLKAFIIAIFISSLITSLLQFKLTNDYLYVYSLTRTGVCLTSSCLISEMERNRDYHF
                      NITAIKSYGMPRAGLMMAFRLVDRKYNPSKGRFESVNSVVIIRSLAPIPAVEVWDYKV
                      DPKDSHRIIGLRKFYIYYPYSPATFLTKAYDFEFTMFLWGMRGGAA*"
+     tRNA            complement(1447474..1447547)
+                     /locus_tag="JLPIBLAO_1_trna_026"
+                     /product="tRNA-Pro"
+                     /anticodon=tgg
+     tRNA            complement(1447551..1447626)
+                     /locus_tag="JLPIBLAO_1_trna_025"
+                     /product="tRNA-Thr"
+                     /anticodon=tgt
      CDS             complement(1447677..1448509)
                      /locus_tag="JLPIBLAO_1_01568"
                      /translation="MSNDEIVAGIMRDYILNLLKEKKRIDDRGFEDYRPIEVEVGVIE
@@ -12492,6 +12677,10 @@ FEATURES             Location/Qualifiers
                      /locus_tag="JLPIBLAO_1_01644"
                      /translation="MFKYTRFEKARIIGARALQISMGAPVLIDVPPGITPLEAAILEF
                      EKGVIPITVIRPS*"
+     tRNA            complement(1516390..1516462)
+                     /locus_tag="JLPIBLAO_1_trna_024"
+                     /product="tRNA-Pro"
+                     /anticodon=ggg
      CDS             complement(1516490..1516686)
                      /locus_tag="JLPIBLAO_1_01645"
                      /translation="MIVPVRCFTCGKVIGDKYYEFKRRVEAGEDPEKVLDDLGLERYC
@@ -12511,6 +12700,10 @@ FEATURES             Location/Qualifiers
                      /translation="MKRTGPTDPNLRRLIRYLRKKSNEYGVKIWKDVAWRLERPRRQR
                      AEVNVSKINRYANDGEMIVVPGSVLGAGKLEKKVIVAAWKFSETARRKIIEAGGEAIT
                      IEELIERNPTGSGVRIME*"
+     tRNA            complement(1518035..1518118)
+                     /locus_tag="JLPIBLAO_1_trna_023"
+                     /product="tRNA-Leu"
+                     /anticodon=cag
      CDS             complement(1518125..1518909)
                      /locus_tag="JLPIBLAO_1_01649"
                      /translation="MAGIEVQILEKKEDSIKFVLKGVHVSFANALRRTILGEVPTFAV
@@ -12534,6 +12727,10 @@ FEATURES             Location/Qualifiers
                      /translation="MANFRHIVRVAGVDLDGNKQLRWALTAIKGIGINFATMVCRVAG
                      LDPFMKAGYLTDEQVKKIEEILADPVAHGIPRWAVNRPKDYETGRDLHLITAKLDMAI
                      REDIMRLRRIRAYRGIRHELGLPVRGQRTRSNFRRGQTVGVSRKKK*"
+     tRNA            complement(1520402..1520484)
+                     /locus_tag="JLPIBLAO_1_trna_022"
+                     /product="tRNA-Ser"
+                     /anticodon=tga
      CDS             complement(1520471..1521108)
                      /locus_tag="JLPIBLAO_1_01653"
                      /translation="MEKWAPTFISFSQIFLDVSHYYSETPGGPLKTKTIEVCIRGYCF
@@ -12716,6 +12913,13 @@ FEATURES             Location/Qualifiers
                      LALLAAKKAKFVVGVDINERAVDIAWKNAVNNDVKNVIFVKSDLFENIRGRFSLIVFN
                      PPYLPGEDEEIRDPIDLALIGGKTGGEVIERFAKHVKDFLLPGGRVLLLYSSLTKINV
                      RKLFDELGFKTAIVAKEKLFFEELYVMKAELSLHFR*"
+     tRNA            complement(1541113..1541186)
+                     /locus_tag="JLPIBLAO_1_trna_021"
+                     /product="tRNA-Asp"
+                     /anticodon=gtc
+     rRNA            complement(1541200..1541319)
+                     /locus_tag="JLPIBLAO_1_rrna_004"
+                     /product="5S_rRNA"
      CDS             complement(1541367..1541854)
                      /locus_tag="JLPIBLAO_1_01677"
                      /translation="MLKNVFVKKLSGDIMEVRFVDDYVAFSRMPYEDEIGELVKEFDA
@@ -13180,6 +13384,10 @@ FEATURES             Location/Qualifiers
                      VALKYMKVGVEKILTAATDGIPLAVQIANELGVDVVYAKKKKEVGVERFYEVNYIPSA
                      SGSITTLYLPTWALKKGERVLIVDDVVRSGETQRALVELCRQAGAIPVGMFFLISVGD
                      IVERLKEEYNIPVEALVNL*"
+     tRNA            1595046..1595123
+                     /locus_tag="JLPIBLAO_1_trna_016"
+                     /product="tRNA-Val"
+                     /anticodon=cac
      CDS             complement(1595189..1595592)
                      /locus_tag="JLPIBLAO_1_01739"
                      /translation="MVSRLEIFNTLEGIVVKKEIKYNSKIGEGVYSFITEKMKREVNP
@@ -14231,6 +14439,10 @@ FEATURES             Location/Qualifiers
                      GSGALTLFLANIIGPTGRIVSYEIREDFAKLAWENIKWAGFDDRVEIKIKDIYEGIDE
                      ENVDHVILDLPQPERVVEHAAKALKPGGYLVAYLPCANQVIRLHEKLAEFRDVFLKPK
                      TIDVVVFEQEVKKECIRPRTTILAHTGYITFARKR*"
+     tRNA            1714042..1714118
+                     /locus_tag="JLPIBLAO_1_trna_017"
+                     /product="tRNA-Val"
+                     /anticodon=tac
      CDS             complement(1714453..1714949)
                      /locus_tag="JLPIBLAO_1_01886"
                      /translation="MRFKPRPFITPVRFKCLFCLDCCRGRHVYLTVSDIKRLVGSGHD
@@ -14911,6 +15123,10 @@ FEATURES             Location/Qualifiers
                      EKTASGEFYSTPKELLVELFDIITRGDLPTSVLEDVLMAVSLGDLSPVDELKDILEGK
                      EDEVESLKMVIAEIIKTRKREDVIIVEGKDIVDLLPYGNDIKLFLLESNEIRKVSKEV
                      NVKELRNILGMDVEDVMDIINLIRVREDV*"
+     tRNA            complement(1798282..1798355)
+                     /locus_tag="JLPIBLAO_1_trna_020"
+                     /product="tRNA-Pro"
+                     /anticodon=cgg
      CDS             complement(1798396..1799093)
                      /locus_tag="JLPIBLAO_1_01969"
                      /translation="MPREKVVRVWDEREVVYSPKRWRILWEKREKALKIMELLKDFDP
@@ -15031,6 +15247,10 @@ FEATURES             Location/Qualifiers
                      /translation="MLLPDWKIRKEILIEPFSEESLQPAGYDLRVGREAFVKGKLIDV
                      EKEGKVVIPPREYALILTLERIKLPDDVMGDMKIRSSLAREGVIGSFAWVDPGWDGNL
                      TLMLYNASNEPVELRYGERFVQIAFIRLEGPARNPYRGNYQGSTRLAFSKRKKL*"
+     tRNA            1811706..1811783
+                     /locus_tag="JLPIBLAO_1_trna_018"
+                     /product="tRNA-Arg"
+                     /anticodon=tcg
      CDS             1812130..1812798
                      /locus_tag="JLPIBLAO_1_01987"
                      /translation="MISKKLSLVFTIILVLAVLVYISNHEHPSTTTNNTNPQSNAFTI
@@ -15308,6 +15528,10 @@ FEATURES             Location/Qualifiers
                      GRIGIIEEPSLGAKPLSRWLIKVHRPIKFEEAKKALKNAQKGLIFLKSQPPIFHVVTE
                      SLELARKIHEIGLSSGFKYTTYKVISRRYLVEINGTEYLTVPLGKDGKVFVTDEYLEF
                      VIEIGNQMLMRGKSRLPRLREKFEELKEEVGEDPLFTTLSTEKLSL*"
+     tRNA            1844790..1844866
+                     /locus_tag="JLPIBLAO_1_trna_019"
+                     /product="tRNA-His"
+                     /anticodon=gtg
      CDS             1845469..1846527
                      /locus_tag="JLPIBLAO_1_02024"
                      /translation="MNDIKKVTQTIITLKFNFSAVVSRMEEPRITVFAYSEDKFEEKR

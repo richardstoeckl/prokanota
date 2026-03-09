@@ -282,6 +282,7 @@ rule predict_features:
         fna=os.path.join(RESULTPATH, "{id}", "features", "{id}.fna"),
         tsv=os.path.join(RESULTPATH, "{id}", "features", "{id}.tsv"),
         rna=os.path.join(RESULTPATH, "{id}", "features", "{id}_rna.tsv"),
+        crispr=os.path.join(RESULTPATH, "{id}", "features", "{id}_crispr.tsv"),
         genome=os.path.join(RESULTPATH, "{id}", "features", "{id}.fasta"),
     log:
         os.path.join(LOGPATH, "{id}", "features", "{id}_predict_features.log"),
@@ -308,8 +309,9 @@ rule predict_features:
         --fna_path {output.fna} \
         --tsv_path {output.tsv} \
         --genome_path {output.genome} \
-        --run_rrna --run_trna \
+        --run_rrna --run_trna --run_crispr \
         --rna_tsv_path {output.rna} \
+        --crispr_tsv_path {output.crispr} \
         --translation_table {params.translation_table} \
         --threads {threads} 2>&1 | tee {log}
         """

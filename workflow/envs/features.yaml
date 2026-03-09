@@ -1,4 +1,4 @@
-name: cds
+name: features
 channels:
     - conda-forge
     - bioconda
@@ -8,7 +8,8 @@ dependencies:
     - trnascan-se==2.0.12
     - pip>=25.0.1
     - pip:
-        - gb-io==0.3.8
+        - gb-io==0.4.0
         - pyrodigal==v3.7.0
         - polars==1.38.1
         - pybarrnap==0.5.1
+        - diced==0.1.3

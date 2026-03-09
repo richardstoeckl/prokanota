@@ -23,6 +23,7 @@ This module relies on external tools:
 - Pyrodigal for gene prediction
 - Pybarrnap for rRNA prediction
 - tRNAscan-SE for tRNA prediction (assumed to be in PATH)
+- DICED for CRISPR array detection
 """
 
 
@@ -77,12 +78,14 @@ def setup_logging(verbose=False):
     rrna_logger = logging.getLogger("rRNA")
     trna_logger = logging.getLogger("tRNA")
     
+    crispr_logger = logging.getLogger("CRISPR")
+
     # Configure pybarrnap logger
     pybarrnap_logger = logging.getLogger("pybarrnap.barrnap")
     if not verbose:
         pybarrnap_logger.setLevel(logging.WARNING)
     
-    return log, cds_logger, rrna_logger, trna_logger
+    return log, cds_logger, rrna_logger, trna_logger, crispr_logger
 
 def get_trnascan_version():
     """
@@ -119,6 +122,13 @@ def log_versions(log):
     log.info(f"Pybarrnap Version: v{pybarrnap.__version__}")
     trna_version = get_trnascan_version()
     log.info(f"tRNAscan-SE Version: v{trna_version}")
+
+    # CRISPR detection
+    try:
+        import diced
+        log.info(f"DICED Version: v{diced.__version__}")
+    except ImportError:
+        log.info("DICED Version: not installed")
 
 
 def log_file_paths(logger, **paths):
@@ -218,6 +228,38 @@ class RNAPrediction:
         """calculate RNA length"""
         return self.end - self.start + 1
 
+class CRISPRPrediction:
+    """
+    Container for CRISPR array predictions.
+    
+    Attributes:
+        contig_id (str): Custom contig name
+        crispr_id (str): Unique CRISPR ID
+        start (int): Start coordinate (1-based)
+        end (int): End coordinate
+        strand (str): '+' or '-'
+        repeat_length (int): Length of the consensus repeat sequence
+        spacer_length (int): Average length of spacer sequences
+        num_repeats (int): Number of repeats in the array
+        repeat_sequence (str): Consensus repeat sequence
+    """
+    def __init__(self, contig_id, crispr_id, start, end, strand,
+                 repeat_length, spacer_length, num_repeats, repeat_sequence):
+        self.contig_id = contig_id
+        self.crispr_id = crispr_id
+        self.start = start
+        self.end = end
+        self.strand = strand
+        self.repeat_length = repeat_length
+        self.spacer_length = spacer_length
+        self.num_repeats = num_repeats
+        self.repeat_sequence = repeat_sequence
+
+    @property
+    def length(self):
+        """Calculate CRISPR array length."""
+        return self.end - self.start + 1
+
 # ---------------------------
 # Output Functions
 # ---------------------------
@@ -238,37 +280,98 @@ def write_faa(genome_id, gene_records, faa_path):
         for record in gene_records:
             faa_file.write(f">{record.gene_id}\n{record.protein_seq}\n")
 
-def write_gff(genome_id, gene_records, gff_path, contigs):
+def write_gff(genome_id, gene_records, gff_path, contigs,
+              rrna_records=None, trna_records=None, crispr_records=None):
     """
-    Writes all predicted gene locations to a GFF file.
-    Each record includes the contig_id, start, end, and gene ID as an attribute.
+    Writes all predicted feature locations to a GFF3 file.
+    Includes CDS (Pyrodigal), rRNA (pybarrnap), tRNA (tRNAscan-SE), and
+    CRISPR arrays (DICED) when the respective record lists are provided.
+    All features are sorted by contig order and then by start position.
 
     Args:
         genome_id (str): The unique genome ID, used as the file name prefix.
         gene_records (list): A list of GenePrediction objects.
         gff_path (str): Path to the output .gff file.
         contigs (dict): Dictionary mapping contig_ids to their sequences.
+        rrna_records (list, optional): List of RNAPrediction objects for rRNA.
+        trna_records (list, optional): List of RNAPrediction objects for tRNA.
+        crispr_records (list, optional): List of CRISPRPrediction objects.
     """
-    log.debug(f"Writing {len(gene_records)} gene locations to {gff_path}")
+    rrna_records = rrna_records or []
+    trna_records = trna_records or []
+    crispr_records = crispr_records or []
+
+    total_features = len(gene_records) + len(rrna_records) + len(trna_records) + len(crispr_records)
+    log.debug(f"Writing {total_features} features ({len(gene_records)} CDS, "
+              f"{len(rrna_records)} rRNA, {len(trna_records)} tRNA, "
+              f"{len(crispr_records)} CRISPR) to {gff_path}")
+
+    # Build a lookup from contig_tag to its insertion order index for sorting
+    contig_order = {tag: i for i, tag in enumerate(contigs.keys())}
+
+    # Collect all feature rows as (contig_order_index, start, row_string) tuples
+    rows = []
+
+    for record in gene_records:
+        row = (
+            f"{record.contig_id}\tPyrodigal\tCDS\t"
+            f"{record.start}\t{record.end}\t.\t"
+            f"{record.strand}\t.\tID={record.gene_id}"
+        )
+        rows.append((contig_order.get(record.contig_id, 0), record.start, row))
+
+    for rna in rrna_records:
+        row = (
+            f"{rna.contig_id}\tpybarrnap\trRNA\t"
+            f"{rna.start}\t{rna.end}\t.\t"
+            f"{rna.strand}\t.\tID={rna.rna_id};product={rna.rna_type}"
+        )
+        rows.append((contig_order.get(rna.contig_id, 0), rna.start, row))
+
+    for rna in trna_records:
+        score_col = f"{rna.score}" if rna.score is not None else "."
+        attrs = f"ID={rna.rna_id};product={rna.rna_type}"
+        if rna.anti_codon:
+            attrs += f";anticodon={rna.anti_codon}"
+        row = (
+            f"{rna.contig_id}\ttRNAscan-SE\ttRNA\t"
+            f"{rna.start}\t{rna.end}\t{score_col}\t"
+            f"{rna.strand}\t.\t{attrs}"
+        )
+        rows.append((contig_order.get(rna.contig_id, 0), rna.start, row))
+
+    for crispr in crispr_records:
+        # GFF3 strand column only allows +, -, ., ? — map '*' (unknown) to '.'
+        strand_col = crispr.strand if crispr.strand in ('+', '-') else '.'
+        row = (
+            f"{crispr.contig_id}\tDICED\trepeat_region\t"
+            f"{crispr.start}\t{crispr.end}\t.\t"
+            f"{strand_col}\t.\tID={crispr.crispr_id};rpt_family=CRISPR;rpt_type=direct"
+        )
+        rows.append((contig_order.get(crispr.contig_id, 0), crispr.start, row))
+
+    # Sort by contig order, then by start position
+    rows.sort(key=lambda x: (x[0], x[1]))
+
     with open(gff_path, "w") as gff_file:
         # Write GFF3 version header
         gff_file.write("##gff-version 3\n")
-        
+
         # Write sequence-region pragmas for each contig
         for contig_id, sequence in contigs.items():
             gff_file.write(f"##sequence-region {contig_id} 1 {len(sequence)}\n")
-        
-        # Write feature entries
-        for record in gene_records:
-            gff_file.write(
-                f"{record.contig_id}\tPyrodigal\tCDS\t"
-                f"{record.start}\t{record.end}\t.\t"
-                f"{record.strand}\t.\tID={record.gene_id}\n"
-            )
 
-def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path):
+        # Write sorted feature entries
+        for _contig_idx, _start, row in rows:
+            gff_file.write(row + "\n")
+
+def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path,
+              rrna_records=None, trna_records=None, crispr_records=None):
     """
-    Writes the predicted CDS to a GenBank file.
+    Writes the predicted features to a GenBank file.
+    Includes CDS (from Pyrodigal), rRNA, tRNA, and CRISPR repeat regions
+    when the respective record lists are provided.
+    All features per contig are sorted by start position.
 
     Args:
         genome_id (str): The generated 8-character genome ID.
@@ -276,17 +379,28 @@ def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path):
         gene_records (list): A list of GenePrediction objects.
         contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
         gbk_path (str): The output path for the GenBank file.
+        rrna_records (list, optional): List of RNAPrediction objects for rRNA.
+        trna_records (list, optional): List of RNAPrediction objects for tRNA.
+        crispr_records (list, optional): List of CRISPRPrediction objects.
     """
-    log.debug(f"Writing {len(gene_records)} genes and {len(contigs)} contigs to {gbk_path}")
+    rrna_records = rrna_records or []
+    trna_records = trna_records or []
+    crispr_records = crispr_records or []
+
+    total_features = len(gene_records) + len(rrna_records) + len(trna_records) + len(crispr_records)
+    log.debug(f"Writing {total_features} features ({len(gene_records)} CDS, "
+              f"{len(rrna_records)} rRNA, {len(trna_records)} tRNA, "
+              f"{len(crispr_records)} CRISPR) across {len(contigs)} contigs to {gbk_path}")
     records = []
     for contig_tag, header_id in contig_mapping.items():
-        # Hole die Sequenz über contig_tag
         dna_sequence = contigs[contig_tag]
         # Encode to bytes if required
         if isinstance(dna_sequence, str):
             dna_sequence = dna_sequence.encode('utf-8')
 
-        features = []
+        # Collect (start, Feature) tuples so we can sort by position later
+        feature_entries = []
+
         for gene in gene_records:
             if gene.contig_id == contig_tag:
                 qualifiers = [
@@ -306,13 +420,64 @@ def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path):
                 else:
                     location = base_location
 
-                feature = Feature(
+                feature_entries.append((gene.start, Feature(
                     kind="CDS",
                     location=location,
                     qualifiers=qualifiers
-                )
-                features.append(feature)
+                )))
 
+        for rna in rrna_records:
+            if rna.contig_id == contig_tag:
+                qualifiers = [
+                    Qualifier(key="locus_tag", value=rna.rna_id),
+                    Qualifier(key="product", value=rna.rna_type),
+                ]
+                if rna.strand == '+':
+                    location = gb_io.Range(start=rna.start - 1, end=rna.end)
+                else:
+                    location = gb_io.Complement(gb_io.Range(start=rna.start, end=rna.end))
+                feature_entries.append((rna.start, Feature(
+                    kind="rRNA",
+                    location=location,
+                    qualifiers=qualifiers
+                )))
+
+        for rna in trna_records:
+            if rna.contig_id == contig_tag:
+                qualifiers = [
+                    Qualifier(key="locus_tag", value=rna.rna_id),
+                    Qualifier(key="product", value=rna.rna_type),
+                ]
+                if rna.anti_codon:
+                    qualifiers.append(Qualifier(key="anticodon", value=rna.anti_codon))
+                if rna.strand == '+':
+                    location = gb_io.Range(start=rna.start - 1, end=rna.end)
+                else:
+                    location = gb_io.Complement(gb_io.Range(start=rna.start, end=rna.end))
+                feature_entries.append((rna.start, Feature(
+                    kind="tRNA",
+                    location=location,
+                    qualifiers=qualifiers
+                )))
+
+        for crispr in crispr_records:
+            if crispr.contig_id == contig_tag:
+                qualifiers = [
+                    Qualifier(key="locus_tag", value=crispr.crispr_id),
+                    Qualifier(key="rpt_family", value="CRISPR"),
+                    Qualifier(key="rpt_type", value="direct"),
+                ]
+                # CRISPR strand is '*' (unknown); use a plain Range without Complement
+                location = gb_io.Range(start=crispr.start - 1, end=crispr.end)
+                feature_entries.append((crispr.start, Feature(
+                    kind="repeat_region",
+                    location=location,
+                    qualifiers=qualifiers
+                )))
+
+        # Sort all features for this contig by start position
+        feature_entries.sort(key=lambda x: x[0])
+        features = [feat for _start, feat in feature_entries]
 
         record = Record(
             name=header_id,
@@ -411,6 +576,31 @@ def write_rna_tsv(rna_records, tsv_path):
                 f"{rna.contig_id}\t{rna.rna_id}\t{rna.rna_type}\t"
                 f"{rna.start}\t{rna.end}\t{rna.strand}\t{rna.length}\t"
                 f"{score}\t{anti_codon}\t{rna.sequence}\n"
+            )
+
+def write_crispr_tsv(crispr_records, tsv_path):
+    """
+    Writes a TSV file summarizing CRISPR array predictions.
+    Columns: contig_id, crispr_id, start, end, strand, length, repeat_length,
+             spacer_length, num_repeats, repeat_sequence, confidence.
+    
+    Args:
+        crispr_records (list): List of CRISPRPrediction objects
+        tsv_path (str): Path for tsv file
+    """
+    log.debug(f"Writing {len(crispr_records)} CRISPR predictions to {tsv_path}")
+
+    # Sort records by start position
+    sorted_records = sorted(crispr_records, key=lambda x: x.start)
+
+    with open(tsv_path, "w") as tsv_file:
+        tsv_file.write("contig_id\tcrispr_id\tstart\tend\tstrand\tlength\t"
+                       "repeat_length\tspacer_length\tnum_repeats\trepeat_sequence\n")
+        for crispr in sorted_records:
+            tsv_file.write(
+                f"{crispr.contig_id}\t{crispr.crispr_id}\t{crispr.start}\t{crispr.end}\t"
+                f"{crispr.strand}\t{crispr.length}\t{crispr.repeat_length}\t"
+                f"{crispr.spacer_length}\t{crispr.num_repeats}\t{crispr.repeat_sequence}\n"
             )
 
 def write_genome(genome_id, tagged_contigs, genome_path):
@@ -559,12 +749,77 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
             )
     return trna_records
 
+def predict_crisprs(tagged_contigs, threads=1):
+    """
+    Prediction of CRISPR arrays via DICED.
+    
+    Args:
+        tagged_contigs (dict): Dictionary with contig_tag -> sequence
+        threads (int): Number of threads (currently unused by DICED)
+    
+    Returns:
+        list: List of CRISPRPrediction objects
+        
+    Raises:
+        ImportError: If DICED is not installed
+    """
+    crispr_logger.info("Starting CRISPR prediction on %d contigs: %s",
+                       len(tagged_contigs), list(tagged_contigs.keys()))
+
+    try:
+        import diced
+    except ImportError:
+        crispr_logger.error("DICED is not installed but run_crispr was requested. "
+                            "Install with: pip install diced")
+        raise
+
+    crispr_records = []
+
+    for contig_id, sequence in tagged_contigs.items():
+        crisprs = diced.scan(sequence)
+
+        for i, crispr in enumerate(crisprs):
+            crispr_id = f"{contig_id}_crispr_{i+1:03d}"
+
+            # Convert from 0-based to 1-based start coordinate
+            start = crispr.start + 1
+            end = crispr.end
+            num_repeats = len(crispr.repeats)
+            repeat_sequence = str(crispr.repeats[0])
+            repeat_length = len(repeat_sequence)
+            # Derive average spacer length from array geometry to avoid
+            # a known off-by-one bug in the DICED spacer iterator (pyo3).
+            num_spacers = num_repeats - 1
+            spacer_length = (
+                int((end - start + 1 - num_repeats * repeat_length) / num_spacers)
+                if num_spacers > 0 else 0
+            )
+
+            # DICED does not predict the strandness, so we will default to '*' to make this clear.
+            strand = '*'
+
+            crispr_records.append(
+                CRISPRPrediction(
+                    contig_id=contig_id,
+                    crispr_id=crispr_id,
+                    start=start,
+                    end=end,
+                    strand=strand,
+                    repeat_length=repeat_length,
+                    spacer_length=spacer_length,
+                    num_repeats=num_repeats,
+                    repeat_sequence=repeat_sequence,
+                )
+            )
+
+    return crispr_records
+
 # ---------------------------
 # Main Parsing and Prediction Function
 # ---------------------------
 
 def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_table, 
-                          run_rrna=False, run_trna=False, threads=1):
+                          run_rrna=False, run_trna=False, run_crispr=False, threads=1):
     """
     Reads the FASTA file, computes a genome ID using MD5 hashing and a custom mapping,
     then uses Pyrodigal to predict genes.
@@ -580,7 +835,9 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
             - tagged_contigs (dict): A dictionary of contig_tag -> contig_sequence.
             - gene_records (list): A list of GenePrediction objects.
             - contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
-            - rrna_records (list): List of RrnaPrediction objects (empty if run_rrna is False).
+            - rrna_records (list): List of RNAPrediction objects (empty if run_rrna is False).
+            - trna_records (list): List of RNAPrediction objects (empty if run_trna is False).
+            - crispr_records (list): List of CRISPRPrediction objects (empty if run_crispr is False).
     """
 
     log.info(f"Processing {filename}.")
@@ -741,12 +998,23 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
 
     trna_logger.info(f"Predicted {len(trna_records)} tRNAs")
 
-    return genome_id, tagged_contigs, gene_records, contig_mapping, rrna_records, trna_records
+    # ---------------------------
+    # CRISPR Prediction using DICED (if requested)
+    # ---------------------------
+
+    crispr_records = []
+    if run_crispr:
+        crispr_records = predict_crisprs(tagged_contigs, threads)
+
+    crispr_logger.info("Predicted %d CRISPR arrays", len(crispr_records))
+
+    return genome_id, tagged_contigs, gene_records, contig_mapping, rrna_records, trna_records, crispr_records
 
 def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=None, 
                   fna_path=None, tsv_path=None, meta_mode=False, closed=False, 
                   translation_table=11, genome_path=None, run_rrna=False, 
-                  run_trna=False, rna_tsv_path=None, threads=1):
+                  run_trna=False, run_crispr=False, rna_tsv_path=None, 
+                  crispr_tsv_path=None, threads=1):
     """
     Master function to process a single genome. Parses the FASTA, runs predictions,
     and writes output files if their paths are provided.
@@ -765,8 +1033,10 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         genome_path (str, optional): Output path for the genome FASTA file.
         run_rrna (bool): Flag to run rRNA prediction.
         run_trna (bool): Flag to run tRNA prediction.
+        run_crispr (bool): Flag to run CRISPR detection.
         rna_tsv_path (str, optional): Output path for the RNA TSV file.
-        threads (int): Number of threads to use for RNA predictions.
+        crispr_tsv_path (str, optional): Output path for the CRISPR TSV file.
+        threads (int): Number of threads to use for RNA/CRISPR predictions.
     """
     # Log versions of all tools
     log_versions(log)
@@ -783,6 +1053,7 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         'tsv': tsv_path,
         'genome': genome_path,
         'rna_tsv': rna_tsv_path,
+        'crispr_tsv': crispr_tsv_path,
     }
     for output_name, output_path in output_files.items():
         if output_path:
@@ -797,12 +1068,13 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         translation_table=translation_table,
         run_rrna=run_rrna,
         run_trna=run_trna,
+        run_crispr=run_crispr,
         threads=threads,
     )
 
     # Parse the FASTA and get predictions
-    genome_id, contigs, gene_records, contig_mapping, rrna_records, trna_records = parse_fasta_and_predict(
-        sample_id, filename, meta_mode, closed, translation_table, run_rrna, run_trna, threads
+    genome_id, contigs, gene_records, contig_mapping, rrna_records, trna_records, crispr_records = parse_fasta_and_predict(
+        sample_id, filename, meta_mode, closed, translation_table, run_rrna, run_trna, run_crispr, threads
     )
     
     # Log execution statistics from prediction
@@ -813,6 +1085,7 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         predicted_genes=len(gene_records),
         predicted_rrnas=len(rrna_records),
         predicted_trnas=len(trna_records),
+        predicted_crisprs=len(crispr_records),
     )
     
     # Check for no gene predictions
@@ -823,9 +1096,11 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
     if faa_path:
         write_faa(genome_id, gene_records, faa_path)
     if gff_path:
-        write_gff(genome_id, gene_records, gff_path, contigs)
+        write_gff(genome_id, gene_records, gff_path, contigs,
+                  rrna_records=rrna_records, trna_records=trna_records, crispr_records=crispr_records)
     if gbk_path:
-        write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path)
+        write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path,
+                  rrna_records=rrna_records, trna_records=trna_records, crispr_records=crispr_records)
     if fna_path:
         write_fna(genome_id, gene_records, fna_path)
     if tsv_path:
@@ -838,13 +1113,17 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         all_rna_records = rrna_records + trna_records
         write_rna_tsv(all_rna_records, rna_tsv_path)
 
+    # Write CRISPR predictions if path is provided (even if empty)
+    if crispr_tsv_path:
+        write_crispr_tsv(crispr_records, crispr_tsv_path)
+
     # Log processed file info
     log.info(f"Finished processing {filename} => {genome_id}.")
 
 
 def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
                           gff_path=None, gbk_path=None, fna_path=None,
-                          genome_path=None, rna_tsv_path=None):
+                          genome_path=None, rna_tsv_path=None, crispr_tsv_path=None):
     """
     Process protein-only FASTA input and write base outputs.
 
@@ -858,6 +1137,7 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
         fna_path (str, optional): Output path for empty nucleotide FASTA file.
         genome_path (str, optional): Output path for empty genome FASTA file.
         rna_tsv_path (str, optional): Output path for empty RNA TSV file.
+        crispr_tsv_path (str, optional): Output path for empty CRISPR TSV file.
     """
     # Log versions of all tools
     log_versions(log)
@@ -874,6 +1154,7 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
         'fna': fna_path,
         'genome': genome_path,
         'rna_tsv': rna_tsv_path,
+        'crispr_tsv': crispr_tsv_path,
     }
     for output_name, output_path in output_files.items():
         if output_path:
@@ -937,6 +1218,8 @@ def process_protein_input(sample_id, filename, faa_path=None, tsv_path=None,
         ensure_empty_file(genome_path)
     if rna_tsv_path:
         ensure_empty_file(rna_tsv_path)
+    if crispr_tsv_path:
+        ensure_empty_file(crispr_tsv_path)
 
     log.info(f"Finished processing protein input {filename} => {hashed_sample_id}.")
 
@@ -971,6 +1254,9 @@ if __name__ == "__main__":
                        help="Run rRNA prediction using pybarrnap")
     parser.add_argument("--run_trna", action="store_true", 
                        help="Run tRNA prediction using tRNAscan-SE")
+    parser.add_argument("--run_crispr", action="store_true",
+                       help="Run CRISPR array detection using DICED")
+    parser.add_argument("--crispr_tsv_path", help="Output path for CRISPR predictions TSV file")
     parser.add_argument(
         "--input_type",
         choices=["dna", "protein"],
@@ -986,7 +1272,7 @@ if __name__ == "__main__":
     a = parser.parse_args()
 
     # Setup logging based on verbose flag
-    log, cds_logger, rrna_logger, trna_logger = setup_logging(a.verbose)
+    log, cds_logger, rrna_logger, trna_logger, crispr_logger = setup_logging(a.verbose)
 
     if a.input_type == "protein":
         process_protein_input(
@@ -999,6 +1285,7 @@ if __name__ == "__main__":
             fna_path=a.fna_path,
             genome_path=a.genome_path,
             rna_tsv_path=a.rna_tsv_path,
+            crispr_tsv_path=a.crispr_tsv_path,
         )
     else:
         # Run process_genome with the given arguments
@@ -1016,6 +1303,8 @@ if __name__ == "__main__":
             genome_path=a.genome_path,
             run_rrna=a.run_rrna,
             run_trna=a.run_trna,
+            run_crispr=a.run_crispr,
             rna_tsv_path=a.rna_tsv_path,
+            crispr_tsv_path=a.crispr_tsv_path,
             threads=a.threads
         )
