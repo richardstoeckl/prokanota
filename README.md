@@ -1,7 +1,12 @@
 # Snakemake workflow: `Prokanota`
 
+<!-- badges: start -->
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥9.3.5-brightgreen.svg)](https://snakemake.github.io)
 [![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml)
+<!-- badges: end -->
 
 Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free* ,modular database architecture.
 
