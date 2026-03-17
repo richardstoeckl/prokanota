@@ -26,6 +26,9 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from mapping_utils import validate_mapping_file as validate_mapping_file_shared
 
+# True on ARM64 hosts (Apple Silicon, aarch64 Linux); False on x86-64.
+IS_ARM = os.uname().machine in ("arm64", "aarch64")
+print(f"Running on {'ARM64' if IS_ARM else 'x86-64'} architecture")
 
 ########## check minimum snakemake version ##########
 min_version("9.0.1")
@@ -493,7 +496,7 @@ for db in ENABLED_DBS:
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
-                os.path.join(workflow.basedir, "envs", "polars.yaml")
+                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/pyhmmer_parse.py \
@@ -528,7 +531,7 @@ for db in ENABLED_DBS:
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
-                os.path.join(workflow.basedir, "envs", "polars.yaml")
+                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/rpsblast_parse.py \
@@ -563,7 +566,7 @@ for db in ENABLED_DBS:
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
-                os.path.join(workflow.basedir, "envs", "polars.yaml")
+                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/diamond_parse.py \
@@ -598,7 +601,7 @@ for db in ENABLED_DBS:
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
             conda:
-                os.path.join(workflow.basedir, "envs", "polars.yaml")
+                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/mmseqs2_parse.py \
@@ -657,7 +660,7 @@ rule merge_sample_annotations:
     message:
         "Merging annotations for {wildcards.id}"
     conda:
-        os.path.join(workflow.basedir, "envs", "polars.yaml")
+        os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
     shell:
         """
         python {params.scriptpath} \

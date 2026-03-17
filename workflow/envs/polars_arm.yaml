@@ -1,9 +1,9 @@
-name: polars
+name: polars_arm
 channels:
   - conda-forge
 dependencies:
   - python=3.13
-  - polars==1.33.1
+  - polars-lts-cpu==1.33.1
   - pandas>=2.2.3
   - pyyaml==6.0.3
   - jsonschema==4.25.1
