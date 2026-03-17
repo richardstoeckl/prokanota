@@ -94,6 +94,40 @@ LOGPATH = os.path.normpath(config["global"]["logs"])
 INTERIMPATH = os.path.normpath(config["global"]["interim"])
 RESULTPATH = os.path.normpath(config["global"]["results"])
 
+FEATURES_DEFAULTS = {
+    "translation_table": 11,
+    "meta": False,
+    "run_rrna": True,
+    "run_trna": True,
+    "run_crispr": True,
+    "minimum_gene_length": 90,
+}
+
+
+def resolve_feature_settings(cfg):
+    """Resolve optional global feature settings with fail-fast validation."""
+    user_features = cfg.get("features", {})
+    resolved = {**FEATURES_DEFAULTS, **user_features}
+
+    if not isinstance(resolved["translation_table"], int):
+        raise ValueError("features.translation_table must be an integer.")
+    if resolved["translation_table"] < 1 or resolved["translation_table"] > 25:
+        raise ValueError("features.translation_table must be between 1 and 25.")
+
+    if not isinstance(resolved["minimum_gene_length"], int):
+        raise ValueError("features.minimum_gene_length must be an integer.")
+    if resolved["minimum_gene_length"] < 1:
+        raise ValueError("features.minimum_gene_length must be >= 1.")
+
+    for key in ("meta", "run_rrna", "run_trna", "run_crispr"):
+        if not isinstance(resolved[key], bool):
+            raise ValueError(f"features.{key} must be a boolean.")
+
+    return resolved
+
+
+FEATURE_SETTINGS = resolve_feature_settings(config)
+
 
 # =============================================================================
 # Load and Validate Databases Config
@@ -294,9 +328,13 @@ rule predict_features:
     threads: 4
     params:
         sample_id="{id}",
-        meta=False,
+        meta_flag="--meta" if FEATURE_SETTINGS["meta"] else "",
         closed=False,
-        translation_table=11,
+        translation_table=FEATURE_SETTINGS["translation_table"],
+        minimum_gene_length=FEATURE_SETTINGS["minimum_gene_length"],
+        rrna_flag="--run_rrna" if FEATURE_SETTINGS["run_rrna"] else "",
+        trna_flag="--run_trna" if FEATURE_SETTINGS["run_trna"] else "",
+        crispr_flag="--run_crispr" if FEATURE_SETTINGS["run_crispr"] else "",
         input_type=lambda wildcards: input_type[wildcards.id],
         scriptpath=os.path.join(workflow.basedir, "scripts", "features.py"),
     conda:
@@ -312,10 +350,12 @@ rule predict_features:
         --fna_path {output.fna} \
         --tsv_path {output.tsv} \
         --genome_path {output.genome} \
-        --run_rrna --run_trna --run_crispr \
+        {params.meta_flag} \
+        {params.rrna_flag} {params.trna_flag} {params.crispr_flag} \
         --rna_tsv_path {output.rna} \
         --crispr_tsv_path {output.crispr} \
         --translation_table {params.translation_table} \
+        --minimum_gene_length {params.minimum_gene_length} \
         --threads {threads} 2>&1 | tee {log}
         """
 

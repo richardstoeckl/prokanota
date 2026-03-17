@@ -64,6 +64,7 @@ conda install -c conda-forge -c bioconda snakemake
 ```
 3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
 4. Edit the `config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
+  You can also configure optional feature prediction defaults there under `features` (for example `translation_table` in range 1-25, `minimum_gene_length`, and toggles for rRNA/tRNA/CRISPR prediction).
 5. Edit the `config/databases.yaml` to enable/disable databases or add custom ones.
 6. Edit the `config/metadata.csv` file with the specific details for each assembly you want to annotate. Please note, that the sampleID you enter here will influence the naming of the contig and gene IDs!
 7. Open a terminal in the main dir and start a dry-run of the pipeline with the following command. This will show you if you set up the paths correctly:

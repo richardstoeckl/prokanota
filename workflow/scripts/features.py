@@ -818,8 +818,9 @@ def predict_crisprs(tagged_contigs, threads=1):
 # Main Parsing and Prediction Function
 # ---------------------------
 
-def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_table, 
-                          run_rrna=False, run_trna=False, run_crispr=False, threads=1):
+def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_table,
+                          minimum_gene_length=90, run_rrna=False, run_trna=False,
+                          run_crispr=False, threads=1):
     """
     Reads the FASTA file, computes a genome ID using MD5 hashing and a custom mapping,
     then uses Pyrodigal to predict genes.
@@ -843,6 +844,7 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
     log.info(f"Processing {filename}.")
 
     log.info(f"Using {threads} threads for RNA predictions.")
+    log.info(f"Using minimum gene length cutoff of {minimum_gene_length} bp.")
 
     # Initialize MD5 hash object with the sample_id
     hash_obj = hashlib.md5(sample_id.encode('utf-8'))
@@ -897,8 +899,15 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
                           f"Automatically switching to metagenomic mode.")
         meta_mode = True
 
-    # Create a Pyrodigal GeneFinder. Train if meta_mode is off
-    gene_finder = pyrodigal.GeneFinder(meta=meta_mode, closed=closed)
+    # max_overlap must not exceed min_gene.
+    max_overlap = min(60, minimum_gene_length)
+    gene_finder = pyrodigal.GeneFinder(
+        meta=meta_mode,
+        closed=closed,
+        min_gene=minimum_gene_length,
+        min_edge_gene=minimum_gene_length,
+        max_overlap=max_overlap,
+    )
     if not meta_mode:
         gene_finder.train(*tagged_contigs.values(), translation_table=translation_table)
 
@@ -1010,10 +1019,10 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
 
     return genome_id, tagged_contigs, gene_records, contig_mapping, rrna_records, trna_records, crispr_records
 
-def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=None, 
-                  fna_path=None, tsv_path=None, meta_mode=False, closed=False, 
-                  translation_table=11, genome_path=None, run_rrna=False, 
-                  run_trna=False, run_crispr=False, rna_tsv_path=None, 
+def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=None,
+                  fna_path=None, tsv_path=None, meta_mode=False, closed=False,
+                  translation_table=11, minimum_gene_length=90, genome_path=None,
+                  run_rrna=False, run_trna=False, run_crispr=False, rna_tsv_path=None,
                   crispr_tsv_path=None, threads=1):
     """
     Master function to process a single genome. Parses the FASTA, runs predictions,
@@ -1030,6 +1039,7 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         meta_mode (bool): True if running Pyrodigal in metagenomic mode.
         closed (bool): True if the genome is closed-ended.
         translation_table (int): Translation table used to decode the DNA into proteins.
+        minimum_gene_length (int): Minimum gene length (bp) to keep a CDS prediction.
         genome_path (str, optional): Output path for the genome FASTA file.
         run_rrna (bool): Flag to run rRNA prediction.
         run_trna (bool): Flag to run tRNA prediction.
@@ -1066,6 +1076,7 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
         meta_mode=meta_mode,
         closed=closed,
         translation_table=translation_table,
+        minimum_gene_length=minimum_gene_length,
         run_rrna=run_rrna,
         run_trna=run_trna,
         run_crispr=run_crispr,
@@ -1074,7 +1085,16 @@ def process_genome(sample_id, filename, faa_path=None, gff_path=None, gbk_path=N
 
     # Parse the FASTA and get predictions
     genome_id, contigs, gene_records, contig_mapping, rrna_records, trna_records, crispr_records = parse_fasta_and_predict(
-        sample_id, filename, meta_mode, closed, translation_table, run_rrna, run_trna, run_crispr, threads
+        sample_id,
+        filename,
+        meta_mode,
+        closed,
+        translation_table,
+        minimum_gene_length,
+        run_rrna,
+        run_trna,
+        run_crispr,
+        threads,
     )
     
     # Log execution statistics from prediction
@@ -1250,6 +1270,8 @@ if __name__ == "__main__":
     parser.add_argument("--closed", action="store_true", help="Closed ends")
     parser.add_argument("--translation_table", type=int, default=11, 
                        help="Translation table to use (default: 11)")
+    parser.add_argument("--minimum_gene_length", type=int, default=90,
+                       help="Minimum gene length in bp to keep CDS predictions (default: 90)")
     parser.add_argument("--run_rrna", action="store_true", 
                        help="Run rRNA prediction using pybarrnap")
     parser.add_argument("--run_trna", action="store_true", 
@@ -1270,6 +1292,11 @@ if __name__ == "__main__":
                        help="Number of threads to use for RNA predictions (default: 1)")
 
     a = parser.parse_args()
+
+    if a.translation_table < 1 or a.translation_table > 25:
+        parser.error("--translation_table must be between 1 and 25.")
+    if a.minimum_gene_length < 1:
+        parser.error("--minimum_gene_length must be >= 1.")
 
     # Setup logging based on verbose flag
     log, cds_logger, rrna_logger, trna_logger, crispr_logger = setup_logging(a.verbose)
@@ -1300,6 +1327,7 @@ if __name__ == "__main__":
             meta_mode=a.meta,
             closed=a.closed,
             translation_table=a.translation_table,
+            minimum_gene_length=a.minimum_gene_length,
             genome_path=a.genome_path,
             run_rrna=a.run_rrna,
             run_trna=a.run_trna,
