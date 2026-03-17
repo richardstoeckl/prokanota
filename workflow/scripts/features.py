@@ -365,6 +365,13 @@ def write_gff(genome_id, gene_records, gff_path, contigs,
         for _contig_idx, _start, row in rows:
             gff_file.write(row + "\n")
 
+        # Append genomic sequences in FASTA format (Bakta/Prokka convention)
+        gff_file.write("##FASTA\n")
+        for contig_id, sequence in contigs.items():
+            gff_file.write(f">{contig_id}\n")
+            for i in range(0, len(sequence), 60):
+                gff_file.write(f"{sequence[i:i+60]}\n")
+
 def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path,
               rrna_records=None, trna_records=None, crispr_records=None):
     """
