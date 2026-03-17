@@ -4,7 +4,7 @@
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥9.3.5-brightgreen.svg)](https://snakemake.github.io)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.1-brightgreen.svg)](https://snakemake.github.io)
 [![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml)
 <!-- badges: end -->
 
@@ -34,13 +34,14 @@ This design philosophy means you can start with the well-documented databases ([
 2. **CDS prediction** using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes edge-case bugs from the original Prodigal.
 3. **rRNA prediction** using [pybarrnap](https://github.com/moshi4/pybarrnap) in `--accurate` mode with Rfam(14.10) covariance models.
 4. **tRNA prediction** using [tRNAscan-SE](https://github.com/UCSC-LoweLab/tRNAscan-SE) in `-G` mode for general tRNA prediction.
+5. **Clustered Regularly Interspaced Short Palindromic Repeat (CRISPR loci prediction** via [Diced](https://github.com/althonos/diced), a Rust reimplementation of the MinCED method.
 
 ### Annotation System
-5. **Modular database architecture:** Add custom HMM, RPS-BLAST, DIAMOND, or mmseqs2 databases by editing a config file — no code changes needed.
-6. **Multi-database annotation:** Top hits from each database are reported separately, preserving annotation depth and enabling informed manual curation.
+6. **Modular database architecture:** Add custom HMM, RPS-BLAST, DIAMOND, or mmseqs2 databases by editing a config file — no code changes needed.
+7. **Multi-database annotation:** Top hits from each database are reported separately, preserving annotation depth and enabling informed manual curation.
 
 ### Output Formats
-7. **Pangenome-ready outputs:** Annotations are provided in `.gff`, `.tsv`, and `.gbk` formats, with sequences in `.fna` (nucleotide) and `.faa` (protein) formats. All use consistent gene IDs for easy cross-referencing with downstream tools.
+8. **Pangenome-ready outputs:** Annotations are provided in `.gff`, `.tsv`, and `.gbk` formats, with sequences in `.fna` (nucleotide) and `.faa` (protein) formats. All use consistent gene IDs for easy cross-referencing with downstream tools.
 
 ## Modular Database System
 
