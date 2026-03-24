@@ -423,15 +423,15 @@ def config(output_dir, **kwargs):
 @click.command(cls=SplashCommand)
 def test(**kwargs):
     """Execute the integration tests for prokanota"""
-    repo_root = Path(__file__).resolve().parents[1]
-    test_script = repo_root / "tests" / "run_tests.py"
+    package_root = Path(__file__).resolve().parent
+    test_script = package_root / "tests" / "run_tests.py"
     if not test_script.exists():
         raise click.ClickException(
-            f"Could not find test runner at {test_script}. Install from source checkout to run this command."
+            f"Could not find test runner at {test_script}. Reinstall prokanota with test assets."
         )
 
     cmd = [sys.executable, str(test_script)]
-    result = subprocess.run(cmd, cwd=str(repo_root), check=False)
+    result = subprocess.run(cmd, cwd=str(package_root), check=False)
     raise SystemExit(result.returncode)
 
 

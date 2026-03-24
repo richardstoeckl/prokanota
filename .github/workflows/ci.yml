@@ -24,8 +24,8 @@ jobs:
 
       - name: Run mapping parser unit tests
         shell: bash -l {0}
-        run: micromamba run -n snakemake python -m unittest tests.test_mapping_utils -v
+        run: micromamba run -n snakemake python -m unittest prokanota.tests.test_mapping_utils -v
 
       - name: Run tests
         shell: bash -l {0}
-        run: micromamba run -n snakemake python tests/run_tests.py
+        run: micromamba run -n snakemake python prokanota/tests/run_tests.py

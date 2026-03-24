@@ -138,12 +138,12 @@ global:
   results: "results"            # path to output dir
 
 features:
-	translation_table: 11         # allowed range: 1-25
-	meta: false                   # force pyrodigal metagenomic mode
-	run_rrna: true                # run pybarrnap rRNA prediction
-	run_trna: true                # run tRNAscan-SE prediction
-	run_crispr: true              # run DICED CRISPR detection
-	minimum_gene_length: 90       # minimum CDS length (bp)
+  translation_table: 11         # allowed range: 1-25
+  meta: false                   # force pyrodigal metagenomic mode
+  run_rrna: true                # run pybarrnap rRNA prediction
+  run_trna: true                # run tRNAscan-SE prediction
+  run_crispr: true              # run DICED CRISPR detection
+  minimum_gene_length: 90       # minimum CDS length (bp)
 ```
 
 ### `databases.yaml`

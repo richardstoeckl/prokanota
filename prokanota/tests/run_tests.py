@@ -9,14 +9,14 @@ import sys
 from pathlib import Path
 from collections import Counter
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SNAKEFILE = REPO_ROOT / "prokanota" / "workflow" / "Snakefile"
-CONFIGFILE = REPO_ROOT / "prokanota" / "config" / "test-config.yaml"
-INTERIM_DIR = REPO_ROOT / "tests" / "output" / "interim"
-RESULTS_DIR = REPO_ROOT / "tests" / "output" / "results"
-EXPECTED_DIR = REPO_ROOT / "tests" / "expected" / "pyhmmer"
-EXPECTED_FEATURES_DIR = REPO_ROOT / "tests" / "expected" / "features"
-EXPECTED_ANNOTATION_DIR = REPO_ROOT / "tests" / "expected" / "annotation"
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+SNAKEFILE = PACKAGE_ROOT / "workflow" / "Snakefile"
+CONFIGFILE = PACKAGE_ROOT / "config" / "test-config.yaml"
+INTERIM_DIR = PACKAGE_ROOT / "tests" / "output" / "interim"
+RESULTS_DIR = PACKAGE_ROOT / "tests" / "output" / "results"
+EXPECTED_DIR = PACKAGE_ROOT / "tests" / "expected" / "pyhmmer"
+EXPECTED_FEATURES_DIR = PACKAGE_ROOT / "tests" / "expected" / "features"
+EXPECTED_ANNOTATION_DIR = PACKAGE_ROOT / "tests" / "expected" / "annotation"
 DB_NAME = "test_pyhmmer"
 SAMPLES = [
     "Pyrococcus_furiosus_DSM_3638-GCF_008245085",
@@ -38,7 +38,7 @@ def run_snakemake() -> None:
         "conda",
     ]
     print("Running:", " ".join(cmd))
-    result = subprocess.run(cmd, cwd=REPO_ROOT)
+    result = subprocess.run(cmd, cwd=PACKAGE_ROOT)
     if result.returncode != 0:
         sys.exit(result.returncode)
 
