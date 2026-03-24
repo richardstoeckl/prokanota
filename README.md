@@ -88,14 +88,14 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 4. Run the pipeline on your data:
 
     ```bash
-  prokanota run --cfg /some/path/config.yaml
+    prokanota run --cfg /some/path/config.yaml
     ```
 
-  If you need to override paths from the config file for a specific run:
+    If you need to override paths from the config file for a specific run:
 
-  ```bash
-  prokanota run --cfg /some/path/config.yaml --db /some/path/databases.yaml --meta /some/path/metadata.csv
-  ```
+    ```bash
+    prokanota run --cfg /some/path/config.yaml --db /some/path/databases.yaml --meta /some/path/metadata.csv
+    ```
 
 
 ### Option 2 - More familiar with Snakemake workflows and their flexibility?
