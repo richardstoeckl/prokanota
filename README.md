@@ -1,11 +1,15 @@
-# Snakemake workflow: `Prokanota`
+# `Prokanota`
 
 <!-- badges: start -->
+![GitHub License](https://img.shields.io/github/license/richardstoeckl/prokanota)
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
+![GitHub Stable Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?display_name=release&label=Latest%20stable%20release)
+![GitHub Latest Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?include_prereleases&display_name=release&label=Latest%20release)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.1-brightgreen.svg)](https://snakemake.github.io)
 [![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml)
+![OS compatibility](https://img.shields.io/badge/os_compatibility-Linux%2FmacOS:_x86%2Farm64-salmon)
 <!-- badges: end -->
 
 Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free* ,modular database architecture.
@@ -54,66 +58,130 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 
 ## Usage
 
+**Prokanota supports two modes of operation, depending on your level of expertise and how much you want to customize.**
+
+### Option 1 - The simple option
+
+1. `Prokanota` is available to install with `pip`. However, you will need [conda](https://docs.conda.io/en/latest/miniconda.html) or mamba available so `prokanota` can install all the required dependencies. Therefore, it is recommended to install `prokanota` into a conda environment as follows.
+
+    ```bash
+    conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    conda activate prokanotaENV
+    pip install prokanota
+    ```
+
+    When you run `prokanota` for the first time, all the required dependencies will be installed as required, so it will take longer than usual (usually a few minutes). Every time you run it afterwards, it will be a lot faster as the dependencies will be installed.
+
+2. You can test if the installation worked by running the internal tests of `prokanota`. This will also install most of the required dependencies for you:
+
+    ```bash
+    prokanota test
+    ```
+
+3. When you are ready to run the pipeline on your own data, let `prokanota` create the default config files for you in a place of your chosing with:
+
+    ```bash
+    prokanota config /some/path/
+    ```
+    This will create the three config files required to run prokanota. See the relevant sections in this README and the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed instructions on how to modify these files.
+
+4. Run the pipeline on your data:
+
+    ```bash
+  prokanota run --cfg /some/path/config.yaml
+    ```
+
+  If you need to override paths from the config file for a specific run:
+
+  ```bash
+  prokanota run --cfg /some/path/config.yaml --db /some/path/databases.yaml --meta /some/path/metadata.csv
+  ```
+
+
+### Option 2 - More familiar with Snakemake workflows and their flexibility?
+
+Since `prokanota` is actually just a Snakemake workflow with a [Snaketool](https://doi.org/10.1371/journal.pcbi.1010705) wrapper, you can simply use it as a Snakemake workflow.
+
 **[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl%20prokanota.html)**
 
-But here is a rough overview:
+Or do the steps manually:
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
 2. Install snakemake with:
 ```bash
-conda install -c conda-forge -c bioconda snakemake
+conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+conda activate prokanotaENV
 ```
 3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
-4. Edit the `config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
+4. Edit the `prokanota/config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
   You can also configure optional feature prediction defaults there under `features` (for example `translation_table` in range 1-25, `minimum_gene_length`, and toggles for rRNA/tRNA/CRISPR prediction).
-5. Edit the `config/databases.yaml` to enable/disable databases or add custom ones.
-6. Edit the `config/metadata.csv` file with the specific details for each assembly you want to annotate. Please note, that the sampleID you enter here will influence the naming of the contig and gene IDs!
-7. Open a terminal in the main dir and start a dry-run of the pipeline with the following command. This will show you if you set up the paths correctly:
-
+5. Edit `prokanota/config/databases.yaml` to add your databases.
+6. Edit `prokanota/config/metadata.csv` with the specific details for each assembly you want to annotate. Please note that the sampleID you enter here will influence the naming of contig and gene IDs.
+7. Run the pipeline with
 ```bash
-snakemake --sdm conda -n --cores
-```
-8. Run the pipeline with
-```bash
-snakemake --sdm conda --cores
+snakemake --sdm conda --configfile prokanota/config/config.yaml --cores
 ```
 
-## Testing
+## Config file setup (quick overview)
 
-Minimal tests are provided under `tests/` and use a dedicated config file.
-The tests are run with:
+See the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed instructions and helper scripts.
 
-```bash
-python tests/run_tests.py
+### `config.yaml`
+
+Define the paths to inputs and outputs, and some optional parameters for the feature prediction module:
+
+```yaml
+global:
+  metadata: "metadata.csv"      # path to metadata file
+  databases: "databases.yaml"   # path to databases file
+  logs: "logs"                  # path to log dir
+  interim: "interim"            # path to intermediate results dir
+  results: "results"            # path to output dir
+
+features:
+	translation_table: 11         # allowed range: 1-25
+	meta: false                   # force pyrodigal metagenomic mode
+	run_rrna: true                # run pybarrnap rRNA prediction
+	run_trna: true                # run tRNAscan-SE prediction
+	run_crispr: true              # run DICED CRISPR detection
+	minimum_gene_length: 90       # minimum CDS length (bp)
 ```
 
-### Adding a Custom Database (quick overview)
+### `databases.yaml`
 
-1. Prepare your database:
-   - For HMM: Press your `.hmm` files using `hmmpress` or download ready-to-use db.
-   - For RPS-BLAST: Build your database using `makeprofiledb` or download ready-to-use db.
-2. Create a mapping file (TSV, no header): `accession<TAB>short_name<TAB>description<TAB>category`
+Here you need to tell prokanota which databases to use for annotation and how. Usually this requires steps similar to this:
+
+1. Prepare your database, e.g. press your `.hmm` files using `hmmpress` or download a ready-to-use db.
+2. Create a mapping file (TSV, no header). Usually databases provide a file like this but you will have to make sure the format is correct (can be done via a simple text editor): `accession<TAB>short_name<TAB>description<TAB>category`
   - Exactly 4 tab-separated columns are required for each non-empty line.
   - The first column (`accession`) is the join key and must not be empty.
   - For `short_name`, `description`, and `category`, the following values are treated as empty and normalized to `*` in output: empty/whitespace-only fields, `NA`, `N/A`, `NULL`/`null`, `-`, and `*`.
   - Duplicate values in the first column are rejected.
-3. Add an entry to `config/databases.yaml`:
+3. Modify `databases.yaml`:
    ```yaml
    databases:
-     - name: MyCustomDB
+     - name: MyCustomDB # pick a name 
        enabled: true
        order: 50 # lower = earlier
-       search_tool: pyhmmer  # or rpsblast
-       db_path: "/path/to/db.hmm"
-       mapping_path: "/path/to/mapping.tsv"
-       evalue_cutoff: 1.0e-3
-       columns:
+       search_tool: pyhmmer  # needs to match your db
+       db_path: "/path/to/db.hmm" # path to your db
+       mapping_path: "/path/to/mapping.tsv" # path to the mapping file
+       evalue_cutoff: 1.0e-3 # E-value threshold for filtering hits
+       mapping_key: accession # Column to join on with mapping file ("accession" or "query_name"). 
+       columns: # List of output columns with name and source field
          - {name: MyDB_hit, source: query_name}
          - {name: MyDB_description, source: description}
          - {name: MyDB_evalue, source: evalue}
+    # A note on the mapping_key: For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession. For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
    ```
-4. Run the pipeline—your custom database will be searched automatically
 
-See the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed instructions and helper scripts.
+### `metadata.csv`
+
+A `.csv` file with four columns and one row per sample (≙ a proteome or genome to annotate). 
+- First column: sampleID (Note: The sampleID is used to name the output files and is used to calculate the gene_ids!)
+- Second column: path to proteome or genome file in FASTA format
+- Third column: Either "dna" (for genome files, this will RUN the feature prediction module), or "protein" (for proteome files, this will SKIP the feature prediction)
+- Fourth column: optional, for comments
+
 
 
 ## Recommended Databases to use
@@ -137,7 +205,7 @@ See the [wiki](https://github.com/richardstoeckl/prokanota/wiki) for detailed in
   - Simply set `enabled: false` for any database in `config/databases.yaml`.
 
 ```
-Copyright Richard Stöckl 2025.
+Copyright Richard Stöckl 2025-2026.
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE or copy at 
 https://www.boost.org/LICENSE_1_0.txt)

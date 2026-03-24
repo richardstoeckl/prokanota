@@ -7,3 +7,12 @@ config/databases-*.yaml
 config/metadata-*.csv
 workflow/scripts/__pycache__
 tests/output
+prokanota/config/config-*.yaml
+prokanota/config/databases-*.yaml
+prokanota/config/metadata-*.csv
+prokanota/workflow/scripts/__pycache__
+prokanota/workflow/conda/
+prokanota/tests/output
+prokanota/__pycache__
+tests/__pycache__
+prokanota.egg-info

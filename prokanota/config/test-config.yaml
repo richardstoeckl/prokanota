@@ -1,6 +1,6 @@
 global:
-  metadata: "../tests/metadata.csv"
-  databases: "../tests/databases.yaml"
+  metadata: "../../tests/metadata.csv"
+  databases: "../../tests/databases.yaml"
   logs: "tests/output/logs"
   interim: "tests/output/interim"
   results: "tests/output/results"

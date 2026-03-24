@@ -10,8 +10,8 @@ from pathlib import Path
 from collections import Counter
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SNAKEFILE = REPO_ROOT / "workflow" / "Snakefile"
-CONFIGFILE = REPO_ROOT / "config" / "test-config.yaml"
+SNAKEFILE = REPO_ROOT / "prokanota" / "workflow" / "Snakefile"
+CONFIGFILE = REPO_ROOT / "prokanota" / "config" / "test-config.yaml"
 INTERIM_DIR = REPO_ROOT / "tests" / "output" / "interim"
 RESULTS_DIR = REPO_ROOT / "tests" / "output" / "results"
 EXPECTED_DIR = REPO_ROOT / "tests" / "expected" / "pyhmmer"
