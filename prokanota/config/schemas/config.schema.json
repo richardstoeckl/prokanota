@@ -2,6 +2,41 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Pipeline Configuration",
   "type": "object",
+  "$defs": {
+    "configPathField": {
+      "type": "string",
+      "description": "Path-like string: 1-4096 chars, no wrapping quotes, no control characters, no trailing space/dot, and no internal double slashes (leading // allowed).",
+      "minLength": 1,
+      "maxLength": 4096,
+      "allOf": [
+        {
+          "not": {
+            "pattern": "^'[^']*'$|^\"[^\"]*\"$|^`[^`]*`$"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[\u0000-\u001F\u007F]"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[ .]$"
+          }
+        },
+        {
+          "anyOf": [
+            {
+              "pattern": "^//(?:[^/]|/(?!/))*$"
+            },
+            {
+              "pattern": "^(?!//)(?:[^/]|/(?!/))*$"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "required": ["global"],
   "properties": {
     "global": {
@@ -10,9 +45,27 @@
       "properties": {
         "metadata": {"type": "string", "default": "metadata.csv"},
         "databases": {"type": "string", "default": "databases.yaml"},
-        "logs": {"type": "string", "default": "logs"},
-        "interim": {"type": "string", "default": "interim"},
-        "results": {"type": "string", "default": "results"}
+        "logs": {
+          "description": "Directory for workflow logs.",
+          "allOf": [
+            {"$ref": "#/$defs/configPathField"},
+            {"default": "logs"}
+          ]
+        },
+        "interim": {
+          "description": "Directory for intermediate workflow files.",
+          "allOf": [
+            {"$ref": "#/$defs/configPathField"},
+            {"default": "interim"}
+          ]
+        },
+        "results": {
+          "description": "Directory for final workflow outputs.",
+          "allOf": [
+            {"$ref": "#/$defs/configPathField"},
+            {"default": "results"}
+          ]
+        }
       }
     },
     "features": {

@@ -2,6 +2,41 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Databases Configuration",
   "type": "object",
+  "$defs": {
+    "pathField": {
+      "type": "string",
+      "description": "Path-like string: 1-4096 chars, no wrapping quotes, no control characters, no trailing space/dot, and no internal double slashes (leading // allowed).",
+      "minLength": 1,
+      "maxLength": 4096,
+      "allOf": [
+        {
+          "not": {
+            "pattern": "^'[^']*'$|^\"[^\"]*\"$|^`[^`]*`$"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[\u0000-\u001F\u007F]"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[ .]$"
+          }
+        },
+        {
+          "anyOf": [
+            {
+              "pattern": "^//(?:[^/]|/(?!/))*$"
+            },
+            {
+              "pattern": "^(?!//)(?:[^/]|/(?!/))*$"
+            }
+          ]
+        }
+      ]
+    }
+  },
   "required": ["databases"],
   "properties": {
     "databases": {
@@ -32,11 +67,19 @@
             "description": "Search tool to use for this database"
           },
           "db_path": {
-            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/$defs/pathField"
+              }
+            ],
             "description": "Path to prepared database files"
           },
           "mapping_path": {
-            "type": "string",
+            "allOf": [
+              {
+                "$ref": "#/$defs/pathField"
+              }
+            ],
             "description": "Path to mapping TSV file"
           },
           "mapping_key": {
