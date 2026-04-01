@@ -7,6 +7,7 @@ All output goes to stdout so Snakemake's shell redirection (2>&1 | tee) captures
 import logging
 import sys
 from datetime import datetime
+from prokanota import __version__
 
 
 def setup_logger(script_name: str) -> logging.Logger:
@@ -40,6 +41,8 @@ def setup_logger(script_name: str) -> logging.Logger:
     
     # Prevent propagation to root logger
     logger.propagate = False
+
+    logger.info(f"prokanota version: {__version__}")
     
     return logger
 

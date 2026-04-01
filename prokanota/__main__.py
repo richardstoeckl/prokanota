@@ -19,6 +19,7 @@ import yaml
 import jsonschema
 
 from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, echo_click
+from prokanota import __version__
 
 
 SPLASH_SCREEN = """
@@ -39,13 +40,6 @@ SPLASH_SCREEN = """
 def snake_base(rel_path):
     """Get the filepath to a Snaketool system file (relative to __main__.py)"""
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), rel_path)
-
-
-def get_version():
-    """Read and print the version from the version file"""
-    with open(snake_base("prokanota.VERSION"), "r") as f:
-        version = f.readline()
-    return version
 
 
 def print_citation():
@@ -261,7 +255,7 @@ def common_options(func):
     cls=SplashOrderedCommands,
     context_settings=dict(help_option_names=["-h", "--help"]),
 )
-@click.version_option(get_version(), "-v", "--version", is_flag=True)
+@click.version_option(__version__, "-v", "--version", is_flag=True)
 def cli():
     """Flexible Snakemake pipeline for prokaryotic annotation with a code-free* ,modular database architecture.
     \b
@@ -444,7 +438,7 @@ def citation(**kwargs):
 @click.command(cls=SplashCommand)
 def version(**kwargs):
     """Print the version for this tool"""
-    click.echo(get_version().strip())
+    click.echo(__version__)
 
 
 cli.add_command(run)

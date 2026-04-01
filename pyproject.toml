@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "prokanota"
+dynamic = ["version"]
+description = "Flexible Snakemake pipeline for prokaryotic annotation with a code-free, modular database architecture."
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.10"
+license = "BSL-1.0"
+license-files = ["LICENSE", "prokanota/prokanota.LICENSE"]
+authors = [
+  { name = "Richard Stoeckl", email = "richard.stoeckl@ur.de" }
+]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Boost Software License 1.0 (BSL-1.0)",
+  "Natural Language :: English",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS :: MacOS X",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Bio-Informatics"
+]
+dependencies = [
+  "click>=8.1.3",
+  "jsonschema>=4.0.0",
+  "pandas>=1.5.0",
+  "PyYAML>=6.0",
+  "snakemake>=9.0.1",
+  "snaketool-utils>=0.0.4"
+]
+
+[project.urls]
+Homepage = "https://github.com/richardstoeckl/prokanota"
+Repository = "https://github.com/richardstoeckl/prokanota"
+
+[project.scripts]
+prokanota = "prokanota.__main__:main"
+
+[tool.hatch.version]
+source = "regex"
+path = "prokanota/prokanota.VERSION"
+pattern = "^(?P<version>.+)$"
+
+[tool.hatch.build.targets.wheel]
+packages = ["prokanota"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/prokanota",
+  "/README.md",
+  "/LICENSE",
+  "/MANIFEST.in"
+]
