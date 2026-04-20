@@ -49,6 +49,13 @@ from feature_utils import (
     map_hexdigest_to_id,
     protein_molecular_weight,
 )
+from logging_utils import (
+    setup_logger,
+    log_file_paths,
+    log_parameters,
+    log_statistics,
+    log_prokanota_version,
+)
 
 # ---------------------------
 # Logging
@@ -61,29 +68,26 @@ def setup_logging(verbose=False):
     Args:
         verbose (bool): If True, show debug messages from all loggers
     """
-    # Define log format with timestamp
-    log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    date_format = '%Y-%m-%d %H:%M:%S'
-    
-    # Configure root logger
-    logging.basicConfig(
-        level=logging.DEBUG if verbose else logging.INFO,
-        format=log_format,
-        datefmt=date_format
-    )
-    
-    # Configure specific loggers
-    log = logging.getLogger('GENERAL')
-    cds_logger = logging.getLogger("CDS")
-    rrna_logger = logging.getLogger("rRNA")
-    trna_logger = logging.getLogger("tRNA")
-    
-    crispr_logger = logging.getLogger("CRISPR")
+    level = logging.DEBUG if verbose else logging.INFO
 
-    # Configure pybarrnap logger
+    # Configure feature-stage loggers through the shared utility.
+    log = setup_logger("FEATURES_GENERAL", level=level)
+    cds_logger = setup_logger("FEATURES_CDS", level=level)
+    rrna_logger = setup_logger("FEATURES_rRNA", level=level)
+    trna_logger = setup_logger("FEATURES_tRNA", level=level)
+    crispr_logger = setup_logger("FEATURES_CRISPR", level=level)
+
+    # Force pybarrnap logs into the same in-house format and Part token.
     pybarrnap_logger = logging.getLogger("pybarrnap.barrnap")
-    if not verbose:
-        pybarrnap_logger.setLevel(logging.WARNING)
+    pybarrnap_logger.handlers.clear()
+    pybarrnap_handler = logging.StreamHandler(sys.stdout)
+    pybarrnap_handler.setFormatter(logging.Formatter(
+        fmt='%(asctime)s - FEATURES_rRNA - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    pybarrnap_logger.addHandler(pybarrnap_handler)
+    pybarrnap_logger.setLevel(logging.DEBUG if verbose else logging.INFO)
+    pybarrnap_logger.propagate = False
     
     return log, cds_logger, rrna_logger, trna_logger, crispr_logger
 
@@ -109,8 +113,10 @@ def get_trnascan_version():
         trna_logger.debug(f"Error getting tRNAscan-SE version: {str(e)}")
         return "unknown"
 
+
 def log_versions(log):
     """Log versions of all dependencies."""
+    log_prokanota_version(log)
     log.info(f"Operating System: {sys.platform}")
     log.info(f"Python Version: v{platform.python_version()}")
     
@@ -129,46 +135,6 @@ def log_versions(log):
         log.info(f"DICED Version: v{diced.__version__}")
     except ImportError:
         log.info("DICED Version: not installed")
-
-
-def log_file_paths(logger, **paths):
-    """
-    Log input and output file paths being used.
-    
-    Args:
-        logger: Logger instance to use
-        **paths: Keyword arguments like input_file="/path/to/file", output_faa="/path/to/file.faa"
-    """
-    for name, path in paths.items():
-        if path:
-            logger.info(f"File path [{name}]: {path}")
-
-
-def log_parameters(logger, **params):
-    """
-    Log processing parameters.
-    
-    Args:
-        logger: Logger instance to use
-        **params: Keyword arguments like meta_mode=True, threads=4, translation_table=11
-    """
-    for name, value in params.items():
-        if value is not None:
-            logger.info(f"Parameter [{name}]: {value}")
-
-
-def log_statistics(logger, **stats):
-    """
-    Log execution statistics (counts, timing, etc.).
-    
-    Args:
-        logger: Logger instance to use
-        **stats: Keyword arguments like genes_predicted=1234, contigs=1
-    """
-    for name, value in stats.items():
-        if value is not None:
-            logger.info(f"Statistic [{name}]: {value}")
-
 
 # ---------------------------
 # Data Classes

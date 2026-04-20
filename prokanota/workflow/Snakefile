@@ -28,7 +28,7 @@ from mapping_utils import validate_mapping_file as validate_mapping_file_shared
 
 # True on ARM64 hosts (Apple Silicon, aarch64 Linux); False on x86-64.
 IS_ARM = os.uname().machine in ("arm64", "aarch64")
-print(f"Running on {'ARM64' if IS_ARM else 'x86-64'} architecture")
+logger.info(f"Running on {'ARM64' if IS_ARM else 'x86-64'} architecture")
 
 ########## check minimum snakemake version ##########
 min_version("9.0.1")
@@ -380,6 +380,7 @@ for db in ENABLED_DBS:
             threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
+                db_name=db_name,
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "pyhmmer_search.py"
                 ),
@@ -393,6 +394,7 @@ for db in ENABLED_DBS:
                 """
                 python {params.scriptpath} \
                     --db {params.db_path} \
+                    --db-name {params.db_name} \
                     --faa {input.faa} \
                     --tblout {output.tblout} \
                     --toolversion {output.version} \
@@ -412,6 +414,7 @@ for db in ENABLED_DBS:
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             params:
                 db_path=db["db_path"],
+                db_name=db_name,
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "rpsblast_search.py"
@@ -427,6 +430,7 @@ for db in ENABLED_DBS:
                 """
                 python {params.scriptpath} \
                     --db {params.db_path} \
+                    --db-name {params.db_name} \
                     --faa {input.faa} \
                     --output {output.tab} \
                     --toolversion {output.version} \
@@ -447,6 +451,7 @@ for db in ENABLED_DBS:
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             params:
                 db_path=db["db_path"],
+                db_name=db_name,
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "diamond_search.py"
@@ -462,6 +467,7 @@ for db in ENABLED_DBS:
                 """
                 python {params.scriptpath} \
                     --db {params.db_path} \
+                    --db-name {params.db_name} \
                     --faa {input.faa} \
                     --output {output.tab} \
                     --toolversion {output.version} \
@@ -482,6 +488,7 @@ for db in ENABLED_DBS:
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             params:
                 db_path=db["db_path"],
+                db_name=db_name,
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 extra_args=build_mmseqs2_extra_args(db),
                 scriptpath=os.path.join(
@@ -498,6 +505,7 @@ for db in ENABLED_DBS:
                 """
                 python {params.scriptpath} \
                     --db {params.db_path} \
+                    --db-name {params.db_name} \
                     --faa {input.faa} \
                     --output {output.tab} \
                     --toolversion {output.version} \

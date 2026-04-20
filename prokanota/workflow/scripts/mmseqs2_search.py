@@ -20,7 +20,7 @@ import subprocess
 import sys
 from pathlib import Path
 from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, log_command
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, log_command, build_part, log_prokanota_version
 
 
 def count_fasta_sequences(fasta_path: str) -> int:
@@ -44,14 +44,9 @@ def count_tabular_hits(tsv_path: str) -> int:
 
 
 def main():
-    logger = setup_logger("mmseqs2_search")
-    start_time = datetime.now()
-    logger.info("=" * 60)
-    logger.info("MMseqs2 Search Started")
-    logger.info("=" * 60)
-    
     parser = argparse.ArgumentParser(description="MMseqs2 search wrapper (BLAST-like outfmt 6)")
     parser.add_argument("--db", required=True, help="MMseqs2 database path")
+    parser.add_argument("--db-name", help="Database name used for logging context")
     parser.add_argument("--faa", required=True, help="FASTA file with protein sequences")
     parser.add_argument("--output", required=True, help="Output file for tabular results")
     parser.add_argument("--toolversion", required=True, help="Output file to record tool version")
@@ -63,6 +58,14 @@ def main():
     parser.add_argument("--cov-mode", type=int, default=None, help="Coverage mode (MMseqs2)")
     parser.add_argument("--coverage", type=float, default=None, help="Coverage threshold (0-1)")
     args = parser.parse_args()
+
+    db_name = args.db_name or Path(args.db).stem
+    logger = setup_logger(build_part("SEARCH", db_name))
+    log_prokanota_version(logger)
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("MMseqs2 Search Started")
+    logger.info("=" * 60)
 
     # Log input files
     log_file_paths(logger, database=args.db, input_fasta=args.faa, output_file=args.output)

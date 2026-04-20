@@ -6,13 +6,14 @@ Uses Polars for efficient data processing.
 
 import argparse
 import json
+import logging
 import polars as pl
 from pathlib import Path
 from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, build_part, log_prokanota_version
 from mapping_utils import parse_mapping_file
 
-logger = setup_logger("diamond_parse")
+logger = logging.getLogger("PARSE")
 
 
 def parse_diamond_output(output_path: Path) -> pl.DataFrame:
@@ -143,11 +144,7 @@ def format_output(df, db_name, columns_config):
 
 
 def main():
-    start_time = datetime.now()
-    logger.info("=" * 60)
-    logger.info("DIAMOND Parse Started")
-    logger.info("=" * 60)
-    
+    global logger
     parser = argparse.ArgumentParser(description="Parse DIAMOND results and join with mapping")
     parser.add_argument("--diamond-output", required=True, help="Path to DIAMOND tabular output file")
     parser.add_argument("--mapping", required=True, help="Path to mapping TSV file")
@@ -167,6 +164,13 @@ def main():
         help="Column config as JSON string",
     )
     args = parser.parse_args()
+
+    logger = setup_logger(build_part("PARSE", args.db_name))
+    log_prokanota_version(logger)
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("DIAMOND Parse Started")
+    logger.info("=" * 60)
 
     # Log input files
     log_file_paths(

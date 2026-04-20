@@ -5,34 +5,64 @@ All output goes to stdout so Snakemake's shell redirection (2>&1 | tee) captures
 """
 
 import logging
+import re
 import sys
-from datetime import datetime
-from prokanota import __version__
+from pathlib import Path
 
 
-def setup_logger(script_name: str) -> logging.Logger:
+def get_prokanota_version() -> str:
+    """
+    Read version from prokanota.VERSION file.
+    
+    Returns the version string, or "unknown" if the file cannot be read.
+    This function enables scripts to run in isolated conda environments
+    where the prokanota package may not be installed.
+    """
+    try:
+        version_file = Path(__file__).parent.parent.parent / "prokanota.VERSION"
+        return version_file.read_text(encoding="utf-8").strip()
+    except (FileNotFoundError, IOError):
+        return "unknown"
+
+
+def normalize_part_token(value: str) -> str:
+    """Normalize a part token to uppercase snake-style text for stable parsing."""
+    token = re.sub(r"[^A-Za-z0-9]+", "_", value.strip()).strip("_")
+    return token.upper() if token else "UNKNOWN"
+
+
+def build_part(stage: str, name: str | None = None) -> str:
+    """Build a stable Part field, e.g. SEARCH_ARCOG or FINALIZE_MERGE."""
+    stage_token = normalize_part_token(stage)
+    if not name:
+        return stage_token
+    return f"{stage_token}_{normalize_part_token(name)}"
+
+
+def setup_logger(part_name: str, level: int = logging.INFO) -> logging.Logger:
     """
     Configure and return a logger that outputs to stdout.
     
     Args:
-        script_name: Name of the script using the logger (for log messages)
+        part_name: Part field value used by downstream parsing
+        level: Logging level for both the logger and its stdout handler
         
     Returns:
         Configured logger instance
     """
-    logger = logging.getLogger(script_name)
-    logger.setLevel(logging.INFO)
+    logger = logging.getLogger(part_name)
+    logger.setLevel(level)
     
     # Remove any existing handlers to avoid duplicates
     logger.handlers.clear()
     
     # Create handler that outputs to stdout
     handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.INFO)
+    handler.setLevel(level)
     
-    # Create formatter with timestamp, level, and message
+    # Create formatter with timestamp, part, level, and message
     formatter = logging.Formatter(
-        fmt='%(asctime)s | %(levelname)-8s | %(message)s',
+        fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     handler.setFormatter(formatter)
@@ -42,9 +72,12 @@ def setup_logger(script_name: str) -> logging.Logger:
     # Prevent propagation to root logger
     logger.propagate = False
 
-    logger.info(f"prokanota version: {__version__}")
-    
     return logger
+
+
+def log_prokanota_version(logger: logging.Logger) -> None:
+    """Log the prokanota version with the current logger Part context."""
+    logger.info(f"prokanota version: {get_prokanota_version()}")
 
 
 def log_command(logger: logging.Logger, command: list) -> None:

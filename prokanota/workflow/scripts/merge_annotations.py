@@ -9,9 +9,9 @@ import json
 import polars as pl
 from pathlib import Path
 from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_statistics
+from logging_utils import setup_logger, log_file_paths, log_statistics, build_part, log_prokanota_version
 
-logger = setup_logger("merge_annotations")
+logger = setup_logger(build_part("FINALIZE", "MERGE"))
 
 
 def load_base_table(path: Path) -> pl.DataFrame:
@@ -41,7 +41,7 @@ def merge_annotations(
 
     for db_name, db_path in db_annotations:
         if not db_path.exists():
-            print(f"Warning: {db_path} does not exist, skipping {db_name}")
+            logger.warning(f"{db_path} does not exist, skipping {db_name}")
             continue
 
         db_df = load_db_annotation(db_path)
@@ -66,6 +66,7 @@ def merge_annotations(
 
 
 def main():
+    log_prokanota_version(logger)
     start_time = datetime.now()
     logger.info("=" * 60)
     logger.info("Annotation Merge Started")

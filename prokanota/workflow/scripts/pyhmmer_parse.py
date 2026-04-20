@@ -6,13 +6,14 @@ Replicates the shell parsing logic from parseSearchResults.smk using Polars.
 
 import argparse
 import json
+import logging
 import polars as pl
 from pathlib import Path
 from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, build_part, log_prokanota_version
 from mapping_utils import parse_mapping_file
 
-logger = setup_logger("pyhmmer_parse")
+logger = logging.getLogger("PARSE")
 
 
 def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
@@ -140,11 +141,7 @@ def format_output(df, db_name, columns_config):
 
 
 def main():
-    start_time = datetime.now()
-    logger.info("=" * 60)
-    logger.info("pyhmmer Parse Started")
-    logger.info("=" * 60)
-    
+    global logger
     parser = argparse.ArgumentParser(description="Parse pyhmmer results and join with mapping")
     parser.add_argument("--tblout", required=True, help="Path to pyhmmer tblout file")
     parser.add_argument("--mapping", required=True, help="Path to mapping TSV file")
@@ -164,6 +161,13 @@ def main():
         help="Column config as JSON string, e.g., '[{\"name\":\"db_hit\",\"source\":\"query_name\"}]'",
     )
     args = parser.parse_args()
+
+    logger = setup_logger(build_part("PARSE", args.db_name))
+    log_prokanota_version(logger)
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("pyhmmer Parse Started")
+    logger.info("=" * 60)
 
     # Log input files
     log_file_paths(

@@ -24,8 +24,9 @@ import pyhmmer.plan7
 import sys
 import os
 import psutil
+from pathlib import Path
 from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics
+from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, build_part, log_prokanota_version
 
 
 def count_hmm_models(db_path: str) -> int:
@@ -38,15 +39,10 @@ def count_hmm_models(db_path: str) -> int:
 
 
 def main():
-    logger = setup_logger("pyhmmer_search")
-    start_time = datetime.now()
-    logger.info("=" * 60)
-    logger.info("pyhmmer Search Started")
-    logger.info("=" * 60)
-    
     parser = argparse.ArgumentParser(
         description="pyhmmer-based hmmsearch replacement with performance optimizations")
     parser.add_argument("--db", required=True, help="Binary HMM database file (e.g., .h3m file)")
+    parser.add_argument("--db-name", help="Database name used for logging context")
     parser.add_argument("--faa", required=True, help="FASTA file with protein sequences")
     parser.add_argument("--tblout", required=True, help="Output file for table results")
     parser.add_argument("--allresults", help="Output file for full results (optional)")
@@ -54,6 +50,14 @@ def main():
     parser.add_argument("--toolversion", required=True, help="Output file to record tool version")
     parser.add_argument("--threads", type=int, default=1, help="Number of threads (CPUs) to use")
     args = parser.parse_args()
+
+    db_name = args.db_name or Path(args.db).stem
+    logger = setup_logger(build_part("SEARCH", db_name))
+    log_prokanota_version(logger)
+    start_time = datetime.now()
+    logger.info("=" * 60)
+    logger.info("pyhmmer Search Started")
+    logger.info("=" * 60)
 
     # Log input files
     files = {'database': args.db, 'input_fasta': args.faa, 'output_tblout': args.tblout}
