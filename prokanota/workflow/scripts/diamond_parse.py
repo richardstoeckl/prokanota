@@ -6,14 +6,13 @@ Uses Polars for efficient data processing.
 
 import argparse
 import json
-import logging
 import polars as pl
 from pathlib import Path
 from datetime import datetime
 from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, build_part, log_prokanota_version
 from mapping_utils import parse_mapping_file
 
-logger = logging.getLogger("PARSE")
+logger = None
 
 
 def parse_diamond_output(output_path: Path) -> pl.DataFrame:
