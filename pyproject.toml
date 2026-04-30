@@ -50,6 +50,10 @@ pattern = "^(?P<version>.+)$"
 
 [tool.hatch.build.targets.wheel]
 packages = ["prokanota"]
+exclude = [
+  "/prokanota/.snakemake",
+  "/prokanota/tests/output"
+]
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -57,4 +61,8 @@ include = [
   "/README.md",
   "/LICENSE",
   "/MANIFEST.in"
+]
+exclude = [
+  "/prokanota/.snakemake",
+  "/prokanota/tests/output"
 ]
