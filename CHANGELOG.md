@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-beta.6] - 2026-04-30
+
+### Fixed
+- fixed pypi builds not including all relevant files
+
 ## [2.0.0-beta.5] - 2026-04-30
 
 ### Changed
@@ -134,7 +139,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ---
-[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.5...HEAD
+[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...HEAD
+[2.0.0-beta.6]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.5...v2.0.0-beta.6
 [2.0.0-beta.5]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.4...v2.0.0-beta.5
 [2.0.0-beta.4]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.3...v2.0.0-beta.4
 [2.0.0-beta.3]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.2...v2.0.0-beta.3
