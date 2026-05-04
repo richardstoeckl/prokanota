@@ -57,7 +57,6 @@ exclude = [
 ]
 
 [tool.hatch.build.targets.wheel.force-include]
-"prokanota/config/schemas" = "prokanota/config/schemas"
 "prokanota/config/config.yaml" = "prokanota/config/config.yaml"
 "prokanota/config/databases.yaml" = "prokanota/config/databases.yaml"
 "prokanota/config/metadata.csv" = "prokanota/config/metadata.csv"
