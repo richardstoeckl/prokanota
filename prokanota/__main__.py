@@ -52,6 +52,8 @@ def print_citation():
 def print_splash():
     """Print the splash screen."""
     click.echo(SPLASH_SCREEN)
+    click.echo(f"prokanota, version {__version__}")
+    click.echo()
 
 
 class SplashCommand(click.Command):
