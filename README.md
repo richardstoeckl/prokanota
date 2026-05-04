@@ -12,7 +12,7 @@ developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.re
 ![OS compatibility](https://img.shields.io/badge/os_compatibility-Linux%2FmacOS:_x86%2Farm64-salmon)
 <!-- badges: end -->
 
-Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free* ,modular database architecture.
+Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free*, modular database architecture.
 
 *Code free if you really force the issue. Some limited knowledge will make your life much easier.
 
@@ -82,8 +82,11 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 1. Prokanota is available via `pip`, but requires [conda](https://docs.conda.io/en/latest/miniconda.html) or mamba to manage its dependencies. Install into a conda environment:
 
     ```bash
+    # create new conda environment
     conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    # activate environment
     conda activate prokanotaENV
+    # install prokanota and all dependencies
     pip install prokanota
     ```
 
@@ -124,19 +127,19 @@ Since `prokanota` is actually just a Snakemake workflow with a [Snaketool](https
 Or do the steps manually:
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
 2. Install snakemake with:
-```bash
-conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
-conda activate prokanotaENV
-```
+    ```bash
+    conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    conda activate prokanotaENV
+    ```
 3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
 4. Edit the `prokanota/config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
   You can also configure optional feature prediction defaults there under `features` (for example `translation_table` in range 1-25, `minimum_gene_length`, and toggles for rRNA/tRNA/CRISPR prediction).
 5. Edit `prokanota/config/databases.yaml` to add your databases.
 6. Edit `prokanota/config/metadata.csv` with the specific details for each assembly you want to annotate. Please note that the sampleID you enter here will influence the naming of contig and gene IDs.
 7. Run the pipeline with
-```bash
-snakemake --sdm conda --configfile prokanota/config/config.yaml --cores
-```
+    ```bash
+    snakemake --sdm conda --configfile prokanota/config/config.yaml --cores
+    ```
 
 ## Inputs
 
@@ -204,7 +207,7 @@ Here you need to tell prokanota which databases to use for annotation and how. A
          - {name: MyDB_evalue, source: evalue}
     # A note on the mapping_key: For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession. For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
    ```
-> **Note:** For a detailed database setup protocol, see the [Zenodo protocol](#configuration--adding-custom-databases) *(link to be added on publication)*.
+> **Note:** For a detailed database setup protocol, see the [protocol on Zenodo](#configuration--adding-custom-databases) *(link to be added on publication)*.
 
 ## Recommended Databases to use
 - **Databases**
