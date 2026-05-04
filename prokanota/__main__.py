@@ -440,7 +440,7 @@ def citation(**kwargs):
 @click.command(cls=SplashCommand)
 def version(**kwargs):
     """Print the version for this tool"""
-    click.echo(__version__)
+    click.echo(f"prokanota, version {__version__}")
 
 
 cli.add_command(run)
