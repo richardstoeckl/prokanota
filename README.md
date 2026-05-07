@@ -122,7 +122,7 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 
 Since `prokanota` is actually just a Snakemake workflow with a [Snaketool](https://doi.org/10.1371/journal.pcbi.1010705) wrapper, you can simply use it as a Snakemake workflow.
 
-**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl%20prokanota.html)**
+**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl/prokanota.html)**
 
 Or do the steps manually:
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
