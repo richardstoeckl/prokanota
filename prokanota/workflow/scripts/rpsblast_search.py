@@ -94,7 +94,8 @@ def main():
         )
         with open(args.toolversion, "w") as tv:
             tv.write(version_result.stdout)
-        logger.info(f"Tool version: {version_result.stdout.strip()}")
+        version_text = " | ".join(version_result.stdout.strip().split('\n'))
+        logger.info(f"Tool version: {version_text}")
     except subprocess.CalledProcessError as e:
         logger.error(f"Error getting rpsblast version: {e}")
         sys.exit(1)

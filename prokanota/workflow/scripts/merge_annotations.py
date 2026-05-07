@@ -104,7 +104,7 @@ def main():
     # Log annotation sources
     logger.info("Annotation sources:")
     for db_name, _ in db_annotations:
-        logger.info(f"  - {db_name}")
+        logger.info(f"  + {db_name}")
 
     # Merge
     logger.info("Merging annotations...")
