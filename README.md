@@ -207,9 +207,10 @@ Here you need to tell prokanota which databases to use for annotation and how. A
          - {name: MyDB_evalue, source: evalue}
     # A note on the mapping_key: For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession. For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
    ```
-> **Note:** For a detailed database setup protocol, see the [protocol on Zenodo](#configuration--adding-custom-databases) *(link to be added on publication)*.
+> **Note:** For a detailed database setup protocol, see the [publication](#configuration--adding-custom-databases), or the [protocol on Zenodo](#configuration--adding-custom-databases) *(links to be added on publication)*.
 
 ## Recommended Databases to use
+For archaeal genome annotation, we frequently use the following databases:
 - **Databases**
     - **[CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains) - The Conserved Domains Database curated by NCBI.** *Sources information from the [SMART](http://smart.embl-heidelberg.de/), [Pfam](http://pfam.sanger.ac.uk/), [COG](https://www.ncbi.nlm.nih.gov/COG/), [TIGR](https://www.ncbi.nlm.nih.gov/Structure/cdd/docs/tigrfams.html), and [PRK](https://www.ncbi.nlm.nih.gov/proteinclusters) databases. This makes it a good consolidated database for annotation purposes.*
     - **[COG](https://www.ncbi.nlm.nih.gov/COG/) - The Clusters of Orthologous Genes (COG) database.** *Even though the CDD sources some information from this DB as well, this is such a good resource that it deserves to be included in full and on its own.*
