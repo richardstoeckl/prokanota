@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-beta.7] - 2026-05-11
+
+### Added
+- Added version number to splash screen.
+
+### Changed
+- Changed all version displays to be the same format
+- Updated the documentation
+
+### Fixed
+- Fixed multiple inclusions of the schema files
+- Fixed some version messages being logged in the wrong format
+
 ## [2.0.0-beta.6] - 2026-04-30
 
 ### Fixed
@@ -139,7 +152,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ---
-[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...HEAD
+[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.7...HEAD
+[2.0.0-beta.7]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...v2.0.0-beta.7
 [2.0.0-beta.6]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.5...v2.0.0-beta.6
 [2.0.0-beta.5]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.4...v2.0.0-beta.5
 [2.0.0-beta.4]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.3...v2.0.0-beta.4
