@@ -1,0 +1,7 @@
+name: diamond
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.14
+  - diamond==2.1.22

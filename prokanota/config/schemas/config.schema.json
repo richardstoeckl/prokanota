@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pipeline Configuration",
+  "type": "object",
+  "$defs": {
+    "configPathField": {
+      "type": "string",
+      "description": "Path-like string: 1-4096 chars, no wrapping quotes, no control characters, no trailing space/dot, and no internal double slashes (leading // allowed).",
+      "minLength": 1,
+      "maxLength": 4096,
+      "allOf": [
+        {
+          "not": {
+            "pattern": "^'[^']*'$|^\"[^\"]*\"$|^`[^`]*`$"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[\u0000-\u001F\u007F]"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[ .]$"
+          }
+        },
+        {
+          "anyOf": [
+            {
+              "pattern": "^//(?:[^/]|/(?!/))*$"
+            },
+            {
+              "pattern": "^(?!//)(?:[^/]|/(?!/))*$"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "required": ["global"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "required": ["metadata", "databases", "logs", "interim", "results"],
+      "properties": {
+        "metadata": {"type": "string", "default": "metadata.csv"},
+        "databases": {"type": "string", "default": "databases.yaml"},
+        "logs": {
+          "description": "Directory for workflow logs.",
+          "allOf": [
+            {"$ref": "#/$defs/configPathField"},
+            {"default": "logs"}
+          ]
+        },
+        "interim": {
+          "description": "Directory for intermediate workflow files.",
+          "allOf": [
+            {"$ref": "#/$defs/configPathField"},
+            {"default": "interim"}
+          ]
+        },
+        "results": {
+          "description": "Directory for final workflow outputs.",
+          "allOf": [
+            {"$ref": "#/$defs/configPathField"},
+            {"default": "results"}
+          ]
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "properties": {
+        "translation_table": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 25,
+          "default": 11
+        },
+        "meta": {
+          "type": "boolean",
+          "default": false
+        },
+        "run_rrna": {
+          "type": "boolean",
+          "default": true
+        },
+        "run_trna": {
+          "type": "boolean",
+          "default": true
+        },
+        "run_crispr": {
+          "type": "boolean",
+          "default": true
+        },
+        "minimum_gene_length": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 90
+        }
+      }
+    }
+  }
+}

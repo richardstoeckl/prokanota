@@ -1,0 +1,65 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "description": "Schema for metadata CSV file (validates each row as an object)",
+    "type": "object",
+    "$defs": {
+        "pathField": {
+            "type": "string",
+            "description": "Path-like string: 1-4096 chars, no wrapping quotes, no control characters, no trailing space/dot, and no internal double slashes (leading // allowed).",
+            "minLength": 1,
+            "maxLength": 4096,
+            "allOf": [
+                {
+                    "not": {
+                        "pattern": "^'[^']*'$|^\"[^\"]*\"$|^`[^`]*`$"
+                    }
+                },
+                {
+                    "not": {
+                        "pattern": "[\u0000-\u001F\u007F]"
+                    }
+                },
+                {
+                    "not": {
+                        "pattern": "[ .]$"
+                    }
+                },
+                {
+                    "anyOf": [
+                        {
+                            "pattern": "^//(?:[^/]|/(?!/))*$"
+                        },
+                        {
+                            "pattern": "^(?!//)(?:[^/]|/(?!/))*$"
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "properties": {
+        "sample_id": {
+            "type": "string",
+            "description": "Sample/genome identifier",
+            "minLength": 1
+        },
+        "path": {
+            "description": "Path to input FASTA file",
+            "allOf": [
+                {
+                    "$ref": "#/$defs/pathField"
+                }
+            ]
+        },
+        "input_type": {
+            "type": "string",
+            "description": "Input type for sample (dna or protein)",
+            "enum": ["dna", "protein"]
+        },
+        "comment": {
+            "type": "string",
+            "description": "Optional comment"
+        }
+    },
+    "required": ["sample_id", "path"]
+}

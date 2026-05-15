@@ -1,5 +1,12 @@
 *.DS_Store
-.vscode/*
-.snakemake/*
+.vscode
+.snakemake
 logs*/*
-config/metadata-*.csv
+*__pycache__
+prokanota/config/config-*.yaml
+prokanota/config/databases-*.yaml
+prokanota/config/metadata-*.csv
+prokanota/workflow/conda/
+prokanota/tests/output
+prokanota.egg-info
+dist/*

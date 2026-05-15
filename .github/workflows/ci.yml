@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-name: snakemake
+          create-args: >-
+            python=3.11
+            -c conda-forge
+            -c bioconda
+            snakemake
+            pandas
+
+      - name: Run mapping parser unit tests
+        shell: bash -l {0}
+        run: micromamba run -n snakemake python -m unittest prokanota.tests.test_mapping_utils -v
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: micromamba run -n snakemake python prokanota/tests/run_tests.py

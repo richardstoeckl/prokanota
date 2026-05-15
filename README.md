@@ -1,70 +1,264 @@
-# Snakemake workflow: `Prokanota`
+# `Prokanota`
 
-[![Snakemake](https://img.shields.io/badge/snakemake-≥9.3.5-brightgreen.svg)](https://snakemake.github.io)
+<!-- badges: start -->
+![GitHub License](https://img.shields.io/github/license/richardstoeckl/prokanota)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
+![GitHub Stable Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?display_name=release&label=Latest%20stable%20release)
+![GitHub Latest Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?include_prereleases&display_name=release&label=Latest%20release)
+[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.1-brightgreen.svg)](https://snakemake.github.io)
+[![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml)
+![OS compatibility](https://img.shields.io/badge/os_compatibility-Linux%2FmacOS:_x86%2Farm64-salmon)
+<!-- badges: end -->
 
-Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion.
+Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free*, modular database architecture.
+
+*Code free if you really force the issue. Some limited knowledge will make your life much easier.
+
+## Table of Contents
+
+- [About](#about)
+- [Features](#features)
+  - [Gene Prediction](#gene-prediction)
+  - [Annotation System](#annotation-system)
+  - [Output Formats](#output-formats)
+- [Modular Database System](#modular-database-system)
+- [Installation & Quick Start](#installation--quick-start)
+  - [Option 1 - The simple option](#option-1---the-simple-option)
+  - [Option 2 - More familiar with Snakemake workflows and their flexibility?](#option-2---more-familiar-with-snakemake-workflows-and-their-flexibility)
+- [Inputs](#inputs)
+- [Configuration & Adding Custom Databases](#configuration--adding-custom-databases)
+  - [`config.yaml`](#configyaml)
+  - [`metadata.csv`](#metadatacsv)
+  - [`databases.yaml`](#databasesyaml)
+- [Recommended Databases to use](#recommended-databases-to-use)
+- [FAQ](#faq)
+- [Citation](#citation)
 
 ## About
-There are great tools available for (mostly bacterial) prokaryotic genome annotation. [Prokka](https://github.com/tseemann/prokka) has been the de facto default for many years, and [Bakta](https://github.com/oschwengers/bakta) is not only great overall, but gets regular updates making it even better.
 
-Unfortunately, at least in my experience, annotation for archaeal species is often not perfect when done with these tools that are specialized for bacteria. Also, while the hierarchical annotation employed by these tools creates annotations that are easy to interpret, sometimes nuances get lost with them.
+Prokaryotic genome annotation is a complex, multi-faceted task. Excellent tools like [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta) provide streamlined, user-friendly annotation that works well for most bacterial genomes. However, their hierarchical annotation systems can lose important nuances, and they often struggle with non-standard organisms—particularly archaeal species—where database coverage is more limited.
 
-This is why I developed this pipeline. Inspired by the annotation approach by [Dombrowski, Nina, et al. Nature Communications, vol. 11, no. 1, Aug. 2020, p. 3939](https://doi.org/10.1038/s41467-020-17408-w), this snakemake pipeline returns the top hits from multiple databases for each predicted protein, allowing the user to make more informed decisions which annotation might be the best.
+On the other end of the spectrum, sophisticated custom annotation pipelines like those described by [Dombrowski, et al. (2020)](https://doi.org/10.1038/s41467-020-17408-w) provide exceptional flexibility and depth, but require substantial bioinformatics expertise and manual configuration.
+
+**Prokanota fills the gap between these approaches.** It provides:
+
+- **An efficient, well-tested backbone** that handles gene prediction and feature annotation automatically
+- **A modular, config-driven database system** that allows users to customize their annotations without writing code
+- **Multi-database top-hit reporting** that preserves annotation nuances and allows informed manual curation
 
 ## Features
 
-1. To ensure that the results are consistent and changes easily identifiable, the gene_ids are created by calculating a hash from the DNA content supplied genome AND the supplied sampleID. Check the "FAQ" section for more information.
-2. CDS are predicted using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes some bugs from prodigal. Results can differ very slightly in these edge-cases.
-3. rRNAs genes are predicted using [pybarrnap](https://github.com/moshi4/pybarrnap) in `--accurate` mode. This uses the CM models from Rfam(14.10).
-4. tRNAs are predicted using [tRNAscan-SE](https://github.com/UCSC-LoweLab/tRNAscan-SE) in `-G` mode.
-5. To facilitate use with pangenome analyses or similar analysis, the pipeline outputs the predicted gene positions as `.gff`,`.tsv`, and `.gbk` files; the gene sequences as `.fna` files; and the protein sequences as `.faa` files. All files utilize the exact same gene_ids. Use these files as input for your favorite downstream tool and cross-reference your results with the annotations from this pipeline!
-6. Currently, the genes are annotated using the [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains), [COG](https://www.ncbi.nlm.nih.gov/COG/), [arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/), and [PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) databases. More are planned in the future.
+### Gene Prediction
+1. **Deterministic gene IDs:** Gene IDs are generated by hashing the DNA content and sample ID, ensuring consistency across runs and making changes immediately identifiable. See FAQ for details.
+2. **CDS prediction** using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes edge-case bugs from the original Prodigal.
+3. **rRNA prediction** using [pybarrnap](https://github.com/moshi4/pybarrnap) in `--accurate` mode with Rfam(14.10) covariance models.
+4. **tRNA prediction** using [tRNAscan-SE](https://github.com/UCSC-LoweLab/tRNAscan-SE) in `-G` mode for general tRNA prediction.
+5. **Clustered Regularly Interspaced Short Palindromic Repeat (CRISPR loci prediction** via [Diced](https://github.com/althonos/diced), a Rust reimplementation of the MinCED method.
 
-## Usage
+### Annotation System
+6. **Modular database architecture:** Add custom HMM, RPS-BLAST, DIAMOND, or mmseqs2 databases by editing a config file — no code changes needed.
+7. **Multi-database annotation:** Top hits from each database are reported separately, preserving annotation depth and enabling informed manual curation.
 
-**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl%20prokanota.html)**
+### Output Formats
+8. **Pangenome-ready outputs:** Annotations are provided in `.gff`, `.tsv`, and `.gbk` formats, with sequences in `.fna` (nucleotide) and `.faa` (protein) formats. All use consistent gene IDs for easy cross-referencing with downstream tools.
 
-But here is a rough overview:
+## Modular Database System
+
+The pipeline uses a **config-driven modular architecture** that separates database definitions from code. This means:
+
+- **No code editing required:** Add new databases by editing `config/databases.yaml`
+- **Flexible tool support:** Currently supports `pyhmmer` (for HMM databases), `rpsblast` (for RPS-BLAST databases), `DIAMOND` (for BLAST/DIAMOND databases), and `mmseqs2` (for BLAST/mmseqs2 databases), with more to come!
+- **Automatic rule generation:** The Snakemake workflow dynamically generates search and parse rules for each enabled database
+- **Standardized output:** All databases contribute columns to a unified annotation table
+
+## Installation & Quick Start
+
+**Prokanota supports two modes of operation, depending on your level of expertise and how much you want to customize.**
+
+### Option 1 - The simple option
+
+1. Prokanota is available via `pip`, but requires [conda](https://docs.conda.io/en/latest/miniconda.html) or mamba to manage its dependencies. Install into a conda environment:
+
+    ```bash
+    # create new conda environment
+    conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    # activate environment
+    conda activate prokanotaENV
+    # install prokanota and all dependencies
+    pip install prokanota
+    ```
+
+    When you run `prokanota` for the first time, all the required dependencies will be installed as required, so it will take longer than usual (usually a few minutes). Every time you run it afterwards, it will be a lot faster as the dependencies will be installed.
+
+2. You can test if the installation worked by running the internal tests of `prokanota`. This will also install most of the required dependencies for you:
+
+    ```bash
+    prokanota test
+    ```
+
+3. When you are ready to run the pipeline on your own data, let `prokanota` create the default config files for you in a place of your chosing with:
+
+    ```bash
+    prokanota config /some/path/
+    ```
+    This will create the three config files required to run prokanota. See the relevant sections in this README for detailed instructions on how to modify these files.
+
+4. Run the pipeline on your data:
+
+    ```bash
+    prokanota run --cfg /some/path/config.yaml
+    ```
+
+    If you need to override paths from the config file for a specific run:
+
+    ```bash
+    prokanota run --cfg /some/path/config.yaml --db /some/path/databases.yaml --meta /some/path/metadata.csv
+    ```
+
+
+### Option 2 - More familiar with Snakemake workflows and their flexibility?
+
+Since `prokanota` is actually just a Snakemake workflow with a [Snaketool](https://doi.org/10.1371/journal.pcbi.1010705) wrapper, you can simply use it as a Snakemake workflow.
+
+**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl/prokanota.html)**
+
+Or do the steps manually:
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
 2. Install snakemake with:
-```bash
-conda install -c conda-forge -c bioconda snakemake
-```
+    ```bash
+    conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    conda activate prokanotaENV
+    ```
 3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
-4. Edit the `config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
-5. Edit the `config/metadata.csv` file with the specific details for each assembly you want to annotate. Please note, that the sampleID you enter here will influence the naming of the contig and gene IDs!
-5. Open a terminal in the main dir and start a dry-run of the pipeline with the following command. This will show you if you set up the paths correctly:
+4. Edit the `prokanota/config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
+  You can also configure optional feature prediction defaults there under `features` (for example `translation_table` in range 1-25, `minimum_gene_length`, and toggles for rRNA/tRNA/CRISPR prediction).
+5. Edit `prokanota/config/databases.yaml` to add your databases.
+6. Edit `prokanota/config/metadata.csv` with the specific details for each assembly you want to annotate. Please note that the sampleID you enter here will influence the naming of contig and gene IDs.
+7. Run the pipeline with
+    ```bash
+    snakemake --sdm conda --configfile prokanota/config/config.yaml --cores
+    ```
 
-```bash
-snakemake --sdm conda -n --cores
-```
-6. Run the pipeline with
-```bash
-snakemake --sdm conda --cores
+## Inputs
+
+Prokanota expects multi-FASTA files containing either genome assemblies (`dna` mode) or raw protein sequences (`protein` mode). You declare these inputs in the `metadata.csv` file.
+
+## Configuration & Adding Custom Databases
+
+Prokanota's flexibility comes from its three configuration files: `config.yaml`, `metadata.csv`, and `databases.yaml`. 
+
+### `config.yaml`
+
+Define the paths to inputs and outputs, and some optional parameters for the feature prediction module:
+
+```yaml
+global:
+  metadata: "metadata.csv"      # path to metadata file
+  databases: "databases.yaml"   # path to databases file
+  logs: "logs"                  # path to log dir
+  interim: "interim"            # path to intermediate results dir
+  results: "results"            # path to output dir
+
+features:
+  translation_table: 11         # allowed range: 1-25
+  meta: false                   # force pyrodigal metagenomic mode
+  run_rrna: true                # run pybarrnap rRNA prediction
+  run_trna: true                # run tRNAscan-SE prediction
+  run_crispr: true              # run DICED CRISPR detection
+  minimum_gene_length: 90       # minimum CDS length (bp)
 ```
 
-## Databases and Tools used in the pipeline and reasoning. Consider citing these if you use this pipeline.
+### `metadata.csv`
+
+A `.csv` file with four columns and one row per sample (≙ a proteome or genome to annotate). 
+- First column: sampleID (Note: The sampleID is used to name the output files and is used to calculate the gene_ids!)
+- Second column: path to proteome or genome file in FASTA format
+- Third column: Either "dna" (for genome files, this will RUN the feature prediction module), or "protein" (for proteome files, this will SKIP the feature prediction)
+  > **Note:** You can mix `dna` and `protein` samples within the same run.
+
+- Fourth column: optional, for comments
+
+### `databases.yaml`
+
+Here you need to tell prokanota which databases to use for annotation and how. Adding a new database requires three simple steps:
+
+1. Prepare your database, e.g. press your `.hmm` files using `hmmpress` or download a ready-to-use db (e.g., the `.LIB` file for PGAP).
+2. Create a mapping file (TSV, no header). Usually databases provide a file like this but you will have to make sure the format is correct (can be done via a simple text editor): `accession<TAB>short_name<TAB>description<TAB>category`
+  - Exactly 4 tab-separated columns are required for each non-empty line.
+  - The first column (`accession`) is the join key and must not be empty.
+  - For `short_name`, `description`, and `category`, the following values are treated as empty and normalized to `*` in output: empty/whitespace-only fields, `NA`, `N/A`, `NULL`/`null`, `-`, and `*`.
+  - Duplicate values in the first column are rejected.
+3. Modify `databases.yaml`:
+   ```yaml
+   databases:
+     - name: MyCustomDB # pick a name 
+       enabled: true
+       order: 50 # lower = earlier
+       search_tool: pyhmmer  # needs to match your db
+       db_path: "/path/to/db.hmm" # path to your db
+       mapping_path: "/path/to/mapping.tsv" # path to the mapping file
+       evalue_cutoff: 1.0e-3 # E-value threshold for filtering hits
+       mapping_key: accession # Column to join on with mapping file ("accession" or "query_name"). 
+       columns: # List of output columns with name and source field
+         - {name: MyDB_hit, source: query_name}
+         - {name: MyDB_description, source: description}
+         - {name: MyDB_evalue, source: evalue}
+    # A note on the mapping_key: For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession. For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
+   ```
+> **Note:** For a detailed database setup protocol, see the [publication](#configuration--adding-custom-databases), or the [protocol on Zenodo](#configuration--adding-custom-databases) *(links to be added on publication)*.
+
+## Recommended Databases to use
+For archaeal genome annotation, we frequently use the following databases:
 - **Databases**
     - **[CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains) - The Conserved Domains Database curated by NCBI.** *Sources information from the [SMART](http://smart.embl-heidelberg.de/), [Pfam](http://pfam.sanger.ac.uk/), [COG](https://www.ncbi.nlm.nih.gov/COG/), [TIGR](https://www.ncbi.nlm.nih.gov/Structure/cdd/docs/tigrfams.html), and [PRK](https://www.ncbi.nlm.nih.gov/proteinclusters) databases. This makes it a good consolidated database for annotation purposes.*
     - **[COG](https://www.ncbi.nlm.nih.gov/COG/) - The Clusters of Orthologous Genes (COG) database.** *Even though the CDD sources some information from this DB as well, this is such a good resource that it deserves to be included in full and on its own.*
-    - **[arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/) - The archaea specific version of the COG database.** *This is included to serve more up-to-date and accurate annotation of archaeal genomes.*
-    - **[PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) - HMMs are used by the [NCBI Prokaryotic Genome Annotation Pipeline (PGAP)](https://pubmed.ncbi.nlm.nih.gov/33270901/).** *Since most submissions of novel prokaryotic genomes are evaluated by the PGAP tool, it makes sense to include its DB.*
-
-
+    - **[arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/) - The archaea specific version of the COG database.** *This provides accurate annotation of archaeal genomes. You can use [this conversion script](https://gist.github.com/richardstoeckl/84be97d0c6dfeb360d04bf17629751a7) to convert the arCOG alignment files to a HMM database.*
+    - **[PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) - HMMs are used by the [NCBI Prokaryotic Genome Annotation Pipeline (PGAP)](https://pubmed.ncbi.nlm.nih.gov/33270901/).** *Most novel prokaryotic genome submissions are evaluated by PGAP, so using its HMMs helps anticipate those annotations.*
 
 ## FAQ
 
 - **How is the gene_id determined? What do the letters mean?**
-  - The gene_id is determined by the contig_id, which is determined by hashing the DNA sequence of the genome and the user supplied sampleID. This ensures that the gene_id is consistent across runs. This is important for downstream analyses, as it allows you to cross-reference your results with the annotations from this pipeline. Changes in the contig_id indicate either changes in the sampleID or changes in the genome sequence and should probably investigated. The hashing algorithm is found in [`prokanota/workflow/scripts/cds.py`](https://github.com/richardstoeckl/prokanota/blob/97462102247b8059d4556bd9fd16e7bc85e4714d/prokanota/workflow/scripts/cds.py#L58-L84).
+  - The gene_id is determined by the contig_id, which is determined by hashing the DNA sequence of the genome and the user supplied sampleID. This ensures that the gene_id is consistent across runs. This is important for downstream analyses, as it allows you to cross-reference your results with the annotations from this pipeline. Changes in the contig_id indicate either changes in the sampleID or changes in the genome sequence and should probably investigated. The hashing algorithm is found in [`prokanota/workflow/scripts/features.py`](https://github.com/richardstoeckl/prokanota/blob/c2dc89227d3171187cf6949af15b27dddd4aa390/workflow/scripts/features.py#L564-L590).
+- **Can I use this pipeline to annotate protein sequences I optained from another source?**
+  - Yes! There is a "genomic" (default) mode and a "protein" mode, which basically skips the feature prediction parts of the pipeline and simply annotates a supplied multifasta file of protein sequences. The best part is, that you can mix genomic samples and protein samples within the same run!
 - **How is the predicted protein molecular weight estimated?**
-  - The molecular weight is estimated by summing the average residue masses in the protein sequence and adding the mass of one water molecule, as described in [GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607](https://doi.org/10.1385/1-59259-890-0:571). The molecular weights are taken from the [here](https://web.expasy.org/findmod/findmod_masses.html#AA) and the function can be found in [`prokanota/workflow/scripts/cds.py`](https://github.com/richardstoeckl/prokanota/blob/97462102247b8059d4556bd9fd16e7bc85e4714d/prokanota/workflow/scripts/cds.py#L240-L258)
+  - The molecular weight is estimated by summing the average residue masses in the protein sequence and adding the mass of one water molecule, as described in [GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607](https://doi.org/10.1385/1-59259-890-0:571). The molecular weights are taken from the [here](https://web.expasy.org/findmod/findmod_masses.html#AA) and the function can be found in [`prokanota/workflow/scripts/features.py`](https://github.com/richardstoeckl/prokanota/blob/c2dc89227d3171187cf6949af15b27dddd4aa390/workflow/scripts/features.py#L398-L416)
+- **Can I use this pipeline for bacterial genomes?**
+  - Absolutely! While the pipeline was designed with archaeal annotation challenges in mind, it works equally well for bacterial genomes.
+- **What if I don't want to use all the built-in databases?**
+  - Simply set `enabled: false` for any database in `config/databases.yaml`.
 
+## Citation
 
+If you use Prokanota in your research, please cite:
 
+> Stöckl, R. *Prokanota: a flexible pipeline for prokaryotic genome annotation with a modular database architecture. Version vX.X.X.* **(publication in preparation)**
 
+Prokanota builds on the following tools — please consider also citing them as appropriate:
+
+- Dependencies:
+
+  - Snakemake: https://doi.org/10.12688/f1000research.29032.1
+  - Snaketool: https://doi.org/10.1371/journal.pcbi.1010705
+
+- If you used the feature prediction module:
+  - Pyrodigal: https://doi.org/10.21105/joss.04296
+  - Pybarrnap: https://github.com/moshi4/pybarrnap
+  - tRNAscan-SE: https://doi.org/10.1093/nar/gkab688
+  - Diced: https://github.com/althonos/diced
+
+- And depending on which search tool was used in the annotation module:
+  - Pyhmmer: https://doi.org/10.1093/bioinformatics/btad214
+  - DIAMOND: https://doi.org/10.1038/s41592-021-01101-x
+  - RPS-BLAST: https://doi.org/10.1093/nar/30.1.281
+  - MMseqs2: https://doi.org/10.1038/nbt.3988
+
+---
 
 ```
-Copyright Richard Stöckl 2025.
+Copyright Richard Stöckl 2025-2026.
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE or copy at 
 https://www.boost.org/LICENSE_1_0.txt)

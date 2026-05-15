@@ -1,0 +1,23 @@
+# target name        query name           accession    E-value  score  bias
+JLPIBLAO_1_01646     Ribosomal_S9         PF00380.20   4.6e-32   108.1  0.2  
+JLPIBLAO_1_01698     Ribosomal_S9         PF00380.20   5.0e-03   14.3   0.1  
+JLPIBLAO_1_01798     Ribosomal_S8         PF00410.20   1.8e-28   96.0   0.0  
+JLPIBLAO_1_01983     Ribosomal_L10        PF00466.21   1.8e-22   76.3   0.1  
+JLPIBLAO_1_01982     Ribosomal_L1         PF00687.22   1.9e-51   171.7  0.7  
+JLPIBLAO_1_00874     Ribosomal_L15e       PF00827.18   1.0e-91   302.8  7.5  
+JLPIBLAO_1_01801     Ribosomal_S4e        PF00900.21   7.4e-23   77.2   0.1  
+JLPIBLAO_1_01649     RNA_pol_A_bac        PF01000.27   2.2e-30   102.3  0.0  
+JLPIBLAO_1_02044     Ribosomal_S3Ae       PF01015.19   2.3e-75   249.4  5.9  
+JLPIBLAO_1_01856     GrpE                 PF01025.20   4.2e-04   17.0   5.8  
+JLPIBLAO_1_00319     GrpE                 PF01025.20   4.5e-01   7.1    19.9 
+JLPIBLAO_1_01500     Ribosomal_S19e       PF01090.20   1.0e-59   197.1  0.0  
+JLPIBLAO_1_00697     Ribosomal_S19e       PF01090.20   5.8e-04   16.5   0.1  
+JLPIBLAO_1_00280     Ribosomal_S19e       PF01090.20   1.3e-03   15.4   0.1  
+JLPIBLAO_1_00988     Ribosomal_S19e       PF01090.20   8.5e-03   12.7   0.0  
+JLPIBLAO_1_01368     Ribosomal_S28e       PF01200.19   9.2e-32   105.8  4.0  
+JLPIBLAO_1_01795     Ribosomal_L19e       PF01280.21   8.8e-60   197.9  14.4 
+JLPIBLAO_1_00534     PNPase               PF03726.15   2.7e-01   8.7    8.1  
+JLPIBLAO_1_01545     PNPase               PF03726.15   9.1e-01   7.0    17.3 
+JLPIBLAO_1_01851     DUF655               PF04919.13   5.9e-75   248.1  0.3  
+JLPIBLAO_1_01141     EIF_2_alpha          PF07541.13   4.7e-26   88.1   0.1  
+JLPIBLAO_1_01027     EIF_2_alpha          PF07541.13   1.2e-02   12.7   4.8  

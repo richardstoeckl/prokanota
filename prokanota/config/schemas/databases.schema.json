@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Databases Configuration",
+  "type": "object",
+  "$defs": {
+    "pathField": {
+      "type": "string",
+      "description": "Path-like string: 1-4096 chars, no wrapping quotes, no control characters, no trailing space/dot, and no internal double slashes (leading // allowed).",
+      "minLength": 1,
+      "maxLength": 4096,
+      "allOf": [
+        {
+          "not": {
+            "pattern": "^'[^']*'$|^\"[^\"]*\"$|^`[^`]*`$"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[\u0000-\u001F\u007F]"
+          }
+        },
+        {
+          "not": {
+            "pattern": "[ .]$"
+          }
+        },
+        {
+          "anyOf": [
+            {
+              "pattern": "^//(?:[^/]|/(?!/))*$"
+            },
+            {
+              "pattern": "^(?!//)(?:[^/]|/(?!/))*$"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "required": ["databases"],
+  "properties": {
+    "databases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "search_tool", "db_path", "mapping_path", "columns"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+            "description": "Unique database identifier (alphanumeric, underscore, must start with letter)"
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this database is active"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 100,
+            "description": "Order in final merged table (lower = earlier)"
+          },
+          "search_tool": {
+            "type": "string",
+            "enum": ["pyhmmer", "rpsblast", "diamond", "mmseqs2"],
+            "description": "Search tool to use for this database"
+          },
+          "db_path": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/pathField"
+              }
+            ],
+            "description": "Path to prepared database files"
+          },
+          "mapping_path": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/pathField"
+              }
+            ],
+            "description": "Path to mapping TSV file"
+          },
+          "mapping_key": {
+            "type": "string",
+            "enum": ["accession", "query_name"],
+            "default": "accession",
+            "description": "Column to join on with mapping file. For pyhmmer databases, use 'query_name' if the mapping file is keyed by HMM name, or 'accession' if keyed by HMM accession. For other tools, typically use 'accession'. No normalization is performed; keys must match exactly."
+          },
+          "evalue_cutoff": {
+            "type": "number",
+            "default": 1e-3,
+            "exclusiveMinimum": 0,
+            "description": "E-value threshold for hit filtering"
+          },
+          "mmseqs2_sensitivity": {
+            "type": "number",
+            "minimum": 0,
+            "description": "MMseqs2 sensitivity (-s)"
+          },
+          "mmseqs2_max_seqs": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "MMseqs2 maximum number of target sequences"
+          },
+          "mmseqs2_min_seq_id": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "MMseqs2 minimum sequence identity (0-1)"
+          },
+          "mmseqs2_cov_mode": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "MMseqs2 coverage mode"
+          },
+          "mmseqs2_coverage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "MMseqs2 coverage threshold (0-1)"
+          },
+          "columns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["name", "source"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+                  "description": "Output column name"
+                },
+                "source": {
+                  "type": "string",
+                  "enum": [
+                    "query_name",
+                    "accession",
+                    "short_name",
+                    "description",
+                    "category",
+                    "evalue",
+                    "score",
+                    "bias",
+                    "pident",
+                    "length",
+                    "mismatch",
+                    "gapopen",
+                    "qstart",
+                    "qend",
+                    "sstart",
+                    "send"
+                  ],
+                  "description": "Source field from hits or mapping"
+                }
+              }
+            },
+            "description": "Column definitions for output"
+          }
+        }
+      }
+    }
+  }
+}
