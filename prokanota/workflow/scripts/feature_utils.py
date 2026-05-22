@@ -52,7 +52,7 @@ def protein_molecular_weight(seq: str) -> float:
         "C": 103.1388,
         "E": 129.1155,
         "Q": 128.1307,
-        "G": 57.0513,
+        "G": 57.0519,
         "H": 137.1411,
         "I": 113.1594,
         "L": 113.1594,
@@ -63,12 +63,18 @@ def protein_molecular_weight(seq: str) -> float:
         "S": 87.0782,
         "T": 101.1051,
         "W": 186.2132,
-        "Y": 163.1733,
-        "V": 99.1311,
+        "Y": 163.1760,
+        "V": 99.1326,
+        "U": 150.0388,  # Selenocysteine
+        "O": 237.3018,  # Pyrrolysine
     }
+    if not seq:
+        return 0.0
     mw = 0.0
     for aa in seq:
-        mw += weights.get(aa, 0.0)  # if an unknown amino acid appears, weight is 0 to alert the user
+        if aa not in weights:
+            return 0.0  # Unknown amino acid yields a zero weight result.
+        mw += weights[aa]
     # Add the weight of one water molecule (approximately 18.015 Da) for the free termini
     mw += 18.01528
     return mw
