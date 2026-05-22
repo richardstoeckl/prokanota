@@ -48,6 +48,7 @@ from feature_utils import (
     hash_sample_id,
     map_hexdigest_to_id,
     protein_molecular_weight,
+    reverse_complement,
 )
 from logging_utils import (
     setup_logger,
@@ -597,21 +598,6 @@ def write_genome(genome_id, tagged_contigs, genome_path):
 # ---------------------------
 # Helper Functions
 # ---------------------------
-
-def reverse_complement(seq):
-    """Return the reverse complement of a DNA sequence."""
-    complement = str.maketrans("ACGT", "TGCA")
-    return seq.translate(complement)[::-1]
-
-
-def get_rrna_sequence(contig_seq, start, end, strand):
-    """
-    Extracts the rRNA sequence from a contig.
-    """
-    seq = contig_seq[start-1:end]
-    if strand == '-':
-        seq = reverse_complement(seq)
-    return seq
 
 def predict_trnas(tagged_contigs, tmp_dir, threads):
     """

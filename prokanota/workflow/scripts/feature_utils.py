@@ -84,3 +84,17 @@ def ensure_empty_file(path: str) -> None:
     file_path = Path(path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_bytes(b"")
+
+
+def reverse_complement(seq: str) -> str:
+    """Return the reverse complement of a DNA sequence."""
+    complement = str.maketrans("ACGTacgt", "TGCAtgca")
+    return seq.translate(complement)[::-1]
+
+
+def get_sequence(contig_seq: str, start: int, end: int, strand: str) -> str:
+    """Extract a sequence from a contig and reverse-complement if needed."""
+    seq = contig_seq[start - 1:end]
+    if strand == "-":
+        seq = reverse_complement(seq)
+    return seq
