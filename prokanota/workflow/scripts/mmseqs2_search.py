@@ -134,7 +134,7 @@ def main():
         format_output,
         "--threads",
         str(args.threads),
-        "--e-value",
+        "-e",
         str(args.evalue),
     ]
 
