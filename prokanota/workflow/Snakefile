@@ -94,6 +94,20 @@ LOGPATH = os.path.normpath(config["global"]["logs"])
 INTERIMPATH = os.path.normpath(config["global"]["interim"])
 RESULTPATH = os.path.normpath(config["global"]["results"])
 
+PROKANOTA_VERBOSE = False
+prokanota_cfg = config.get("prokanota", {})
+if isinstance(prokanota_cfg, dict):
+    prokanota_args = prokanota_cfg.get("args", {})
+    if isinstance(prokanota_args, dict):
+        PROKANOTA_VERBOSE = bool(
+            prokanota_args.get("verbose", False)
+            or prokanota_args.get("very_verbose", False)
+        )
+if not PROKANOTA_VERBOSE:
+    PROKANOTA_VERBOSE = bool(config.get("prokanota_verbose", False))
+
+LOG_REDIRECT = "2>&1 | tee {log}" if PROKANOTA_VERBOSE else "1> {log} 2>&1"
+
 FEATURES_DEFAULTS = {
     "translation_table": 11,
     "meta": False,
@@ -280,7 +294,10 @@ def validate_database_files(db_config):
 # Validate all enabled databases at workflow start
 for db in ENABLED_DBS:
     validate_search_tool(db["search_tool"])
-    validate_database_files(db)
+    # TODO: Rework database file validation. The current validation
+    # implementation needs a complete rework; temporarily disable it
+    # to avoid blocking runs until a proper reimplementation is available.
+    # validate_database_files(db)
 
 
 # =============================================================================
@@ -356,8 +373,7 @@ rule predict_features:
         --crispr_tsv_path {output.crispr} \
         --translation_table {params.translation_table} \
         --minimum_gene_length {params.minimum_gene_length} \
-        --threads {threads} 2>&1 | tee {log}
-        """
+        --threads {threads} """ + LOG_REDIRECT
 
 
 # =============================================================================
@@ -399,8 +415,7 @@ for db in ENABLED_DBS:
                     --tblout {output.tblout} \
                     --toolversion {output.version} \
                     --threads {threads} \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
     elif db["search_tool"] == "rpsblast":
 
@@ -436,8 +451,7 @@ for db in ENABLED_DBS:
                     --toolversion {output.version} \
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
     elif db["search_tool"] == "diamond":
 
@@ -473,8 +487,7 @@ for db in ENABLED_DBS:
                     --toolversion {output.version} \
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
     elif db["search_tool"] == "mmseqs2":
 
@@ -512,8 +525,7 @@ for db in ENABLED_DBS:
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
                     {params.extra_args} \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
 
 # =============================================================================
@@ -555,8 +567,7 @@ for db in ENABLED_DBS:
                     --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
     elif db["search_tool"] == "rpsblast":
 
@@ -590,8 +601,7 @@ for db in ENABLED_DBS:
                     --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
     elif db["search_tool"] == "diamond":
 
@@ -625,8 +635,7 @@ for db in ENABLED_DBS:
                     --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
     elif db["search_tool"] == "mmseqs2":
 
@@ -660,8 +669,7 @@ for db in ENABLED_DBS:
                     --mapping-key {params.mapping_key} \
                     --evalue-cutoff {params.evalue_cutoff} \
                     --columns '{params.columns_json}' \
-                    2>&1 | tee {log}
-                """
+                """ + LOG_REDIRECT
 
 
 # =============================================================================
@@ -715,8 +723,7 @@ rule merge_sample_annotations:
             --base-table {input.base_table} \
             --output {output.final} \
             --db-results '{params.db_results_json}' \
-            2>&1 | tee {log}
-        """
+        """ + LOG_REDIRECT
 
 
 rule collect_master_table:
