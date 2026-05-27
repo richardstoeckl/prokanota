@@ -131,11 +131,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Select which test mode to run",
     )
     parser.add_argument(
-        "--skip-polars",
-        action="store_true",
-        help="Skip tests marked with the 'polars' pytest marker",
-    )
-    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Show full tool output in the console",
@@ -148,10 +143,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def run_pytest(skip_polars: bool) -> bool:
+def run_pytest() -> bool:
     cmd = [sys.executable, "-m", "pytest", "-q", str(PYTEST_TESTS)]
-    if skip_polars:
-        cmd.extend(["-m", "not polars"])
     print("Running:", " ".join(cmd))
     result = subprocess.run(cmd, cwd=PACKAGE_ROOT)
     return result.returncode == 0
@@ -606,7 +599,7 @@ def main() -> int:
     if args.very_verbose:
         args.verbose = True
 
-    if not run_pytest(args.skip_polars):
+    if not run_pytest():
         return 1
 
     if args.mode == "minimal":

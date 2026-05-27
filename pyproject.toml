@@ -33,7 +33,8 @@ dependencies = [
   "pandas>=1.5.0",
   "PyYAML>=6.0",
   "snakemake>=9.0.1",
-  "snaketool-utils>=0.0.4"
+  "snaketool-utils>=0.0.4",
+  "pytest>=8.3.4"
 ]
 
 [project.urls]
@@ -61,7 +62,6 @@ exclude = [
 "prokanota/config/databases.yaml" = "prokanota/config/databases.yaml"
 "prokanota/config/metadata.csv" = "prokanota/config/metadata.csv"
 "prokanota/config/README.md" = "prokanota/config/README.md"
-"prokanota/config/test-config.yaml" = "prokanota/config/test-config.yaml"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -84,4 +84,3 @@ exclude = [
 "prokanota/config/databases.yaml" = "prokanota/config/databases.yaml"
 "prokanota/config/metadata.csv" = "prokanota/config/metadata.csv"
 "prokanota/config/README.md" = "prokanota/config/README.md"
-"prokanota/config/test-config.yaml" = "prokanota/config/test-config.yaml"

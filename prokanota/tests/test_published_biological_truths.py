@@ -17,9 +17,7 @@ for path in (str(REPO_ROOT), str(SCRIPTS_DIR)):
         sys.path.insert(0, path)
 
 from prokanota.workflow.scripts import feature_utils
-from prokanota.workflow.scripts import diamond_parse
 from prokanota.workflow.scripts import mapping_utils
-from prokanota.workflow.scripts import merge_annotations
 
 def _column_to_list(df, column):
     series = df[column]
@@ -152,12 +150,13 @@ def test_get_sequence_minus_strand():
 # Standard cutoffs: 1e-3 (permissive), 1e-5 (moderate), 1e-10 (stringent).
 # Reference: Altschul et al., J Mol Biol 1990; 215(3):403-410 (BLAST paper)
 
-@pytest.mark.polars
 def test_evalue_filtering_removes_insignificant_hits():
     """
     Verify that hits above e-value cutoff are filtered out.
     A hit with e-value 0.01 should be removed when cutoff is 1e-3.
     """
+    pytest.importorskip("polars")
+    from prokanota.workflow.scripts import diamond_parse
     import polars as pl
 
     hits_df = pl.DataFrame({
@@ -174,7 +173,6 @@ def test_evalue_filtering_removes_insignificant_hits():
     assert "gene3" not in filtered["gene_id"].to_list()
 
 
-@pytest.mark.polars
 def test_best_hit_selection_by_score():
     """
     When a gene has multiple hits, select the one with highest bitscore.
@@ -182,6 +180,8 @@ def test_best_hit_selection_by_score():
     preferable for comparing hits across different databases.
     Reference: Karlin & Altschul, PNAS 1990; 87(6):2264-2268
     """
+    pytest.importorskip("polars")
+    from prokanota.workflow.scripts import diamond_parse
     import polars as pl
 
     hits_df = pl.DataFrame({
@@ -197,12 +197,13 @@ def test_best_hit_selection_by_score():
     assert filtered["accession"][0] == "pfam2"  # Highest score wins
 
 
-@pytest.mark.polars
 def test_tiebreaker_uses_evalue():
     """
     When scores are tied, prefer the hit with lower (better) e-value.
     This ensures we select the most statistically significant hit.
     """
+    pytest.importorskip("polars")
+    from prokanota.workflow.scripts import diamond_parse
     import polars as pl
 
     hits_df = pl.DataFrame({
@@ -452,13 +453,14 @@ def test_validate_mapping_file_returns_stats():
 # which annotation appears first in the output.
 # Higher priority (lower order number) databases should be processed first.
 
-@pytest.mark.polars
 def test_merge_preserves_database_order():
     """
     Verify annotations are merged in specified priority order.
     Example: Pfam (order=1) should appear before COG (order=2).
     This ensures consistent, reproducible annotation output.
     """
+    pytest.importorskip("polars")
+    from prokanota.workflow.scripts import merge_annotations
     import polars as pl
 
     base_df = pl.DataFrame({
@@ -497,13 +499,14 @@ def test_merge_preserves_database_order():
             cog_path.unlink(missing_ok=True)
 
 
-@pytest.mark.polars
 def test_merge_fills_missing_with_asterisk():
     """
     Verify genes without hits in a database get '*' placeholder.
     This maintains consistent column structure across all genes
     and clearly indicates absence of annotation vs. missing data.
     """
+    pytest.importorskip("polars")
+    from prokanota.workflow.scripts import merge_annotations
     import polars as pl
 
     base_df = pl.DataFrame({

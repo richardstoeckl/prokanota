@@ -504,7 +504,7 @@ def _run_tests(mode: str, **kwargs) -> None:
     if very_verbose:
         verbose = True
 
-    cmd = [sys.executable, str(test_script), "--skip-polars", "--mode", mode]
+    cmd = [sys.executable, str(test_script), "--mode", mode]
     if verbose:
         cmd.append("--verbose")
     if very_verbose:
