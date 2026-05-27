@@ -17,7 +17,6 @@ for path in (str(REPO_ROOT), str(SCRIPTS_DIR)):
         sys.path.insert(0, path)
 
 from prokanota.workflow.scripts import feature_utils
-from prokanota.workflow.scripts import mapping_utils
 
 def _column_to_list(df, column):
     series = df[column]
@@ -236,6 +235,8 @@ def test_empty_marker_normalization():
     - KEGG: empty string for no pathway
     All should be normalized to '*' for consistent downstream processing.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "ACC001\t-\tDescription\tCategory\n"
         "ACC002\tNA\tDescription\tCategory\n"
@@ -264,6 +265,8 @@ def test_duplicate_accession_rejection():
     Duplicate accessions would cause ambiguous annotation assignments
     and must be caught during validation, not silently ignored.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "PF00001\tGPCR\tG-protein coupled receptor\tSignaling\n"
         "PF00001\tGPCR_dup\tDuplicate entry\tSignaling\n"
@@ -287,6 +290,8 @@ def test_pfam_accession_format():
     Test parsing of Pfam-style accessions (PFxxxxx.version).
     Reference: https://pfam.xfam.org/help#tabview=tab4
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "PF00001.23\t7tm_1\tGPCR family\tSignaling\n"
         "PF00002.28\t7tm_2\tSecretin family\tSignaling\n"
@@ -310,6 +315,8 @@ def test_wrong_column_count_rejection():
     """
     Verify malformed rows with wrong column counts raise an error.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "ACC001\tGeneA\tDescA\tcatA\n"
         "ACC002\tGeneB\tDescB\n"
@@ -332,6 +339,8 @@ def test_missing_accession_rejection():
     """
     Verify empty accession keys are rejected.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "\tGeneA\tDescA\tcatA\n"
         "ACC002\tGeneB\tDescB\tcatB\n"
@@ -354,6 +363,8 @@ def test_wrapped_double_quotes_are_stripped():
     """
     Verify wrapped double quotes are stripped from all fields.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = '"CDD:XXXXX"\t"gene_1"\t"description with spaces"\t"category"\n'
 
     tmp_path = None
@@ -377,6 +388,8 @@ def test_special_characters_are_preserved():
     """
     Verify description contents with special characters are preserved.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = "ACC001\tGeneA\tcontains 'single' and \"double\" quotes Ω\tcatA\n"
 
     tmp_path = None
@@ -397,6 +410,8 @@ def test_empty_markers_normalized_across_all_fields():
     """
     Verify empty markers are normalized across non-key fields.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "ACC001\t\tNA\tNULL\n"
         "ACC002\t-\tN/A\t*\n"
@@ -423,6 +438,8 @@ def test_validate_mapping_file_returns_stats():
     """
     Verify validation returns row count and sample accessions.
     """
+    pytest.importorskip("pandas")
+    from prokanota.workflow.scripts import mapping_utils
     content = (
         "ACC001\tGeneA\tDescA\tcatA\n"
         "ACC002\tGeneB\tDescB\tcatB\n"

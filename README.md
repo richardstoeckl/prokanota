@@ -8,7 +8,7 @@ developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.re
 ![GitHub Stable Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?display_name=release&label=Latest%20stable%20release)
 ![GitHub Latest Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?include_prereleases&display_name=release&label=Latest%20release)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.1-brightgreen.svg)](https://snakemake.github.io)
-[![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/ci.yml)
+[![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml)
 ![OS compatibility](https://img.shields.io/badge/os_compatibility-Linux%2FmacOS:_x86%2Farm64-salmon)
 <!-- badges: end -->
 
