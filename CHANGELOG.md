@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-beta.8] - 2026-05-27
+
+### Added
+- Added `--verbose` and `--very-verbose` flags to give finer control over logging output, allowing users to see more detailed information when needed without overwhelming them with logs by default.
+
+### Changed
+- Moved general functions from `features.py` to `feature_utils.py` to reduce clutter and improve code organization.
+- Improved Molecular Weight calculation to be more accurate and handle edge cases better.
+- Bumped Diamond version to 2.2.0
+- Reworked the testing setup. Tests are now split into `minimal`, default, and `full` sets. The `minimal` set is designed to quickly test core functionality based on published real biological data, while the `full` set includes tests for all features and implemented database search and parse modules, based on a newly created mock database. The default test set includes the minimal tests but keeps the same structure and extent as before, to allow for quick testing of the installation.
+
+### Fixed
+- Fixed the MMseqs2 search script not using the updated E-value parameter name
+
 ## [2.0.0-beta.7] - 2026-05-11
 
 ### Added
@@ -152,7 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ---
-[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.7...HEAD
+[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.8...HEAD
+[2.0.0-beta.8]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.7...v2.0.0-beta.8
 [2.0.0-beta.7]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...v2.0.0-beta.7
 [2.0.0-beta.6]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.5...v2.0.0-beta.6
 [2.0.0-beta.5]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.4...v2.0.0-beta.5
