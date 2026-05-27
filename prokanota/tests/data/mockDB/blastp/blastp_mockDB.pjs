@@ -1,0 +1,24 @@
+{
+  "version": "1.2",
+  "dbname": "blastp_mockDB",
+  "dbtype": "Protein",
+  "db-version": 5,
+  "description": "blastp_mockDB",
+  "number-of-letters": 80695,
+  "number-of-sequences": 393,
+  "last-updated": "2026-05-22T15:35:00",
+  "number-of-volumes": 1,
+  "bytes-total": 203871,
+  "bytes-to-cache": 84337,
+  "files": [
+    "blastp_mockDB.pdb",
+    "blastp_mockDB.phr",
+    "blastp_mockDB.pin",
+    "blastp_mockDB.pog",
+    "blastp_mockDB.pos",
+    "blastp_mockDB.pot",
+    "blastp_mockDB.psq",
+    "blastp_mockDB.ptf",
+    "blastp_mockDB.pto"
+  ]
+}

@@ -1,0 +1,123 @@
+databases:
+  - name: test_pyhmmer
+    enabled: true
+    order: 10
+    search_tool: pyhmmer
+    db_path: "tests/data/mockDB/hmm/hmm_mockDB.hmm.h3m"
+    mapping_path: "tests/data/mockDB/mockDB_profile_mapping.tsv"
+    mapping_key: query_name
+    evalue_cutoff: 1.0e-3
+    columns:
+      - name: test_pyhmmer_hit
+        source: query_name
+      - name: test_pyhmmer_accession
+        source: accession
+      - name: test_pyhmmer_short_name
+        source: short_name
+      - name: test_pyhmmer_description
+        source: description
+      - name: test_pyhmmer_category
+        source: category
+      - name: test_pyhmmer_evalue
+        source: evalue
+      - name: test_pyhmmer_score
+        source: score
+  - name: test_rpsblast
+    enabled: true
+    order: 20
+    search_tool: rpsblast
+    db_path: "tests/data/mockDB/rpsblast/rpsblast_mockDB"
+    mapping_path: "tests/data/mockDB/mockDB_profile_mapping.tsv"
+    mapping_key: accession
+    evalue_cutoff: 1.0e-3
+    columns:
+      - name: cdd_accession
+        source: accession
+      - name: cdd_gene
+        source: short_name
+      - name: cdd_description
+        source: description
+      - name: cdd_category
+        source: category
+      - name: cdd_evalue
+        source: evalue
+  - name: test_blastp_diamond
+    enabled: true
+    order: 30
+    search_tool: diamond
+    db_path: "tests/data/mockDB/blastp/blastp_mockDB"
+    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    mapping_key: accession
+    evalue_cutoff: 1.0e-3
+    columns:
+      - name: blastp_hit
+        source: accession
+      - name: blastp_short_name
+        source: short_name
+      - name: blastp_description
+        source: description
+      - name: blastp_category
+        source: category
+      - name: blastp_evalue
+        source: evalue
+      - name: blastp_score
+        source: score
+      - name: blastp_pident
+        source: pident
+      - name: blastp_length
+        source: length
+  - name: test_diamond
+    enabled: true
+    order: 40
+    search_tool: diamond
+    db_path: "tests/data/mockDB/diamond/diamond_mockDB.dmnd"
+    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    mapping_key: accession
+    evalue_cutoff: 1.0e-3
+    columns:
+      - name: diamond_hit
+        source: accession
+      - name: diamond_short_name
+        source: short_name
+      - name: diamond_description
+        source: description
+      - name: diamond_category
+        source: category
+      - name: diamond_evalue
+        source: evalue
+      - name: diamond_score
+        source: score
+      - name: diamond_pident
+        source: pident
+      - name: diamond_length
+        source: length
+  - name: test_mmseqs2
+    enabled: true
+    order: 50
+    search_tool: mmseqs2
+    db_path: "tests/data/mockDB/mmseqs2/mmseqs2_mockDB"
+    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    mapping_key: accession
+    evalue_cutoff: 1.0e-3
+    mmseqs2_sensitivity: 5.7
+    mmseqs2_max_seqs: 300
+    mmseqs2_min_seq_id: 0.3
+    mmseqs2_cov_mode: 0
+    mmseqs2_coverage: 0.8
+    columns:
+      - name: mmseqs2_hit
+        source: accession
+      - name: mmseqs2_short_name
+        source: short_name
+      - name: mmseqs2_description
+        source: description
+      - name: mmseqs2_category
+        source: category
+      - name: mmseqs2_evalue
+        source: evalue
+      - name: mmseqs2_score
+        source: score
+      - name: mmseqs2_pident
+        source: pident
+      - name: mmseqs2_length
+        source: length

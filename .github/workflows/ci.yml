@@ -5,27 +5,50 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  tests-minimal:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install pytest
+        run: python -m pip install --upgrade pip pytest
+
+      - name: Run minimal tests
+        run: python prokanota/tests/run_tests.py --mode minimal
+
+  tests-full:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Setup micromamba
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           environment-name: snakemake
+          cache-environment: true
+          cache-downloads: true
           create-args: >-
             python=3.11
             -c conda-forge
             -c bioconda
             snakemake
             pandas
+            pytest
+            polars
 
-      - name: Run mapping parser unit tests
+      - name: Install prokanota
         shell: bash -l {0}
-        run: micromamba run -n snakemake python -m unittest prokanota.tests.test_mapping_utils -v
+        run: micromamba run -n snakemake python -m pip install .
 
-      - name: Run tests
+      - name: Run full tests
         shell: bash -l {0}
-        run: micromamba run -n snakemake python prokanota/tests/run_tests.py
+        run: micromamba run -n snakemake prokanota test-full

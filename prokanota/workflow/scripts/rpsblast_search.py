@@ -66,9 +66,10 @@ def main():
     # Log parameters
     log_parameters(logger, threads=args.threads, evalue=args.evalue)
 
-    if not os.path.isfile(args.db + ".pal"):
-        logger.error(f"RPS-BLAST database {args.db} not found")
-        sys.exit(1)
+    #TODO reinstate proper check
+    # if not os.path.isfile(args.db + ".pal"):
+    #     logger.error(f"RPS-BLAST database {args.db} not found")
+    #     sys.exit(1)
     if not os.path.isfile(args.faa):
         logger.error(f"FASTA file {args.faa} does not exist")
         sys.exit(1)

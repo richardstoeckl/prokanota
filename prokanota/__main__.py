@@ -454,7 +454,44 @@ def config(output_dir, **kwargs):
     help="Show tool output and verbose Snakemake execution details",
 )
 def test(**kwargs):
-    """Execute the integration tests for prokanota"""
+    """Execute the pyhmmer-only integration tests for prokanota"""
+    _run_tests("pyhmmer", **kwargs)
+
+
+@click.command(cls=SplashCommand, name="test-minimal")
+@click.option(
+    "--verbose",
+    is_flag=True,
+    help="Show full tool output in the console",
+)
+@click.option(
+    "--very-verbose",
+    is_flag=True,
+    help="Show tool output and verbose Snakemake execution details",
+)
+def test_minimal(**kwargs):
+    """Execute minimal pytest-only tests for prokanota"""
+    _run_tests("minimal", **kwargs)
+
+
+@click.command(cls=SplashCommand, name="test-full")
+@click.option(
+    "--verbose",
+    is_flag=True,
+    help="Show full tool output in the console",
+)
+@click.option(
+    "--very-verbose",
+    is_flag=True,
+    help="Show tool output and verbose Snakemake execution details",
+)
+def test_full(**kwargs):
+    """Execute full integration tests for prokanota"""
+    _run_tests("full", **kwargs)
+
+
+def _run_tests(mode: str, **kwargs) -> None:
+    """Run test script with a specific mode."""
     package_root = Path(__file__).resolve().parent
     test_script = package_root / "tests" / "run_tests.py"
     if not test_script.exists():
@@ -467,7 +504,7 @@ def test(**kwargs):
     if very_verbose:
         verbose = True
 
-    cmd = [sys.executable, str(test_script), "--skip-polars"]
+    cmd = [sys.executable, str(test_script), "--skip-polars", "--mode", mode]
     if verbose:
         cmd.append("--verbose")
     if very_verbose:
@@ -491,6 +528,8 @@ def version(**kwargs):
 cli.add_command(run)
 cli.add_command(config)
 cli.add_command(test)
+cli.add_command(test_minimal)
+cli.add_command(test_full)
 cli.add_command(citation)
 cli.add_command(version)
 
