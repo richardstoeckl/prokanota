@@ -305,6 +305,144 @@ def test_pfam_accession_format():
             tmp_path.unlink(missing_ok=True)
 
 
+def test_wrong_column_count_rejection():
+    """
+    Verify malformed rows with wrong column counts raise an error.
+    """
+    content = (
+        "ACC001\tGeneA\tDescA\tcatA\n"
+        "ACC002\tGeneB\tDescB\n"
+    )
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+            handle.write(content)
+            tmp_path = Path(handle.name)
+
+        with pytest.raises(ValueError, match="Expected 4 columns, found 3"):
+            mapping_utils.parse_mapping_file(tmp_path)
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def test_missing_accession_rejection():
+    """
+    Verify empty accession keys are rejected.
+    """
+    content = (
+        "\tGeneA\tDescA\tcatA\n"
+        "ACC002\tGeneB\tDescB\tcatB\n"
+    )
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+            handle.write(content)
+            tmp_path = Path(handle.name)
+
+        with pytest.raises(ValueError, match=r"Column 1 \(accession\) must not be empty"):
+            mapping_utils.parse_mapping_file(tmp_path)
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def test_wrapped_double_quotes_are_stripped():
+    """
+    Verify wrapped double quotes are stripped from all fields.
+    """
+    content = '"CDD:XXXXX"\t"gene_1"\t"description with spaces"\t"category"\n'
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+            handle.write(content)
+            tmp_path = Path(handle.name)
+
+        df = mapping_utils.parse_mapping_file(tmp_path)
+
+        assert _column_to_list(df, "accession") == ["CDD:XXXXX"]
+        assert _column_to_list(df, "short_name") == ["gene_1"]
+        assert _column_to_list(df, "description") == ["description with spaces"]
+        assert _column_to_list(df, "category") == ["category"]
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def test_special_characters_are_preserved():
+    """
+    Verify description contents with special characters are preserved.
+    """
+    content = "ACC001\tGeneA\tcontains 'single' and \"double\" quotes Ω\tcatA\n"
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+            handle.write(content)
+            tmp_path = Path(handle.name)
+
+        df = mapping_utils.parse_mapping_file(tmp_path)
+
+        assert _column_to_list(df, "description") == ["contains 'single' and \"double\" quotes Ω"]
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def test_empty_markers_normalized_across_all_fields():
+    """
+    Verify empty markers are normalized across non-key fields.
+    """
+    content = (
+        "ACC001\t\tNA\tNULL\n"
+        "ACC002\t-\tN/A\t*\n"
+        "ACC003\t  \tnull\t   \n"
+    )
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+            handle.write(content)
+            tmp_path = Path(handle.name)
+
+        df = mapping_utils.parse_mapping_file(tmp_path)
+
+        assert _column_to_list(df, "short_name") == ["*", "*", "*"]
+        assert _column_to_list(df, "description") == ["*", "*", "*"]
+        assert _column_to_list(df, "category") == ["*", "*", "*"]
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
+def test_validate_mapping_file_returns_stats():
+    """
+    Verify validation returns row count and sample accessions.
+    """
+    content = (
+        "ACC001\tGeneA\tDescA\tcatA\n"
+        "ACC002\tGeneB\tDescB\tcatB\n"
+        "ACC003\tGeneC\tDescC\tcatC\n"
+    )
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+            handle.write(content)
+            tmp_path = Path(handle.name)
+
+        stats = mapping_utils.validate_mapping_file(tmp_path)
+
+        assert stats["row_count"] == 3
+        assert stats["sample_accessions"] == ["ACC001", "ACC002", "ACC003"]
+    finally:
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
+
+
 # ---
 # 5. Annotation Merging Priority (merge_annotations.py)
 # ---
