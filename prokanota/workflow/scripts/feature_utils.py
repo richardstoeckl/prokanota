@@ -93,9 +93,35 @@ def ensure_empty_file(path: str) -> None:
 
 
 def reverse_complement(seq: str) -> str:
-    """Return the reverse complement of a DNA sequence."""
-    complement = str.maketrans("ACGTacgt", "TGCAtgca")
-    return seq.translate(complement)[::-1]
+    """Reverse complement the given DNA sequence.
+
+    This implementation is IUPAC-aware (see https://www.bioinformatics.org/sms/iupac.html) 
+    and preserves the case of the input sequence. Unknown characters are preserved as-is.
+    """
+    complement = {
+        "A": "T",
+        "C": "G",
+        "G": "C",
+        "T": "A",
+        "N": "N",
+        "R": "Y",
+        "Y": "R",
+        "S": "S",
+        "W": "W",
+        "K": "M",
+        "M": "K",
+        "B": "V",
+        "V": "B",
+        "D": "H",
+        "H": "D",
+    }
+
+    rc = []
+    for ch in reversed(seq):
+        up = ch.upper()
+        comp = complement.get(up, up)
+        rc.append(comp.lower() if ch.islower() else comp)
+    return "".join(rc)
 
 
 def get_sequence(contig_seq: str, start: int, end: int, strand: str) -> str:
