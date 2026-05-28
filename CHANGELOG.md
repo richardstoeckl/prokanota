@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added more tests based on published rRNA and tRNA annotations for Pyrococcus furiosus (DSM 3638) to validate the RNA prediction step more thoroughly.
+- Added a check if the translation_table of pyrodigal in raining mode switches within a genome and warn the user if that is the case.
+- Added non-canonical bases to reverse complement function.
+
+### Fixed
+- Fixed some issues with the test suite regarding dependencies
+
 ## [2.0.0-beta.8] - 2026-05-27
 
 ### Added
