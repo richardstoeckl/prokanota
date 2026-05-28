@@ -108,14 +108,13 @@ def test_reverse_complement_preserves_length():
 def test_reverse_complement_uppercase_only():
     """
     Pyrodigal outputs uppercase sequences, so reverse_complement is designed to
-    handle uppercase ACGT. Ambiguous bases (N, R, Y, etc.) are not handled at all and will just be reversed.
-    Lowercase input will be reverse complemented but stay lowercase.
+    handle uppercase ACGT. Lowercase input will be reverse complemented but stay lowercase.
     """
     # Lowercase is reverse complemented but not converted to uppercase
     assert feature_utils.reverse_complement("atgc") == "gcat"  # NOT "GCAT"
 
-    # Ambiguous bases pass through unchanged
-    assert feature_utils.reverse_complement("ATNG") == "CNAT"  # N not complemented
+    # Ambiguous bases 
+    assert feature_utils.reverse_complement("ATRC") == "GYAT"
 
 def test_reverse_complement_empty():
     """Empty sequence should return empty string."""

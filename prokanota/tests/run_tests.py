@@ -565,6 +565,13 @@ def check_crispr_arrays(path: Path) -> bool:
 
 
 def check_trna_records(path: Path) -> bool:
+    """
+    Validate tRNA records found in the assembled `*_rna.tsv` file.
+
+    Pyrococcus furiosus (DSM 3638) includes a singular loci for 
+    tRNA-His (Gene ID: 41713857) and tRNA-Cys (Gene ID: 41713313), 
+    respectively. We check for the exact location and sequences.
+    """
     try:
         rows = parse_tsv_rows(path)
     except (FileNotFoundError, ValueError) as exc:
@@ -575,6 +582,7 @@ def check_trna_records(path: Path) -> bool:
     if not trna_rows:
         return True
 
+    success = True
     for row in trna_rows:
         rna_type = row.get("rna_type", "")
         anti_codon = row.get("anti_codon", "")
@@ -590,7 +598,99 @@ def check_trna_records(path: Path) -> bool:
                 print(f"      {Colors.RED}Invalid tRNA anticodon in {path}: {anti_codon}{Colors.END}")
                 return False
 
-    return True
+    expected_trnas = [
+        {
+            "rna_type": "tRNA-His",
+            "start": "1844790",
+            "end": "1844866",
+            "strand": "+",
+            "sequence": "GCCGGGGTGGTGTAGCCTGGTTAGCACAGGGGACTGTGGATCCCCTGGCCCGGGTTCAAATCCCGGCCCCGGCCCCA",
+            "reference": "Gene ID: 41713857",
+        },
+        {
+            "rna_type": "tRNA-Cys",
+            "start": "1380455",
+            "end": "1380529",
+            "strand": "-",
+            "sequence": "GCCGGGATAGCCTAGAGGCCAGGCGGGGGACTGCAGATCCCCTTTACCCGGGTTCAAATCCCGGTCCCGGCTCCA",
+            "reference": "Gene ID: 41713313",
+        },
+    ]
+
+    for expected in expected_trnas:
+        matches = [
+            row
+            for row in trna_rows
+            if row.get("rna_type") == expected["rna_type"]
+            and row.get("start") == expected["start"]
+            and row.get("end") == expected["end"]
+            and row.get("strand") == expected["strand"]
+            and row.get("sequence") == expected["sequence"]
+        ]
+        if not matches:
+            print(
+                f"      {Colors.RED}Missing or mismatched {expected['rna_type']} at "
+                f"{expected['start']}-{expected['end']} ({expected['strand']}), "
+                f"{expected['reference']} in {path}{Colors.END}"
+            )
+            success = False
+
+    return success
+
+
+def check_rrna_records(path: Path) -> bool:
+    """
+    Validate 5S rRNA records found in the assembled `*_rna.tsv` file.
+
+    Pyrococcus furiosus (DSM 3638) encodes two 5S ribosomal RNA genes in its genome.
+    We check for the exact location and sequence of the expected 5S rRNA loci.
+    See https://www.ncbi.nlm.nih.gov/datasets/gene/41713297/ and 
+    https://www.ncbi.nlm.nih.gov/datasets/gene/41713504/ for details.
+    """
+    try:
+        rows = parse_tsv_rows(path)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"      {Colors.RED}{exc}{Colors.END}")
+        return False
+
+    # Find 5S rRNA records
+    rrna_rows = [row for row in rows if row.get("rna_type", "") == "5S_rRNA"]
+    if len(rrna_rows) != 2:
+        print(f"      {Colors.RED}Expected 2 5S rRNA records in {path}, found {len(rrna_rows)}{Colors.END}")
+        return False
+
+    expected_rrnas = [
+        {
+            "start": "1370591",
+            "end": "1370712",
+            "strand": "+",
+            "sequence": "TACGGCGGCCATAGCGGGGGGGCCACACCCGGTCTCATTTCGAACCCGGAAGTTAAGCCCCCCAGCGATCCCGGTTGTACTGCCCTCCGAGAGGGGGCGGGAAGCCGGGGACGCCGCCGGCC",
+        },
+        {
+            "start": "1541199",
+            "end": "1541319",
+            "strand": "-",
+            "sequence": "TACGGCGGCCATAGCGGGGGGCCACACCCGGTCTCATTTCGAACCCGGAAGTTAAGCCCCCCAGCGATCCCGGTTGTACTGCCCTCCGAGAGGGGGCGGGAAGCCGGGGACGCCGCCGGCC",
+        },
+    ]
+
+    success = True
+    for expected in expected_rrnas:
+        matches = [
+            r
+            for r in rrna_rows
+            if r.get("start") == expected["start"]
+            and r.get("end") == expected["end"]
+            and r.get("strand") == expected["strand"]
+            and r.get("sequence") == expected["sequence"]
+        ]
+        if not matches:
+            print(
+                f"      {Colors.RED}Missing or mismatched 5S rRNA at {expected['start']}-{expected['end']} ({expected['strand']}) in {path}{Colors.END}"
+            )
+            success = False
+
+    return success
 
 
 def main() -> int:
@@ -751,6 +851,14 @@ def main() -> int:
     else:
         success = False
         print(f"    {Colors.RED}✗ tRNA records{Colors.END}")
+
+    total_checks += 1
+    if check_rrna_records(rna_path):
+        passed_checks += 1
+        print(f"    {Colors.GREEN}✓ rRNA records{Colors.END}")
+    else:
+        success = False
+        print(f"    {Colors.RED}✗ rRNA records{Colors.END}")
 
     # Summary
     print(f"\n{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}")
