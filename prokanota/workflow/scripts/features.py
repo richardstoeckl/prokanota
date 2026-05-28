@@ -33,6 +33,7 @@ import os
 import sys
 import subprocess as sp
 from pathlib import Path
+from collections import Counter
 import platform
 import pyrodigal
 import argparse
@@ -881,9 +882,18 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
         cds_logger.info("Starting CDS prediction on %d contigs in %s: %s", 
                        len(tagged_contigs), mode_description, list(tagged_contigs.keys()))
 
+    # Track translation tables used across contigs to detect potential data quality issues
+    genetic_code_count = Counter()
+
     for contig_tag, dna_sequence in tagged_contigs.items():
         sequence = pyrodigal.Sequence(dna_sequence)
         genes = gene_finder.find_genes(sequence)
+        
+        # Track the translation table used for this contig
+        if genes.training_info is not None:
+            contig_translation_table = genes.training_info.translation_table
+            genetic_code_count[contig_translation_table] += 1
+        
         for j, gene in enumerate(genes):
             protein_seq = gene.translate()
             gene_id = f"{contig_tag}_{j+1:05d}"
@@ -900,6 +910,15 @@ def parse_fasta_and_predict(sample_id, filename, meta_mode, closed, translation_
                     dna_seq=gene_dna_seq
                 )
             )
+
+    # Warn if multiple translation tables were detected
+    if len(genetic_code_count) > 1:
+        cds_logger.warning(
+            f"Pyrodigal used multiple translation tables for genome '{genome_id}' "
+            f"using {mode_description}, which is unexpected. "
+            f"A genome is expected to have a single genetic code. "
+            f"Translation table distribution: {dict(genetic_code_count)}"
+        )
 
     cds_logger.info(f"Predicted {len(gene_records)} genes")
 
