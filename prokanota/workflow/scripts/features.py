@@ -382,11 +382,8 @@ def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path,
                     Qualifier(key="locus_tag", value=gene.gene_id),
                     Qualifier(key="translation", value=gene.protein_seq)
                 ]
-                # Adjust the start for plus strand features only.
-                if gene.strand == '+':
-                    adjusted_start = gene.start - 1
-                else:
-                    adjusted_start = gene.start
+                # Convert to 0-based start for GenBank output.
+                adjusted_start = gene.start - 1
 
                 base_location = gb_io.Range(start=adjusted_start, end=gene.end)
                 # For negative strand, wrap in Complement.
@@ -407,10 +404,11 @@ def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path,
                     Qualifier(key="locus_tag", value=rna.rna_id),
                     Qualifier(key="product", value=rna.rna_type),
                 ]
+                adjusted_start = rna.start - 1
                 if rna.strand == '+':
-                    location = gb_io.Range(start=rna.start - 1, end=rna.end)
+                    location = gb_io.Range(start=adjusted_start, end=rna.end)
                 else:
-                    location = gb_io.Complement(gb_io.Range(start=rna.start, end=rna.end))
+                    location = gb_io.Complement(gb_io.Range(start=adjusted_start, end=rna.end))
                 feature_entries.append((rna.start, Feature(
                     kind="rRNA",
                     location=location,
@@ -425,10 +423,11 @@ def write_gbk(genome_id, contigs, gene_records, contig_mapping, gbk_path,
                 ]
                 if rna.anti_codon:
                     qualifiers.append(Qualifier(key="anticodon", value=rna.anti_codon))
+                adjusted_start = rna.start - 1
                 if rna.strand == '+':
-                    location = gb_io.Range(start=rna.start - 1, end=rna.end)
+                    location = gb_io.Range(start=adjusted_start, end=rna.end)
                 else:
-                    location = gb_io.Complement(gb_io.Range(start=rna.start, end=rna.end))
+                    location = gb_io.Complement(gb_io.Range(start=adjusted_start, end=rna.end))
                 feature_entries.append((rna.start, Feature(
                     kind="tRNA",
                     location=location,
@@ -469,16 +468,13 @@ def write_fna(genome_id, gene_records, fna_path):
     """
     Writes gene sequences to a FASTA (.fna) file.
     For genes on the plus strand, uses the sequence as predicted.
-    For genes on the minus strand, reverse-complements the predicted sequence,
-    then trims the last nucleotide to correct for coordinate discrepancies.
+    For genes on the minus strand, reverse-complements the predicted sequence.
     """
     log.debug(f"Writing {len(gene_records)} gene sequences to {fna_path}")
     with open(fna_path, "w") as fna_file:
         for record in gene_records:
             if record.strand == '-':
-                # Reverse complement the entire gene sequence,
-                # then trim the last nucleotide.
-                corrected_seq = reverse_complement(record.dna_seq)[:-1]
+                corrected_seq = reverse_complement(record.dna_seq)
             else:
                 corrected_seq = record.dna_seq
             fna_file.write(f">{record.gene_id}\n{corrected_seq}\n")
@@ -503,10 +499,8 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
             contig_length = len(contigs[contig_tag])
             for gene in gene_records:
                 if gene.contig_id == contig_tag:
-                    # Calculate gene length. For genes on '-' strand, subtract one nucleotide (see write_gbk()).
+                    # Calculate gene length from the stored nucleotide sequence.
                     gene_length = len(gene.dna_seq)
-                    if gene.strand == '-':
-                        gene_length -= 1
 
                     # Remove stop codon from the protein sequence if present for length calculation
                     if gene.protein_seq.endswith("*"):
