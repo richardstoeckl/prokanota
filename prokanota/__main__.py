@@ -20,6 +20,7 @@ import jsonschema
 
 from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, echo_click
 from prokanota import __version__
+from prokanota.workflow.scripts import metadataFromDir
 
 
 SPLASH_SCREEN = """
@@ -525,6 +526,62 @@ def version(**kwargs):
     click.echo(f"prokanota, version {__version__}")
 
 
+@click.group(cls=SplashCommand)
+def helper():
+    """Utility commands to help prepare inputs for prokanota"""
+    pass
+
+
+@click.command(cls=SplashCommand)
+@click.option(
+    "--path",
+    required=True,
+    type=click.Path(exists=True, file_okay=False, path_type=str),
+    help="Directory containing FASTA files",
+)
+@click.option(
+    "--out",
+    required=False,
+    type=click.Path(path_type=str),
+    default=None,
+    help="Output CSV file path (default: metadata.csv in current directory)",
+)
+@click.option(
+    "--mode",
+    required=True,
+    type=click.Choice(["dna", "protein"]),
+    help="Type of sequences: dna or protein",
+)
+@click.option(
+    "--comment",
+    default="",
+    help="Optional comment for all entries (default: empty string)",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Overwrite output file if it already exists",
+)
+def metadata_from_dir(path, out, mode, comment, force):
+    """Generate metadata CSV from a directory of FASTA files
+    
+    This helper generates a sample metadata CSV file from all FASTA files
+    found in a directory. It automatically extracts sample IDs from filenames
+    and records the absolute path to each file.
+    
+    Example:
+        prokanota helper metadata-from-dir --path ./genomes --mode dna
+    """
+    try:
+        output_file = Path(out) if out else Path.cwd() / "metadata.csv"
+        message = metadataFromDir.generate_metadata(
+            Path(path), output_file, mode, comment, force
+        )
+        click.echo(message)
+    except ValueError as e:
+        raise click.ClickException(str(e))
+
+
 cli.add_command(run)
 cli.add_command(config)
 cli.add_command(test)
@@ -532,6 +589,8 @@ cli.add_command(test_minimal)
 cli.add_command(test_full)
 cli.add_command(citation)
 cli.add_command(version)
+cli.add_command(helper)
+helper.add_command(metadata_from_dir)
 
 
 def main():
