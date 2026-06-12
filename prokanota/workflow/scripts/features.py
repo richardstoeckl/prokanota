@@ -738,12 +738,18 @@ def predict_crisprs(tagged_contigs, threads=1):
             # Convert from 0-based to 1-based start coordinate
             start = crispr.start + 1
             end = crispr.end
+
             num_repeats = len(crispr.repeats)
+
+            # This outputs the first repeat as the repeat sequence. DICED does not currently output a consensus repeat
+            # but this is a reasonable approximation.
             repeat_sequence = str(crispr.repeats[0])
             repeat_length = len(repeat_sequence)
-            # Derive average spacer length from array geometry to avoid
-            # a known off-by-one bug in the DICED spacer iterator (pyo3).
-            num_spacers = num_repeats - 1
+            num_spacers = len(crispr.spacers)
+
+            # This calculates the average spacer length by taking the total length of the array, 
+            # subtracting the total length of all repeats, and dividing by the number of spacers. 
+            # If there are no spacers, we set this to 0 to avoid division by zero.
             spacer_length = (
                 int((end - start + 1 - num_repeats * repeat_length) / num_spacers)
                 if num_spacers > 0 else 0
