@@ -95,7 +95,7 @@ def ensure_empty_file(path: str) -> None:
 def reverse_complement(seq: str) -> str:
     """Reverse complement the given DNA sequence.
 
-    This implementation is IUPAC-aware (see https://www.bioinformatics.org/sms/iupac.html) 
+    This implementation is IUPAC-aware (see https://www.bioinformatics.org/sms/iupac.html)
     and preserves the case of the input sequence. Unknown characters are preserved as-is.
     """
     complement = {
@@ -126,7 +126,7 @@ def reverse_complement(seq: str) -> str:
 
 def get_sequence(contig_seq: str, start: int, end: int, strand: str) -> str:
     """Extract a sequence from a contig and reverse-complement if needed."""
-    seq = contig_seq[start - 1:end]
+    seq = contig_seq[start - 1 : end]
     if strand == "-":
         seq = reverse_complement(seq)
     return seq

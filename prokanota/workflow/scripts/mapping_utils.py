@@ -81,7 +81,7 @@ def parse_mapping_file(mapping_path: str | Path) -> Any:
     seen_keys: dict[str, int] = {}
     records: list[dict[str, str]] = []
 
-    with open(mapping_path, "r", encoding="utf-8", errors="replace") as handle:
+    with open(mapping_path, encoding="utf-8", errors="replace") as handle:
         for line_num, raw_line in enumerate(handle, 1):
             line = raw_line.rstrip("\n\r")
 

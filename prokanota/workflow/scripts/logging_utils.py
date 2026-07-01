@@ -13,7 +13,7 @@ from pathlib import Path
 def get_prokanota_version() -> str:
     """
     Read version from prokanota.VERSION file.
-    
+
     Returns the version string, or "unknown" if the file cannot be read.
     This function enables scripts to run in isolated conda environments
     where the prokanota package may not be installed.
@@ -21,7 +21,7 @@ def get_prokanota_version() -> str:
     try:
         version_file = Path(__file__).parent.parent.parent / "prokanota.VERSION"
         return version_file.read_text(encoding="utf-8").strip()
-    except (FileNotFoundError, IOError):
+    except (OSError, FileNotFoundError):
         return "unknown"
 
 
@@ -42,33 +42,33 @@ def build_part(stage: str, name: str | None = None) -> str:
 def setup_logger(part_name: str, level: int = logging.INFO) -> logging.Logger:
     """
     Configure and return a logger that outputs to stdout.
-    
+
     Args:
         part_name: Part field value used by downstream parsing
         level: Logging level for both the logger and its stdout handler
-        
+
     Returns:
         Configured logger instance
     """
     logger = logging.getLogger(part_name)
     logger.setLevel(level)
-    
+
     # Remove any existing handlers to avoid duplicates
     logger.handlers.clear()
-    
+
     # Create handler that outputs to stdout
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(level)
-    
+
     # Create formatter with timestamp, part, level, and message
     formatter = logging.Formatter(
-        fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     handler.setFormatter(formatter)
-    
+
     logger.addHandler(handler)
-    
+
     # Prevent propagation to root logger
     logger.propagate = False
 
@@ -83,7 +83,7 @@ def log_prokanota_version(logger: logging.Logger) -> None:
 def log_command(logger: logging.Logger, command: list) -> None:
     """
     Log a command that will be executed.
-    
+
     Args:
         logger: Logger instance
         command: List of command arguments
@@ -94,7 +94,7 @@ def log_command(logger: logging.Logger, command: list) -> None:
 def log_file_paths(logger: logging.Logger, **paths) -> None:
     """
     Log file paths being used.
-    
+
     Args:
         logger: Logger instance
         **paths: Keyword arguments like input_file="/path/to/file", db="/path/to/db"
@@ -106,7 +106,7 @@ def log_file_paths(logger: logging.Logger, **paths) -> None:
 def log_parameters(logger: logging.Logger, **params) -> None:
     """
     Log search/parsing parameters.
-    
+
     Args:
         logger: Logger instance
         **params: Keyword arguments like evalue=0.001, threads=4
@@ -118,7 +118,7 @@ def log_parameters(logger: logging.Logger, **params) -> None:
 def log_statistics(logger: logging.Logger, **stats) -> None:
     """
     Log execution statistics.
-    
+
     Args:
         logger: Logger instance
         **stats: Keyword arguments like input_sequences=1000, output_hits=250

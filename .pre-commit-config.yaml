@@ -1,0 +1,70 @@
+# .pre-commit-config.yaml
+#
+# Install:
+#   python -m pip install pre-commit
+#   pre-commit install
+#
+# Run manually:
+#   pre-commit run --all-files
+#
+# Update hook versions occasionally:
+#   pre-commit autoupdate
+
+repos:
+  # General repository hygiene: whitespace, syntax checks, merge conflicts,
+  # accidental private keys, large files, etc.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=2000"]
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        exclude: |
+          (?x)^(
+              prokanota/tests/data/.*|
+              prokanota/tests/expected/.*|
+              prokanota/config/.*\.csv
+          )$
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: trailing-whitespace
+        exclude: |
+          (?x)^(
+              prokanota/tests/data/.*|
+              prokanota/tests/expected/.*|
+              prokanota/config/.*\.csv
+          )$
+
+  # Python linting, import sorting, pyupgrade-like modernization,
+  # and formatting.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff-check
+        types_or: [ python, pyproject ]
+        args: [ --fix, "--extend-select=E,F,I,UP,B", "--ignore=E501", "--target-version=py311" ]
+      - id: ruff-format
+
+  # Format Snakemake files: Snakefile and *.smk.
+  - repo: https://github.com/snakemake/snakefmt
+    rev: v2.0.3
+    hooks:
+      - id: snakefmt
+        files: '(^|/)(Snakefile|.*\.smk)$'
+
+# static analysis tool for GitHub Actions
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.26.1
+    hooks:
+      - id: zizmor

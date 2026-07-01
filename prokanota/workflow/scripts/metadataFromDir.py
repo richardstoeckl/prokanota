@@ -6,7 +6,6 @@ import re
 import sys
 from pathlib import Path
 
-
 FASTA_EXTENSIONS = [
     ".fasta",
     ".fa",
@@ -28,7 +27,7 @@ def normalize_filename(filename):
     # Remove known FASTA extension
     for ext in FASTA_EXTENSIONS:
         if name.lower().endswith(ext):
-            name = name[:-len(ext)]
+            name = name[: -len(ext)]
             break
 
     # Replace any non-alphanumeric character with underscore
@@ -68,20 +67,20 @@ def make_unique_sample_id(sample_id, used_sample_ids):
 def generate_metadata(input_dir, output_file, mode, comment="", force=False):
     """
     Generate metadata CSV from a directory of FASTA files.
-    
+
     Args:
         input_dir: Path to directory containing FASTA files
         output_file: Path to output CSV file
         mode: Type of sequences ("dna" or "protein")
         comment: Optional comment for all entries
         force: Whether to overwrite existing output file
-        
+
     Raises:
         ValueError: If input validation fails
     """
     input_dir = Path(input_dir)
     output_file = Path(output_file)
-    
+
     # Check if input directory exists
     if not input_dir.is_dir():
         raise ValueError(f"Directory does not exist: {input_dir}")
@@ -147,7 +146,7 @@ def generate_metadata(input_dir, output_file, mode, comment="", force=False):
         return f"Successfully created metadata file '{output_file}' with {len(rows)} entries."
 
     except OSError as e:
-        raise ValueError(f"Could not write to output file '{output_file}': {e}")
+        raise ValueError(f"Could not write to output file '{output_file}': {e}") from e
 
 
 def main():

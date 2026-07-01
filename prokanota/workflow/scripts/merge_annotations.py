@@ -6,10 +6,17 @@ Dynamically handles any number of databases based on config.
 
 import argparse
 import json
-import polars as pl
-from pathlib import Path
 from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_statistics, build_part, log_prokanota_version
+from pathlib import Path
+
+import polars as pl
+from logging_utils import (
+    build_part,
+    log_file_paths,
+    log_prokanota_version,
+    log_statistics,
+    setup_logger,
+)
 
 logger = setup_logger(build_part("FINALIZE", "MERGE"))
 
@@ -58,9 +65,9 @@ def merge_annotations(
         )
 
         # Fill nulls with "*" for missing annotations
-        result = result.with_columns([
-            pl.col(c).cast(pl.Utf8).fill_null("*") for c in new_cols
-        ])
+        result = result.with_columns(
+            [pl.col(c).cast(pl.Utf8).fill_null("*") for c in new_cols]
+        )
 
     return result
 
@@ -71,16 +78,24 @@ def main():
     logger.info("=" * 60)
     logger.info("Annotation Merge Started")
     logger.info("=" * 60)
-    
-    parser = argparse.ArgumentParser(description="Merge all annotations into final table")
-    parser.add_argument("--base-table", required=True, help="Path to base feature table")
-    parser.add_argument("--output", required=True, help="Path to output final annotation TSV")
+
+    parser = argparse.ArgumentParser(
+        description="Merge all annotations into final table"
+    )
+    parser.add_argument(
+        "--base-table", required=True, help="Path to base feature table"
+    )
+    parser.add_argument(
+        "--output", required=True, help="Path to output final annotation TSV"
+    )
     parser.add_argument(
         "--db-results",
         required=True,
         help='JSON array of {"name": "db_name", "path": "/path/to/results.tsv", "order": 10}',
     )
-    parser.add_argument("--gene-id-column", default="gene_id", help="Column name for gene ID")
+    parser.add_argument(
+        "--gene-id-column", default="gene_id", help="Column name for gene ID"
+    )
     args = parser.parse_args()
 
     # Log input files
@@ -113,7 +128,7 @@ def main():
     # Write output
     logger.info(f"Writing final annotation table to {args.output}...")
     final_df.write_csv(args.output, separator="\t")
-    
+
     # Log statistics
     final_count = len(final_df)
     final_cols = len(final_df.columns)
@@ -122,7 +137,7 @@ def main():
         final_genes=final_count,
         final_columns=final_cols,
     )
-    
+
     # Log execution time
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()

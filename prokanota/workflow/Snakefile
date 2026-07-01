@@ -3,7 +3,7 @@ Modular annotation pipeline with dynamic database support.
 
 Copyright Richard Stöckl 2025.
 Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE or copy at 
+(See accompanying file LICENSE or copy at
 https://www.boost.org/LICENSE_1_0.txt)
 """
 
@@ -340,8 +340,8 @@ rule predict_features:
         genome=os.path.join(RESULTPATH, "{id}", "features", "{id}.fasta"),
     log:
         os.path.join(LOGPATH, "{id}", "features", "{id}_predict_features.log"),
-    message:
-        "Predicting features for {wildcards.id}"
+    conda:
+        os.path.join(workflow.basedir, "envs", "features.yaml")
     threads: 4
     params:
         sample_id="{id}",
@@ -354,8 +354,8 @@ rule predict_features:
         crispr_flag="--run_crispr" if FEATURE_SETTINGS["run_crispr"] else "",
         input_type=lambda wildcards: input_type[wildcards.id],
         scriptpath=os.path.join(workflow.basedir, "scripts", "features.py"),
-    conda:
-        os.path.join(workflow.basedir, "envs", "features.yaml")
+    message:
+        "Predicting features for {wildcards.id}"
     shell:
         """
         python {params.scriptpath} \
@@ -393,6 +393,10 @@ for db in ENABLED_DBS:
             output:
                 tblout=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tblout"),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            log:
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
+            conda:
+                os.path.join(workflow.basedir, "envs", "pyhmmer.yaml")
             threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
@@ -400,12 +404,8 @@ for db in ENABLED_DBS:
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "pyhmmer_search.py"
                 ),
-            log:
-                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
-            conda:
-                os.path.join(workflow.basedir, "envs", "pyhmmer.yaml")
             shell:
                 """
                 python {params.scriptpath} \
@@ -427,6 +427,11 @@ for db in ENABLED_DBS:
             output:
                 tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            log:
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
+            conda:
+                os.path.join(workflow.basedir, "envs", "rpsblast.yaml")
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
                 db_name=db_name,
@@ -434,13 +439,8 @@ for db in ENABLED_DBS:
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "rpsblast_search.py"
                 ),
-            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
-            log:
-                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
-            conda:
-                os.path.join(workflow.basedir, "envs", "rpsblast.yaml")
             shell:
                 """
                 python {params.scriptpath} \
@@ -463,6 +463,11 @@ for db in ENABLED_DBS:
             output:
                 tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            log:
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
+            conda:
+                os.path.join(workflow.basedir, "envs", "diamond.yaml")
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
                 db_name=db_name,
@@ -470,13 +475,8 @@ for db in ENABLED_DBS:
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "diamond_search.py"
                 ),
-            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
-            log:
-                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
-            conda:
-                os.path.join(workflow.basedir, "envs", "diamond.yaml")
             shell:
                 """
                 python {params.scriptpath} \
@@ -499,6 +499,11 @@ for db in ENABLED_DBS:
             output:
                 tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
+            log:
+                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
+            conda:
+                os.path.join(workflow.basedir, "envs", "mmseqs2.yaml")
+            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
             params:
                 db_path=db["db_path"],
                 db_name=db_name,
@@ -507,13 +512,8 @@ for db in ENABLED_DBS:
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "mmseqs2_search.py"
                 ),
-            threads: max(1, int(workflow.cores * 0.5))  # Use safe threads calculation
-            log:
-                os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
             message:
                 f"Searching {{wildcards.id}} against {db_name}"
-            conda:
-                os.path.join(workflow.basedir, "envs", "mmseqs2.yaml")
             shell:
                 """
                 python {params.scriptpath} \
@@ -545,18 +545,22 @@ for db in ENABLED_DBS:
                 mapping=db["mapping_path"],
             output:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            log:
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
+            conda:
+                os.path.join(
+                    workflow.basedir,
+                    "envs",
+                    "polars_arm.yaml" if IS_ARM else "polars.yaml",
+                )
+            threads: 1  # Parsing is single-threaded
             params:
                 db_name=db_name,
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads: 1  # Parsing is single-threaded
-            log:
-                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
-            conda:
-                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/pyhmmer_parse.py \
@@ -579,18 +583,22 @@ for db in ENABLED_DBS:
                 mapping=db["mapping_path"],
             output:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            log:
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
+            conda:
+                os.path.join(
+                    workflow.basedir,
+                    "envs",
+                    "polars_arm.yaml" if IS_ARM else "polars.yaml",
+                )
+            threads: 1  # Parsing is single-threaded
             params:
                 db_name=db_name,
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads: 1  # Parsing is single-threaded
-            log:
-                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
-            conda:
-                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/rpsblast_parse.py \
@@ -613,18 +621,22 @@ for db in ENABLED_DBS:
                 mapping=db["mapping_path"],
             output:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            log:
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
+            conda:
+                os.path.join(
+                    workflow.basedir,
+                    "envs",
+                    "polars_arm.yaml" if IS_ARM else "polars.yaml",
+                )
+            threads: 1  # Parsing is single-threaded
             params:
                 db_name=db_name,
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads: 1  # Parsing is single-threaded
-            log:
-                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
-            conda:
-                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/diamond_parse.py \
@@ -647,18 +659,22 @@ for db in ENABLED_DBS:
                 mapping=db["mapping_path"],
             output:
                 tsv=os.path.join(INTERIMPATH, "{id}", db_name, "parsed_annotation.tsv"),
+            log:
+                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
+            conda:
+                os.path.join(
+                    workflow.basedir,
+                    "envs",
+                    "polars_arm.yaml" if IS_ARM else "polars.yaml",
+                )
+            threads: 1  # Parsing is single-threaded
             params:
                 db_name=db_name,
                 mapping_key=db.get("mapping_key", "accession"),
                 evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 columns_json=get_columns_json(db),
-            threads: 1  # Parsing is single-threaded
-            log:
-                os.path.join(LOGPATH, "{id}", "parse", f"parse_{db_name}.log"),
             message:
                 f"Parsing {{wildcards.id}} {db_name} results"
-            conda:
-                os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
             shell:
                 """
                 python {workflow.basedir}/scripts/mmseqs2_parse.py \
@@ -707,16 +723,18 @@ rule merge_sample_annotations:
         parsed=get_all_parsed_annotations,
     output:
         final=os.path.join(RESULTPATH, "{id}", "annotation", "{id}_finalAnnotation.tsv"),
+    log:
+        os.path.join(LOGPATH, "{id}", "finalize", "merge_annotations.log"),
+    conda:
+        os.path.join(
+            workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml"
+        )
+    threads: 1  # Merging is single-threaded
     params:
         db_results_json=get_db_results_json,
         scriptpath=os.path.join(workflow.basedir, "scripts", "merge_annotations.py"),
-    threads: 1  # Merging is single-threaded
-    log:
-        os.path.join(LOGPATH, "{id}", "finalize", "merge_annotations.log"),
     message:
         "Merging annotations for {wildcards.id}"
-    conda:
-        os.path.join(workflow.basedir, "envs", "polars_arm.yaml" if IS_ARM else "polars.yaml")
     shell:
         """
         python {params.scriptpath} \
@@ -734,9 +752,9 @@ rule collect_master_table:
         ),
     output:
         final=os.path.join(RESULTPATH, "common", "annotation", "finalAnnotation.tsv"),
-    threads: 1  # Merging is single-threaded
     log:
         os.path.join(LOGPATH, "collect_master_table.log"),
+    threads: 1  # Merging is single-threaded
     message:
         "Collecting master annotation table"
     run:

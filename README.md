@@ -55,7 +55,7 @@ On the other end of the spectrum, sophisticated custom annotation pipelines like
 2. **CDS prediction** using [pyrodigal](https://github.com/althonos/pyrodigal), which fixes edge-case bugs from the original Prodigal.
 3. **rRNA prediction** using [pybarrnap](https://github.com/moshi4/pybarrnap) in `--accurate` mode with Rfam(14.10) covariance models.
 4. **tRNA prediction** using [tRNAscan-SE](https://github.com/UCSC-LoweLab/tRNAscan-SE) in `-G` mode for general tRNA prediction.
-5. **Clustered Regularly Interspaced Short Palindromic Repeat (CRISPR loci prediction** via [Diced](https://github.com/althonos/diced), a Rust reimplementation of the MinCED method.
+5. **Clustered Regularly Interspaced Short Palindromic Repeat (CRISPR) loci prediction** via [Diced](https://github.com/althonos/diced), a Rust reimplementation of the MinCED method.
 
 ### Annotation System
 6. **Modular database architecture:** Add custom HMM, RPS-BLAST, DIAMOND, or mmseqs2 databases by editing a config file — no code changes needed.
@@ -147,7 +147,7 @@ Prokanota expects multi-FASTA files containing either genome assemblies (`dna` m
 
 ## Configuration & Adding Custom Databases
 
-Prokanota's flexibility comes from its three configuration files: `config.yaml`, `metadata.csv`, and `databases.yaml`. 
+Prokanota's flexibility comes from its three configuration files: `config.yaml`, `metadata.csv`, and `databases.yaml`.
 
 ### `config.yaml`
 
@@ -172,7 +172,7 @@ features:
 
 ### `metadata.csv`
 
-A `.csv` file with four columns and one row per sample (≙ a proteome or genome to annotate). 
+A `.csv` file with four columns and one row per sample (≙ a proteome or genome to annotate).
 - First column: sampleID (Note: The sampleID is used to name the output files and is used to calculate the gene_ids!)
 - Second column: path to proteome or genome file in FASTA format
 - Third column: Either "dna" (for genome files, this will RUN the feature prediction module), or "protein" (for proteome files, this will SKIP the feature prediction)
@@ -193,14 +193,14 @@ Here you need to tell prokanota which databases to use for annotation and how. A
 3. Modify `databases.yaml`:
    ```yaml
    databases:
-     - name: MyCustomDB # pick a name 
+     - name: MyCustomDB # pick a name
        enabled: true
        order: 50 # lower = earlier
        search_tool: pyhmmer  # needs to match your db
        db_path: "/path/to/db.hmm" # path to your db
        mapping_path: "/path/to/mapping.tsv" # path to the mapping file
        evalue_cutoff: 1.0e-3 # E-value threshold for filtering hits
-       mapping_key: accession # Column to join on with mapping file ("accession" or "query_name"). 
+       mapping_key: accession # Column to join on with mapping file ("accession" or "query_name").
        columns: # List of output columns with name and source field
          - {name: MyDB_hit, source: query_name}
          - {name: MyDB_description, source: description}
@@ -260,6 +260,6 @@ Prokanota builds on the following tools — please consider also citing them as 
 ```
 Copyright Richard Stöckl 2025-2026.
 Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE or copy at 
+(See accompanying file LICENSE or copy at
 https://www.boost.org/LICENSE_1_0.txt)
 ```

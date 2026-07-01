@@ -31,9 +31,12 @@ rna_path = RESULTS_DIR / genome_sample / "features" / f"{genome_sample}_rna.tsv"
 gbk_path = RESULTS_DIR / genome_sample / "features" / f"{genome_sample}.gbk"
 gff_path = RESULTS_DIR / genome_sample / "features" / f"{genome_sample}.gff"
 tsv_path = RESULTS_DIR / genome_sample / "features" / f"{genome_sample}.tsv"
-annotation_path = RESULTS_DIR / genome_sample / "annotation" / f"{genome_sample}_finalAnnotation.tsv"
+annotation_path = (
+    RESULTS_DIR / genome_sample / "annotation" / f"{genome_sample}_finalAnnotation.tsv"
+)
 fna_path = RESULTS_DIR / genome_sample / "features" / f"{genome_sample}.fna"
 faa_path = RESULTS_DIR / genome_sample / "features" / f"{genome_sample}.faa"
+
 
 # ANSI color codes for terminal output
 class Colors:
@@ -63,6 +66,7 @@ def get_hits_normalizer(db_name: str):
         return normalize_tblout
     return None
 
+
 # Safely loads a YAML configuration file from disk.
 # Validates that the file exists, can be parsed by PyYAML, and that the root of
 # the YAML document is a dictionary (mapping), raising errors otherwise.
@@ -90,7 +94,9 @@ def load_databases(path: Path) -> list[dict[str, object]]:
 
 # Filters a list of database configurations, returning only those that are currently enabled.
 # Databases are considered enabled by default unless they have an explicit `enabled: false` key.
-def get_enabled_databases(databases: list[dict[str, object]]) -> list[dict[str, object]]:
+def get_enabled_databases(
+    databases: list[dict[str, object]],
+) -> list[dict[str, object]]:
     enabled = []
     for db in databases:
         if not isinstance(db, dict):
@@ -138,7 +144,9 @@ def get_all_db_columns(databases: list[dict[str, object]]) -> set[str]:
 # It reads the base template config, overrides the "databases" setting to point to
 # the database YAML for the current mode, and writes the resulting config to the
 # log/output directory for Snakemake execution.
-def build_snakemake_config(config_path: Path, databases_path: Path, mode_label: str) -> Path:
+def build_snakemake_config(
+    config_path: Path, databases_path: Path, mode_label: str
+) -> Path:
     config_data = load_yaml_file(config_path, "config")
     global_cfg = config_data.get("global")
     if not isinstance(global_cfg, dict):
@@ -253,19 +261,21 @@ def normalize_tsv(
 ) -> str:
     if not path.exists():
         raise FileNotFoundError(f"Missing file: {path}")
-    
+
     # Strip comments (lines starting with '#') and leading/trailing whitespaces
     raw_lines = path.read_text().splitlines()
-    data_lines = [line.strip() for line in raw_lines if line.strip() and not line.startswith("#")]
+    data_lines = [
+        line.strip() for line in raw_lines if line.strip() and not line.startswith("#")
+    ]
     if not data_lines:
         return ""
-    
+
     # Split fields using either a custom parser or standard delimiter
     if line_parser is not None:
         rows = [line_parser(line) for line in data_lines]
     else:
         rows = [line.split(delimiter) for line in data_lines]
-        
+
     if has_header:
         header_cols = rows[0]
         data_rows = rows[1:]
@@ -278,7 +288,7 @@ def normalize_tsv(
         keep_indexes = column_filter(header_cols)
     else:
         keep_indexes = list(range(len(header_cols))) if header_cols else []
-        
+
     if header_cols:
         filtered_header_cols = [header_cols[idx] for idx in keep_indexes]
         filtered_header = "\t".join(filtered_header_cols)
@@ -302,7 +312,7 @@ def normalize_tsv(
         rows_sorted = rows_to_sort
 
     normalized_rows = ["\t".join(row) for row in rows_sorted]
-    
+
     # Return standard unified TSV content string
     if filtered_header:
         return "\n".join([filtered_header] + normalized_rows).strip()
@@ -341,6 +351,7 @@ def normalize_annotation(
             for idx, col in enumerate(header_cols)
             if col in enabled_db_columns or col not in all_db_columns
         ]
+
     return normalize_tsv(path, sort_key_col="gene_id", column_filter=col_filter)
 
 
@@ -399,15 +410,27 @@ def compare_directories(
     file_comparator=None,
 ) -> bool:
     if not expected_root.exists():
-        print(f"      {Colors.RED}Expected directory not found: {expected_root}{Colors.END}")
+        print(
+            f"      {Colors.RED}Expected directory not found: {expected_root}{Colors.END}"
+        )
         return False
     if not actual_root.exists():
-        print(f"      {Colors.RED}Actual output directory not found: {actual_root}{Colors.END}")
+        print(
+            f"      {Colors.RED}Actual output directory not found: {actual_root}{Colors.END}"
+        )
         return False
 
     # Retrieve all files recursively, keeping paths relative to directory root
-    expected_files = {path.relative_to(expected_root) for path in expected_root.rglob("*") if path.is_file()}
-    actual_files = {path.relative_to(actual_root) for path in actual_root.rglob("*") if path.is_file()}
+    expected_files = {
+        path.relative_to(expected_root)
+        for path in expected_root.rglob("*")
+        if path.is_file()
+    }
+    actual_files = {
+        path.relative_to(actual_root)
+        for path in actual_root.rglob("*")
+        if path.is_file()
+    }
     success = True
 
     # Identify structural mismatches in directory contents
@@ -460,11 +483,16 @@ def compare_annotation_directory(
     def annotation_comparator(actual: Path, expected: Path, file_label: str) -> bool:
         # Use annotation normalizer for TSVs to ignore columns from disabled databases
         if expected.suffix == ".tsv":
-            normalizer = lambda path: normalize_annotation(path, enabled_db_columns, all_db_columns)
+
+            def normalizer(path):
+                return normalize_annotation(path, enabled_db_columns, all_db_columns)
+
             return compare_files(actual, expected, file_label, normalizer=normalizer)
         return compare_files(actual, expected, file_label)
 
-    return compare_directories(expected_root, actual_root, label, file_comparator=annotation_comparator)
+    return compare_directories(
+        expected_root, actual_root, label, file_comparator=annotation_comparator
+    )
 
 
 # Cleans and normalizes nucleotide or amino acid sequences by removing newlines,
@@ -485,17 +513,17 @@ def extract_gbk_translation(path: Path, locus_tag: str) -> str:
             continue
         # Scan forward to locate the translation attribute
         for j in range(idx, len(lines)):
-            if "/translation=\"" not in lines[j]:
+            if '/translation="' not in lines[j]:
                 continue
             fragment = lines[j].split('/translation="', 1)[1]
             parts = [fragment]
             # If sequence is single-line, extract and return
-            if "\"" in fragment:
+            if '"' in fragment:
                 return normalize_sequence(fragment.split('"', 1)[0])
             # For multi-line sequences, keep reading until the closing quote
             for k in range(j + 1, len(lines)):
                 chunk = lines[k].strip()
-                if "\"" in chunk:
+                if '"' in chunk:
                     parts.append(chunk.split('"', 1)[0])
                     return normalize_sequence("".join(parts))
                 parts.append(chunk)
@@ -595,11 +623,15 @@ def check_gff_coordinates(path: Path) -> bool:
             start = int(fields[3])
             end = int(fields[4])
         except ValueError:
-            print(f"      {Colors.RED}Non-integer coordinates in {path}: {fields[3]}-{fields[4]}{Colors.END}")
+            print(
+                f"      {Colors.RED}Non-integer coordinates in {path}: {fields[3]}-{fields[4]}{Colors.END}"
+            )
             return False
         # GFF coordinates are 1-based, start must be <= end
         if start < 1 or end < 1 or end < start:
-            print(f"      {Colors.RED}Invalid coordinates in {path}: {start}-{end}{Colors.END}")
+            print(
+                f"      {Colors.RED}Invalid coordinates in {path}: {start}-{end}{Colors.END}"
+            )
             return False
 
     return True
@@ -621,7 +653,9 @@ def check_gff_strand_encoding(path: Path) -> bool:
         # Repeat regions (like CRISPR arrays) should have unstranded dot ('.') strand values
         if feature_type == "repeat_region":
             if strand != ".":
-                print(f"      {Colors.RED}CRISPR strand not '.' in {path}: {strand}{Colors.END}")
+                print(
+                    f"      {Colors.RED}CRISPR strand not '.' in {path}: {strand}{Colors.END}"
+                )
                 return False
         elif strand not in ("+", "-", ".", "?"):
             print(f"      {Colors.RED}Invalid strand in {path}: {strand}{Colors.END}")
@@ -644,7 +678,7 @@ def parse_tsv_rows(path: Path) -> list[dict[str, str]]:
         fields = line.split("\t")
         if len(fields) != len(header):
             raise ValueError(f"Invalid TSV row in {path}")
-        rows.append(dict(zip(header, fields)))
+        rows.append(dict(zip(header, fields, strict=True)))
     return rows
 
 
@@ -670,24 +704,34 @@ def check_crispr_arrays(path: Path) -> bool:
             spacer_length = int(row["spacer_length"])
             num_repeats = int(row["num_repeats"])
         except (KeyError, ValueError):
-            print(f"      {Colors.RED}Invalid CRISPR numeric fields in {path}{Colors.END}")
+            print(
+                f"      {Colors.RED}Invalid CRISPR numeric fields in {path}{Colors.END}"
+            )
             return False
 
         # Biologically valid CRISPR arrays require at least 2 repeats
         if num_repeats < 2:
-            print(f"      {Colors.RED}CRISPR repeats < 2 in {path}: {row.get('crispr_id', '?')}{Colors.END}")
+            print(
+                f"      {Colors.RED}CRISPR repeats < 2 in {path}: {row.get('crispr_id', '?')}{Colors.END}"
+            )
             return False
 
         # Total predicted length should match the coordinate boundaries
-        expected_length = (end - start + 1)
+        expected_length = end - start + 1
         if length != expected_length:
-            print(f"      {Colors.RED}CRISPR length mismatch in {path}: {row.get('crispr_id', '?')}{Colors.END}")
+            print(
+                f"      {Colors.RED}CRISPR length mismatch in {path}: {row.get('crispr_id', '?')}{Colors.END}"
+            )
             return False
 
         # Geometry consistency: (num_repeats * repeat_length) + (num_spacers * spacer_length)
-        inferred_length = (num_repeats * repeat_length) + ((num_repeats - 1) * spacer_length)
+        inferred_length = (num_repeats * repeat_length) + (
+            (num_repeats - 1) * spacer_length
+        )
         if abs(expected_length - inferred_length) > (num_repeats - 1):
-            print(f"      {Colors.RED}CRISPR geometry mismatch in {path}: {row.get('crispr_id', '?')}{Colors.END}")
+            print(
+                f"      {Colors.RED}CRISPR geometry mismatch in {path}: {row.get('crispr_id', '?')}{Colors.END}"
+            )
             return False
 
     return True
@@ -697,8 +741,8 @@ def check_trna_records(path: Path) -> bool:
     """
     Validate tRNA records found in the assembled `*_rna.tsv` file.
 
-    Pyrococcus furiosus (DSM 3638) includes a singular loci for 
-    tRNA-His (Gene ID: 41713857) and tRNA-Cys (Gene ID: 41713313), 
+    Pyrococcus furiosus (DSM 3638) includes a singular loci for
+    tRNA-His (Gene ID: 41713857) and tRNA-Cys (Gene ID: 41713313),
     respectively. We check for the exact location and sequences.
     """
     try:
@@ -720,16 +764,22 @@ def check_trna_records(path: Path) -> bool:
 
         # tRNA identifiers should follow the standard pattern 'tRNA-[AminoAcidThreeLetters]'
         if not rna_type.startswith("tRNA-") or len(rna_type) < 6:
-            print(f"      {Colors.RED}Invalid tRNA type in {path}: {rna_type}{Colors.END}")
+            print(
+                f"      {Colors.RED}Invalid tRNA type in {path}: {rna_type}{Colors.END}"
+            )
             return False
         # Verify proper upper-casing of the amino acid abbreviation
         if not rna_type[5].isupper():
-            print(f"      {Colors.RED}Invalid tRNA type casing in {path}: {rna_type}{Colors.END}")
+            print(
+                f"      {Colors.RED}Invalid tRNA type casing in {path}: {rna_type}{Colors.END}"
+            )
             return False
         # Anticodon should either be undefined ('.') or a 3-letter lowercase code
         if anti_codon != ".":
             if anti_codon != anti_codon.lower() or len(anti_codon) != 3:
-                print(f"      {Colors.RED}Invalid tRNA anticodon in {path}: {anti_codon}{Colors.END}")
+                print(
+                    f"      {Colors.RED}Invalid tRNA anticodon in {path}: {anti_codon}{Colors.END}"
+                )
                 return False
 
     # Target reference tRNAs with known published coordinates/sequences for validation
@@ -780,7 +830,7 @@ def check_rrna_records(path: Path) -> bool:
 
     Pyrococcus furiosus (DSM 3638) encodes two 5S ribosomal RNA genes in its genome.
     We check for the exact location and sequence of the expected 5S rRNA loci.
-    See https://www.ncbi.nlm.nih.gov/datasets/gene/41713297/ and 
+    See https://www.ncbi.nlm.nih.gov/datasets/gene/41713297/ and
     https://www.ncbi.nlm.nih.gov/datasets/gene/41713504/ for details.
     """
     try:
@@ -792,7 +842,9 @@ def check_rrna_records(path: Path) -> bool:
     # Find 5S rRNA records - expect exactly two genes in Pyrococcus furiosus
     rrna_rows = [row for row in rows if row.get("rna_type", "") == "5S_rRNA"]
     if len(rrna_rows) != 2:
-        print(f"      {Colors.RED}Expected 2 5S rRNA records in {path}, found {len(rrna_rows)}{Colors.END}")
+        print(
+            f"      {Colors.RED}Expected 2 5S rRNA records in {path}, found {len(rrna_rows)}{Colors.END}"
+        )
         return False
 
     # Define exact attributes of published 5S ribosomal rRNA coordinates and sequences
@@ -988,13 +1040,17 @@ def check_argonaute_records(
         )
         success = False
     if f'/locus_tag="{feature_id}"' not in gbk_text:
-        print(f"      {Colors.RED}Missing Argonaute locus_tag in {gbk_path}: {feature_id}{Colors.END}")
+        print(
+            f"      {Colors.RED}Missing Argonaute locus_tag in {gbk_path}: {feature_id}{Colors.END}"
+        )
         success = False
 
     # 5. Extract translation sequence from GBK and compare with expected protein
     translation = extract_gbk_translation(gbk_path, feature_id)
     if not translation or translation != expected_protein:
-        print(f"      {Colors.RED}Argonaute GBK translation mismatch in {gbk_path}{Colors.END}")
+        print(
+            f"      {Colors.RED}Argonaute GBK translation mismatch in {gbk_path}{Colors.END}"
+        )
         success = False
 
     # 6. Verify nucleotide sequence identity in FNA FASTA output
@@ -1005,7 +1061,9 @@ def check_argonaute_records(
         return False
 
     if normalize_sequence(fna_records.get(feature_id, "")) != expected_nucleotide:
-        print(f"      {Colors.RED}Argonaute FNA sequence mismatch in {fna_path}{Colors.END}")
+        print(
+            f"      {Colors.RED}Argonaute FNA sequence mismatch in {fna_path}{Colors.END}"
+        )
         success = False
 
     # 7. Verify protein sequence identity in FAA FASTA output
@@ -1016,7 +1074,9 @@ def check_argonaute_records(
         return False
 
     if normalize_sequence(faa_records.get(feature_id, "")) != expected_protein:
-        print(f"      {Colors.RED}Argonaute FAA sequence mismatch in {faa_path}{Colors.END}")
+        print(
+            f"      {Colors.RED}Argonaute FAA sequence mismatch in {faa_path}{Colors.END}"
+        )
         success = False
 
     return success
@@ -1047,9 +1107,13 @@ def main() -> int:
 
     selected_databases = load_databases(databases_path)
     enabled_databases = get_enabled_databases(selected_databases)
-    enabled_db_names = [db.get("name") for db in enabled_databases if isinstance(db.get("name"), str)]
+    enabled_db_names = [
+        db.get("name") for db in enabled_databases if isinstance(db.get("name"), str)
+    ]
     enabled_db_columns_map = get_database_columns(enabled_databases)
-    enabled_db_columns = set(col for cols in enabled_db_columns_map.values() for col in cols)
+    enabled_db_columns = set(
+        col for cols in enabled_db_columns_map.values() for col in cols
+    )
 
     full_databases = load_databases(DATABASES_FULL)
     all_db_columns = get_all_db_columns(full_databases)
@@ -1065,7 +1129,7 @@ def main() -> int:
     # 4. Perform directory and file comparisons for each sample
     for sample_id in SAMPLES:
         print(f"\n{Colors.BOLD}{Colors.BLUE}Sample: {sample_id}{Colors.END}")
-        
+
         # Check each database's raw and parsed output
         if not enabled_db_names:
             print(f"{Colors.YELLOW}  No databases enabled for this sample{Colors.END}")
@@ -1074,14 +1138,19 @@ def main() -> int:
         print(f"  Databases enabled: {', '.join(enabled_db_names)}")
         for db_name in enabled_db_names:
             print(f"\n  {Colors.BOLD}{db_name}:{Colors.END}")
-            
+
             # Check raw hits output (tblout or tsv)
             hits_name = get_hits_filename(db_name)
             hits_normalizer = get_hits_normalizer(db_name)
             actual_tblout = INTERIM_DIR / sample_id / db_name / hits_name
             expected_tblout = EXPECTED_BASE_DIR / sample_id / db_name / hits_name
             total_checks += 1
-            raw_ok = compare_files(actual_tblout, expected_tblout, f"raw:{sample_id}:{db_name}", normalizer=hits_normalizer)
+            raw_ok = compare_files(
+                actual_tblout,
+                expected_tblout,
+                f"raw:{sample_id}:{db_name}",
+                normalizer=hits_normalizer,
+            )
             if raw_ok:
                 passed_checks += 1
                 print(f"    {Colors.GREEN}✓ Raw hits{Colors.END}")
@@ -1091,9 +1160,16 @@ def main() -> int:
 
             # Check parsed database annotations
             actual_parsed = INTERIM_DIR / sample_id / db_name / "parsed_annotation.tsv"
-            expected_parsed = EXPECTED_BASE_DIR / sample_id / db_name / "parsed_annotation.tsv"
+            expected_parsed = (
+                EXPECTED_BASE_DIR / sample_id / db_name / "parsed_annotation.tsv"
+            )
             total_checks += 1
-            if compare_files(actual_parsed, expected_parsed, f"parsed:{sample_id}:{db_name}", normalizer=normalize_parsed):
+            if compare_files(
+                actual_parsed,
+                expected_parsed,
+                f"parsed:{sample_id}:{db_name}",
+                normalizer=normalize_parsed,
+            ):
                 passed_checks += 1
                 print(f"    {Colors.GREEN}✓ Parsed annotation{Colors.END}")
             else:
@@ -1105,7 +1181,9 @@ def main() -> int:
         expected_features = EXPECTED_BASE_DIR / sample_id / "features"
         actual_features = RESULTS_DIR / sample_id / "features"
         total_checks += 1
-        if compare_directory(expected_features, actual_features, f"features:{sample_id}"):
+        if compare_directory(
+            expected_features, actual_features, f"features:{sample_id}"
+        ):
             passed_checks += 1
             print(f"    {Colors.GREEN}✓ Features directory{Colors.END}")
         else:
@@ -1148,7 +1226,7 @@ def main() -> int:
     for sample_id in SAMPLES:
         print(f"  {sample_id}:")
         sample_gff_path = RESULTS_DIR / sample_id / "features" / f"{sample_id}.gff"
-        
+
         total_checks += 1
         if check_gff_coordinates(sample_gff_path):
             passed_checks += 1
@@ -1156,7 +1234,7 @@ def main() -> int:
         else:
             success = False
             print(f"    {Colors.RED}✗ GFF coordinates{Colors.END}")
-        
+
         total_checks += 1
         if check_gff_strand_encoding(sample_gff_path):
             passed_checks += 1
@@ -1176,7 +1254,7 @@ def main() -> int:
     else:
         success = False
         print(f"    {Colors.RED}✗ CRISPR arrays{Colors.END}")
-    
+
     total_checks += 1
     if check_trna_records(rna_path):
         passed_checks += 1
@@ -1194,7 +1272,9 @@ def main() -> int:
         print(f"    {Colors.RED}✗ rRNA records{Colors.END}")
 
     total_checks += 1
-    if check_argonaute_records(gbk_path, gff_path, tsv_path, annotation_path, fna_path, faa_path):
+    if check_argonaute_records(
+        gbk_path, gff_path, tsv_path, annotation_path, fna_path, faa_path
+    ):
         passed_checks += 1
         print(f"    {Colors.GREEN}✓ Argonaute records{Colors.END}")
     else:
@@ -1202,12 +1282,16 @@ def main() -> int:
         print(f"    {Colors.RED}✗ Argonaute records{Colors.END}")
 
     # 8. Report final pass/fail summary
-    print(f"\n{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}")
+    print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 60}{Colors.END}")
     if success:
-        print(f"{Colors.GREEN}{Colors.BOLD}✓ ALL TESTS PASSED ({passed_checks}/{total_checks} checks){Colors.END}")
+        print(
+            f"{Colors.GREEN}{Colors.BOLD}✓ ALL TESTS PASSED ({passed_checks}/{total_checks} checks){Colors.END}"
+        )
     else:
-        print(f"{Colors.RED}{Colors.BOLD}✗ SOME TESTS FAILED ({passed_checks}/{total_checks} checks passed){Colors.END}")
-    print(f"{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}")
+        print(
+            f"{Colors.RED}{Colors.BOLD}✗ SOME TESTS FAILED ({passed_checks}/{total_checks} checks passed){Colors.END}"
+        )
+    print(f"{Colors.BOLD}{Colors.BLUE}{'=' * 60}{Colors.END}")
 
     return 0 if success else 1
 

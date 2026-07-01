@@ -18,15 +18,23 @@ Usage example:
 """
 
 import argparse
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+
+import psutil
 import pyhmmer
 import pyhmmer.easel
 import pyhmmer.plan7
-import sys
-import os
-import psutil
-from pathlib import Path
-from datetime import datetime
-from logging_utils import setup_logger, log_file_paths, log_parameters, log_statistics, build_part, log_prokanota_version
+from logging_utils import (
+    build_part,
+    log_file_paths,
+    log_parameters,
+    log_prokanota_version,
+    log_statistics,
+    setup_logger,
+)
 
 
 def count_hmm_models(db_path: str) -> int:
@@ -40,15 +48,26 @@ def count_hmm_models(db_path: str) -> int:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="pyhmmer-based hmmsearch replacement with performance optimizations")
-    parser.add_argument("--db", required=True, help="Binary HMM database file (e.g., .h3m file)")
+        description="pyhmmer-based hmmsearch replacement with performance optimizations"
+    )
+    parser.add_argument(
+        "--db", required=True, help="Binary HMM database file (e.g., .h3m file)"
+    )
     parser.add_argument("--db-name", help="Database name used for logging context")
-    parser.add_argument("--faa", required=True, help="FASTA file with protein sequences")
+    parser.add_argument(
+        "--faa", required=True, help="FASTA file with protein sequences"
+    )
     parser.add_argument("--tblout", required=True, help="Output file for table results")
     parser.add_argument("--allresults", help="Output file for full results (optional)")
-    parser.add_argument("--domtblout", help="Output file for domain table results (optional)")
-    parser.add_argument("--toolversion", required=True, help="Output file to record tool version")
-    parser.add_argument("--threads", type=int, default=1, help="Number of threads (CPUs) to use")
+    parser.add_argument(
+        "--domtblout", help="Output file for domain table results (optional)"
+    )
+    parser.add_argument(
+        "--toolversion", required=True, help="Output file to record tool version"
+    )
+    parser.add_argument(
+        "--threads", type=int, default=1, help="Number of threads (CPUs) to use"
+    )
     args = parser.parse_args()
 
     db_name = args.db_name or Path(args.db).stem
@@ -60,13 +79,13 @@ def main():
     logger.info("=" * 60)
 
     # Log input files
-    files = {'database': args.db, 'input_fasta': args.faa, 'output_tblout': args.tblout}
+    files = {"database": args.db, "input_fasta": args.faa, "output_tblout": args.tblout}
     if args.allresults:
-        files['output_allresults'] = args.allresults
+        files["output_allresults"] = args.allresults
     if args.domtblout:
-        files['output_domtblout'] = args.domtblout
+        files["output_domtblout"] = args.domtblout
     log_file_paths(logger, **files)
-    
+
     # Log parameters
     log_parameters(logger, threads=args.threads)
 
@@ -79,11 +98,11 @@ def main():
     if not os.path.isfile(args.db):
         logger.error(f"HMM file {args.db} does not exist")
         sys.exit(1)
-    
+
     logger.info("Loading HMM models...")
     with pyhmmer.plan7.HMMFile(args.db) as hmm_file:
         hmms = list(hmm_file)
-    
+
     hmm_count = len(hmms)
     logger.info(f"HMM models loaded: {hmm_count}")
     log_statistics(logger, hmm_models=hmm_count)
@@ -92,18 +111,24 @@ def main():
     if not os.path.isfile(args.faa):
         logger.error(f"FASTA file {args.faa} does not exist")
         sys.exit(1)
-    
+
     file_size = os.path.getsize(args.faa) / (1024 * 1024)  # Size in MB
-    available_memory = psutil.virtual_memory().available / (1024 * 1024)  # Available memory in MB
-    logger.info(f"FASTA file size: {file_size:.2f} MB, Available memory: {available_memory:.2f} MB")
-    
+    available_memory = psutil.virtual_memory().available / (
+        1024 * 1024
+    )  # Available memory in MB
+    logger.info(
+        f"FASTA file size: {file_size:.2f} MB, Available memory: {available_memory:.2f} MB"
+    )
+
     if file_size > available_memory * 0.8:
-        logger.warning(f"FASTA file size ({file_size:.2f} MB) may exceed available memory ({available_memory:.2f} MB)")
-    
+        logger.warning(
+            f"FASTA file size ({file_size:.2f} MB) may exceed available memory ({available_memory:.2f} MB)"
+        )
+
     logger.info("Loading sequences...")
     with pyhmmer.easel.SequenceFile(args.faa, digital=True) as seq_file:
         sequences = seq_file.read_block()
-    
+
     seq_count = len(sequences)
     logger.info(f"Input sequences loaded: {seq_count}")
 
@@ -119,7 +144,9 @@ def main():
         domtblout_file = open(args.domtblout, "w") if args.domtblout else None
 
         # Write tblout header without separator
-        tblout.write("# target name        query name           accession    E-value  score  bias\n")
+        tblout.write(
+            "# target name        query name           accession    E-value  score  bias\n"
+        )
 
         # Optional headers
         if allresults_file:
@@ -128,10 +155,10 @@ def main():
             domtblout_file.write("# target name\tp-value\tscore\n")
 
         # Process results
-        for hmm, result in zip(hmms, results):
+        for hmm, result in zip(hmms, results, strict=True):
             hmm_name = hmm.name  # Keep .sr in query name
             hmm_acc = hmm.accession if hmm.accession else "-"
-            
+
             if allresults_file:
                 allresults_file.write(f"HMM: {hmm_name} (accession: {hmm_acc})\n")
 
@@ -145,12 +172,16 @@ def main():
                 full_bias = hit.bias
 
                 # Write to tblout with query accession
-                tblout.write(f"{hit_name:<20} {hmm_name:<20} {hmm_acc:<12} {full_evalue:<9.1e} {full_score:<6.1f} {full_bias:<5.1f}\n")
+                tblout.write(
+                    f"{hit_name:<20} {hmm_name:<20} {hmm_acc:<12} {full_evalue:<9.1e} {full_score:<6.1f} {full_bias:<5.1f}\n"
+                )
 
                 # Optional outputs
                 if allresults_file:
                     hit_acc = hit.accession if hit.accession else "-"
-                    allresults_file.write(f"  Hit: {hit_name} (accession: {hit_acc})  E-value: {hit.evalue}  Score: {hit.score}  Bias: {hit.bias}\n")
+                    allresults_file.write(
+                        f"  Hit: {hit_name} (accession: {hit_acc})  E-value: {hit.evalue}  Score: {hit.score}  Bias: {hit.bias}\n"
+                    )
                 if domtblout_file:
                     for dom in hit.domains:
                         domtblout_file.write(f"{hit_name}\t{dom.pvalue}\t{dom.score}\n")
@@ -166,11 +197,13 @@ def main():
 
     # Log execution statistics
     log_statistics(logger, output_hits=hit_count)
-    
+
     # Check for no hits
     if hit_count == 0 and seq_count > 0:
-        logger.warning(f"No hits found in HMM database for {seq_count} input sequences. Database may not match data or parameters need adjustment.")
-    
+        logger.warning(
+            f"No hits found in HMM database for {seq_count} input sequences. Database may not match data or parameters need adjustment."
+        )
+
     # Log execution time
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
@@ -178,6 +211,7 @@ def main():
     logger.info("=" * 60)
     logger.info("pyhmmer Search Completed Successfully")
     logger.info("=" * 60)
+
 
 if __name__ == "__main__":
     main()

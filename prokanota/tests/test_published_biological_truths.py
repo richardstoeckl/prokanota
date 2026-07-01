@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from prokanota.workflow.scripts import feature_utils
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = REPO_ROOT / "prokanota"
 SCRIPTS_DIR = PACKAGE_ROOT / "workflow" / "scripts"
@@ -16,13 +18,13 @@ for path in (str(REPO_ROOT), str(SCRIPTS_DIR)):
     if path not in sys.path:
         sys.path.insert(0, path)
 
-from prokanota.workflow.scripts import feature_utils
 
 def _column_to_list(df, column):
     series = df[column]
     if hasattr(series, "to_list"):
         return series.to_list()
     return series.tolist()
+
 
 # ---
 # 1. Protein Molecular Weight Calculation (feature_utils.py)
@@ -33,6 +35,7 @@ def _column_to_list(df, column):
 # https://web.expasy.org/findmod/findmod_masses.html
 # MW = sum(residue masses) + 18.01528 Da (one water molecule for free termini)
 # Reference: Gasteiger et al., The Proteomics Protocols Handbook, 2005, pp. 571-607
+
 
 def test_single_amino_acid_weights():
     """
@@ -47,6 +50,7 @@ def test_single_amino_acid_weights():
     # Expected: 186.2132 + 18.01528 = 204.22848 Da
     assert abs(feature_utils.protein_molecular_weight("W") - 204.23) < 0.01
 
+
 def test_pfu_ago_protein_molecular_weight():
     """
     Validate MW calculation against Pyrococcus furiosus Argonaute (PfAgo).
@@ -55,7 +59,8 @@ def test_pfu_ago_protein_molecular_weight():
     """
     pf_ago = "MKAKVVINLVKINKKIIPDKIYVYRLFNDPEEELQKEGYSIYRLAYENVGIVIDPENLIIATTKELEYEGEFIPEGEISFSELRNDYQSKLVLRLLKENGIGEYELSKLLRKFRKPKTFGDYKVIPSVEMSVIKHDEDFYLVIHIIHQIQSMKTLWELVNKDPKELEEFLMTHKENLMLKDIASPLKTVYKPCFEEYTKKPKLDHNQEIVKYWYNYHIERYWNTPEAKLEFYRKFGQVDLKQPAILAKFASKIKKNKNYKIYLLPQLVVPTYNAEQLESDVAKEILEYTKLMPEERKELLENILAEVDSDIIDKSLSEIEVEKIAQELENKIRVRDDKGNSVPISQLNVQKSQLLLWTNYSRKYPVILPYEVPEKFRKIREIPMFIILDSGLLADIQNFATNEFRELVKSMYYSLAKKYNSLAKKARSTNEIGLPFLDFRGKEKVITEDLNSDKGIIEVVEQVSSFMKGKELGLAFIAARNKLSSEKFEEIKRRLFNLNVISQVVNEDTLKNKRDKYDRNRLDLFVRHNLLFQVLSKLGVKYYVLDYRFNYDYIIGIDVAPMKRSEGYIGGSAVMFDSQGYIRKIVPIKIGEQRGESVDMNEFFKEMVDKFKEFNIKLDNKKILLLRDGRITNNEEEGLKYISEMFDIEVVTMDVIKNHPVRAFANMKMYFNLGGAIYLIPHKLKQAKGTPIPIKLAKKRIIKNGKVEKQSITRQDVLDIFILTRLNYGSISADMRLPAPVHYAHKFANAIRNEWKIKEEFLAEGFLYFV"
     mw = feature_utils.protein_molecular_weight(pf_ago)
-    assert abs(mw - 90390) < 1.0 # allow for small rounding differences
+    assert abs(mw - 90390) < 1.0  # allow for small rounding differences
+
 
 def test_unknown_amino_acid_handling():
     """
@@ -66,11 +71,13 @@ def test_unknown_amino_acid_handling():
     mw_with_unknown = feature_utils.protein_molecular_weight("MXK")
     assert mw_with_unknown == 0.0, "Unknown amino acid should yield zero weight"
 
+
 def test_empty_sequence_molecular_weight():
     """
     Empty sequence should return zero.
     """
     assert feature_utils.protein_molecular_weight("") == 0
+
 
 # ---
 # 2. DNA Reverse Complement + Sequence Extraction (feature_utils.py)
@@ -79,6 +86,7 @@ def test_empty_sequence_molecular_weight():
 # Test reverse complement function for biological correctness.
 # Reverse complement is fundamental for handling minus-strand genes.
 # The complement pairs are: A<->T, C<->G (Watson-Crick base pairing).
+
 
 def test_reverse_complement_basic():
     """
@@ -113,12 +121,14 @@ def test_reverse_complement_uppercase_only():
     # Lowercase is reverse complemented but not converted to uppercase
     assert feature_utils.reverse_complement("atgc") == "gcat"  # NOT "GCAT"
 
-    # Ambiguous bases 
+    # Ambiguous bases
     assert feature_utils.reverse_complement("ATRC") == "GYAT"
+
 
 def test_reverse_complement_empty():
     """Empty sequence should return empty string."""
     assert feature_utils.reverse_complement("") == ""
+
 
 def test_single_nucleotide_reverse_complement():
     """Single nucleotide reverse complement is just the complement."""
@@ -139,6 +149,7 @@ def test_get_sequence_minus_strand():
     contig = "ATGCCGTA"
     assert feature_utils.get_sequence(contig, 2, 5, "-") == "GGCA"
 
+
 # ---
 # 3. E-value Filtering and Best Hit Selection (diamond_parse.py, pyhmmer_parse.py)
 # ---
@@ -148,21 +159,25 @@ def test_get_sequence_minus_strand():
 # Standard cutoffs: 1e-3 (permissive), 1e-5 (moderate), 1e-10 (stringent).
 # Reference: Altschul et al., J Mol Biol 1990; 215(3):403-410 (BLAST paper)
 
+
 def test_evalue_filtering_removes_insignificant_hits():
     """
     Verify that hits above e-value cutoff are filtered out.
     A hit with e-value 0.01 should be removed when cutoff is 1e-3.
     """
     pytest.importorskip("polars")
-    from prokanota.workflow.scripts import diamond_parse
     import polars as pl
 
-    hits_df = pl.DataFrame({
-        "gene_id": ["gene1", "gene2", "gene3"],
-        "accession": ["acc1", "acc2", "acc3"],
-        "evalue": [1e-10, 1e-3, 0.01],  # significant, borderline, insignificant
-        "score": [100.0, 50.0, 30.0],
-    })
+    from prokanota.workflow.scripts import diamond_parse
+
+    hits_df = pl.DataFrame(
+        {
+            "gene_id": ["gene1", "gene2", "gene3"],
+            "accession": ["acc1", "acc2", "acc3"],
+            "evalue": [1e-10, 1e-3, 0.01],  # significant, borderline, insignificant
+            "score": [100.0, 50.0, 30.0],
+        }
+    )
 
     filtered = diamond_parse.filter_and_deduplicate(hits_df, evalue_cutoff=1e-3)
 
@@ -179,15 +194,18 @@ def test_best_hit_selection_by_score():
     Reference: Karlin & Altschul, PNAS 1990; 87(6):2264-2268
     """
     pytest.importorskip("polars")
-    from prokanota.workflow.scripts import diamond_parse
     import polars as pl
 
-    hits_df = pl.DataFrame({
-        "gene_id": ["gene1", "gene1", "gene1"],
-        "accession": ["pfam1", "pfam2", "pfam3"],
-        "evalue": [1e-20, 1e-25, 1e-15],
-        "score": [150.0, 200.0, 100.0],  # pfam2 has highest score
-    })
+    from prokanota.workflow.scripts import diamond_parse
+
+    hits_df = pl.DataFrame(
+        {
+            "gene_id": ["gene1", "gene1", "gene1"],
+            "accession": ["pfam1", "pfam2", "pfam3"],
+            "evalue": [1e-20, 1e-25, 1e-15],
+            "score": [150.0, 200.0, 100.0],  # pfam2 has highest score
+        }
+    )
 
     filtered = diamond_parse.filter_and_deduplicate(hits_df, evalue_cutoff=1e-3)
 
@@ -201,15 +219,18 @@ def test_tiebreaker_uses_evalue():
     This ensures we select the most statistically significant hit.
     """
     pytest.importorskip("polars")
-    from prokanota.workflow.scripts import diamond_parse
     import polars as pl
 
-    hits_df = pl.DataFrame({
-        "gene_id": ["gene1", "gene1"],
-        "accession": ["hit_a", "hit_b"],
-        "evalue": [1e-30, 1e-20],  # hit_a has better e-value
-        "score": [100.0, 100.0],   # Same score
-    })
+    from prokanota.workflow.scripts import diamond_parse
+
+    hits_df = pl.DataFrame(
+        {
+            "gene_id": ["gene1", "gene1"],
+            "accession": ["hit_a", "hit_b"],
+            "evalue": [1e-30, 1e-20],  # hit_a has better e-value
+            "score": [100.0, 100.0],  # Same score
+        }
+    )
 
     filtered = diamond_parse.filter_and_deduplicate(hits_df, evalue_cutoff=1e-3)
 
@@ -236,6 +257,7 @@ def test_empty_marker_normalization():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
+
     content = (
         "ACC001\t-\tDescription\tCategory\n"
         "ACC002\tNA\tDescription\tCategory\n"
@@ -245,7 +267,9 @@ def test_empty_marker_normalization():
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -266,6 +290,7 @@ def test_duplicate_accession_rejection():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
+
     content = (
         "PF00001\tGPCR\tG-protein coupled receptor\tSignaling\n"
         "PF00001\tGPCR_dup\tDuplicate entry\tSignaling\n"
@@ -273,7 +298,9 @@ def test_duplicate_accession_rejection():
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -291,6 +318,7 @@ def test_pfam_accession_format():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
+
     content = (
         "PF00001.23\t7tm_1\tGPCR family\tSignaling\n"
         "PF00002.28\t7tm_2\tSecretin family\tSignaling\n"
@@ -298,7 +326,9 @@ def test_pfam_accession_format():
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -316,14 +346,14 @@ def test_wrong_column_count_rejection():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
-    content = (
-        "ACC001\tGeneA\tDescA\tcatA\n"
-        "ACC002\tGeneB\tDescB\n"
-    )
+
+    content = "ACC001\tGeneA\tDescA\tcatA\nACC002\tGeneB\tDescB\n"
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -340,18 +370,20 @@ def test_missing_accession_rejection():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
-    content = (
-        "\tGeneA\tDescA\tcatA\n"
-        "ACC002\tGeneB\tDescB\tcatB\n"
-    )
+
+    content = "\tGeneA\tDescA\tcatA\nACC002\tGeneB\tDescB\tcatB\n"
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
-        with pytest.raises(ValueError, match=r"Column 1 \(accession\) must not be empty"):
+        with pytest.raises(
+            ValueError, match=r"Column 1 \(accession\) must not be empty"
+        ):
             mapping_utils.parse_mapping_file(tmp_path)
     finally:
         if tmp_path is not None:
@@ -364,11 +396,14 @@ def test_wrapped_double_quotes_are_stripped():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
+
     content = '"CDD:XXXXX"\t"gene_1"\t"description with spaces"\t"category"\n'
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -389,17 +424,22 @@ def test_special_characters_are_preserved():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
+
     content = "ACC001\tGeneA\tcontains 'single' and \"double\" quotes Ω\tcatA\n"
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
         df = mapping_utils.parse_mapping_file(tmp_path)
 
-        assert _column_to_list(df, "description") == ["contains 'single' and \"double\" quotes Ω"]
+        assert _column_to_list(df, "description") == [
+            "contains 'single' and \"double\" quotes Ω"
+        ]
     finally:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)
@@ -411,15 +451,14 @@ def test_empty_markers_normalized_across_all_fields():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
-    content = (
-        "ACC001\t\tNA\tNULL\n"
-        "ACC002\t-\tN/A\t*\n"
-        "ACC003\t  \tnull\t   \n"
-    )
+
+    content = "ACC001\t\tNA\tNULL\nACC002\t-\tN/A\t*\nACC003\t  \tnull\t   \n"
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -439,6 +478,7 @@ def test_validate_mapping_file_returns_stats():
     """
     pytest.importorskip("pandas")
     from prokanota.workflow.scripts import mapping_utils
+
     content = (
         "ACC001\tGeneA\tDescA\tcatA\n"
         "ACC002\tGeneB\tDescB\tcatB\n"
@@ -447,7 +487,9 @@ def test_validate_mapping_file_returns_stats():
 
     tmp_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(content)
             tmp_path = Path(handle.name)
 
@@ -469,6 +511,7 @@ def test_validate_mapping_file_returns_stats():
 # which annotation appears first in the output.
 # Higher priority (lower order number) databases should be processed first.
 
+
 def test_merge_preserves_database_order():
     """
     Verify annotations are merged in specified priority order.
@@ -476,24 +519,31 @@ def test_merge_preserves_database_order():
     This ensures consistent, reproducible annotation output.
     """
     pytest.importorskip("polars")
-    from prokanota.workflow.scripts import merge_annotations
     import polars as pl
 
-    base_df = pl.DataFrame({
-        "gene_id": ["gene1", "gene2"],
-        "contig_id": ["c1", "c1"],
-    })
+    from prokanota.workflow.scripts import merge_annotations
 
-    pfam_content = "gene_id\tpfam_hit\n" "gene1\tPF00001\n"
-    cog_content = "gene_id\tcog_hit\n" "gene1\tCOG0001\n" "gene2\tCOG0002\n"
+    base_df = pl.DataFrame(
+        {
+            "gene_id": ["gene1", "gene2"],
+            "contig_id": ["c1", "c1"],
+        }
+    )
+
+    pfam_content = "gene_id\tpfam_hit\ngene1\tPF00001\n"
+    cog_content = "gene_id\tcog_hit\ngene1\tCOG0001\ngene2\tCOG0002\n"
 
     pfam_path = None
     cog_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(pfam_content)
             pfam_path = Path(handle.name)
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(cog_content)
             cog_path = Path(handle.name)
 
@@ -522,18 +572,23 @@ def test_merge_fills_missing_with_asterisk():
     and clearly indicates absence of annotation vs. missing data.
     """
     pytest.importorskip("polars")
-    from prokanota.workflow.scripts import merge_annotations
     import polars as pl
 
-    base_df = pl.DataFrame({
-        "gene_id": ["gene1", "gene2", "gene3"],
-    })
+    from prokanota.workflow.scripts import merge_annotations
 
-    annotation_content = "gene_id\tdb_hit\n" "gene1\tHIT001\n"
+    base_df = pl.DataFrame(
+        {
+            "gene_id": ["gene1", "gene2", "gene3"],
+        }
+    )
+
+    annotation_content = "gene_id\tdb_hit\ngene1\tHIT001\n"
 
     annotation_path = None
     try:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".tsv", delete=False
+        ) as handle:
             handle.write(annotation_content)
             annotation_path = Path(handle.name)
 

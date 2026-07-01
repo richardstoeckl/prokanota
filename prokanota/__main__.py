@@ -5,36 +5,36 @@ Check out the wiki for a detailed look at customising this file:
 https://github.com/beardymcjohnface/Snaketool/wiki/Customising-your-Snaketool
 """
 
-import os
 import csv
 import json
+import os
 import shutil
 import subprocess
 import sys
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
-import click
-import yaml
-import jsonschema
 
-from snaketool_utils.cli_utils import OrderedCommands, run_snakemake, echo_click
+import click
+import jsonschema
+import yaml
+from snaketool_utils.cli_utils import OrderedCommands, echo_click, run_snakemake
+
 from prokanota import __version__
 from prokanota.workflow.scripts import metadataFromDir
 
-
 SPLASH_SCREEN = """
-                             888                                 888             
-                             888                                 888             
-                             888                                 888             
-    88888b.  888d888 .d88b.  888  888  8888b.  88888b.   .d88b.  888888  8888b.  
-    888 "88b 888P"  d88""88b 888 .88P     "88b 888 "88b d88""88b 888        "88b 
-    888  888 888    888  888 888888K  .d888888 888  888 888  888 888    .d888888 
-    888 d88P 888    Y88..88P 888 "88b 888  888 888  888 Y88..88P Y88b.  888  888 
-    88888P"  888     "Y88P"  888  888 "Y888888 888  888  "Y88P"   "Y888 "Y888888 
-    888                                                                          
-    888                                                                          
-    888                                                                          
+                             888                                 888
+                             888                                 888
+                             888                                 888
+    88888b.  888d888 .d88b.  888  888  8888b.  88888b.   .d88b.  888888  8888b.
+    888 "88b 888P"  d88""88b 888 .88P     "88b 888 "88b d88""88b 888        "88b
+    888  888 888    888  888 888888K  .d888888 888  888 888  888 888    .d888888
+    888 d88P 888    Y88..88P 888 "88b 888  888 888  888 Y88..88P Y88b.  888  888
+    88888P"  888     "Y88P"  888  888 "Y888888 888  888  "Y88P"   "Y888 "Y888888
+    888
+    888
+    888
     """
 
 
@@ -45,7 +45,7 @@ def snake_base(rel_path):
 
 def print_citation():
     """Read and print the Citation information from the citation file"""
-    with open(snake_base("prokanota.CITATION"), "r") as f:
+    with open(snake_base("prokanota.CITATION")) as f:
         for line in f:
             echo_click(line)
 
@@ -90,16 +90,18 @@ def validate_readable_file(ctx, param, value):
 def validate_yaml_schema(yaml_path, schema_path, label):
     """Validate a YAML file against a JSON schema and raise a ClickException on error."""
     try:
-        with open(yaml_path, "r", encoding="utf-8") as handle:
+        with open(yaml_path, encoding="utf-8") as handle:
             content = yaml.safe_load(handle)
     except Exception as exc:
         raise click.ClickException(f"Invalid {label} file {yaml_path}: {exc}") from exc
 
     try:
-        with open(schema_path, "r", encoding="utf-8") as handle:
+        with open(schema_path, encoding="utf-8") as handle:
             schema = json.load(handle)
     except Exception as exc:
-        raise click.ClickException(f"Could not read schema {schema_path}: {exc}") from exc
+        raise click.ClickException(
+            f"Could not read schema {schema_path}: {exc}"
+        ) from exc
 
     try:
         jsonschema.validate(content, schema)
@@ -112,10 +114,12 @@ def validate_yaml_schema(yaml_path, schema_path, label):
 def validate_config_schema(config_data, schema_path, config_path):
     """Validate config dict against schema and raise ClickException on error."""
     try:
-        with open(schema_path, "r", encoding="utf-8") as handle:
+        with open(schema_path, encoding="utf-8") as handle:
             schema = json.load(handle)
     except Exception as exc:
-        raise click.ClickException(f"Could not read schema {schema_path}: {exc}") from exc
+        raise click.ClickException(
+            f"Could not read schema {schema_path}: {exc}"
+        ) from exc
 
     try:
         jsonschema.validate(config_data, schema)
@@ -128,7 +132,7 @@ def validate_config_schema(config_data, schema_path, config_path):
 def read_yaml_file(yaml_path, label):
     """Load YAML from disk and return Python object."""
     try:
-        with open(yaml_path, "r", encoding="utf-8") as handle:
+        with open(yaml_path, encoding="utf-8") as handle:
             return yaml.safe_load(handle)
     except Exception as exc:
         raise click.ClickException(f"Invalid {label} file {yaml_path}: {exc}") from exc
@@ -141,11 +145,17 @@ def resolve_input_path(config_path, candidate, label):
         candidate_path = config_path.parent / candidate_path
 
     if not candidate_path.exists():
-        raise click.ClickException(f"{label.capitalize()} file does not exist: {candidate_path}")
+        raise click.ClickException(
+            f"{label.capitalize()} file does not exist: {candidate_path}"
+        )
     if not candidate_path.is_file():
-        raise click.ClickException(f"{label.capitalize()} path is not a file: {candidate_path}")
+        raise click.ClickException(
+            f"{label.capitalize()} path is not a file: {candidate_path}"
+        )
     if not os.access(candidate_path, os.R_OK):
-        raise click.ClickException(f"{label.capitalize()} file is not readable: {candidate_path}")
+        raise click.ClickException(
+            f"{label.capitalize()} file is not readable: {candidate_path}"
+        )
     return candidate_path.resolve()
 
 
@@ -198,7 +208,7 @@ def validate_metadata_csv(metadata_path):
     """Validate minimal required metadata CSV structure before invoking Snakemake."""
     required_columns = {"sample_id", "path"}
     try:
-        with open(metadata_path, "r", encoding="utf-8", newline="") as handle:
+        with open(metadata_path, encoding="utf-8", newline="") as handle:
             reader = csv.DictReader(handle)
             if reader.fieldnames is None:
                 raise click.ClickException(
@@ -212,7 +222,9 @@ def validate_metadata_csv(metadata_path):
     except click.ClickException:
         raise
     except Exception as exc:
-        raise click.ClickException(f"Invalid metadata file {metadata_path}: {exc}") from exc
+        raise click.ClickException(
+            f"Invalid metadata file {metadata_path}: {exc}"
+        ) from exc
 
 
 def common_options(func):
@@ -340,15 +352,18 @@ def run(**kwargs):
         verbose = True
 
     config_schema = snake_base(os.path.join("config", "schemas", "config.schema.json"))
-    db_schema = snake_base(os.path.join("config", "schemas", "databases.schema.json"))
 
     config_data = read_yaml_file(configfile, "config")
     if not isinstance(config_data, dict):
-        raise click.ClickException(f"Invalid config file {configfile}: root must be a mapping")
+        raise click.ClickException(
+            f"Invalid config file {configfile}: root must be a mapping"
+        )
 
     global_cfg = config_data.get("global")
     if not isinstance(global_cfg, dict):
-        raise click.ClickException(f"Invalid config file {configfile}: missing 'global' section")
+        raise click.ClickException(
+            f"Invalid config file {configfile}: missing 'global' section"
+        )
 
     databases_candidate = databases_override or global_cfg.get("databases")
     metadata_candidate = metadata_override or global_cfg.get("metadata")
@@ -420,7 +435,7 @@ def run(**kwargs):
         # Full path to Snakefile
         snakefile_path=snake_base(os.path.join("workflow", "Snakefile")),
         merge_config=merge_config,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -564,11 +579,11 @@ def helper():
 )
 def metadata_from_dir(path, out, mode, comment, force):
     """Generate metadata CSV from a directory of FASTA files
-    
+
     This helper generates a sample metadata CSV file from all FASTA files
     found in a directory. It automatically extracts sample IDs from filenames
     and records the absolute path to each file.
-    
+
     Example:
         prokanota helper metadata-from-dir --path ./genomes --mode dna
     """
@@ -579,7 +594,7 @@ def metadata_from_dir(path, out, mode, comment, force):
         )
         click.echo(message)
     except ValueError as e:
-        raise click.ClickException(str(e))
+        raise click.ClickException(str(e)) from e
 
 
 cli.add_command(run)
