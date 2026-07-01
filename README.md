@@ -1,7 +1,7 @@
 # `Prokanota`
 
 <!-- badges: start -->
-![GitHub License](https://img.shields.io/github/license/richardstoeckl/prokanota)
+![GitHub License](https://shields.io/github/license/richardstoeckl/prokanota)
 [![Project Status: Active – The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
@@ -179,6 +179,15 @@ A `.csv` file with four columns and one row per sample (≙ a proteome or genome
   > **Note:** You can mix `dna` and `protein` samples within the same run.
 
 - Fourth column: optional, for comments
+
+Prokanota includes a convenience function to create a `metadata.csv` from a directory with FASTA files:
+
+```bash
+# Show help with detailed instructions
+prokanota helper metadata-from-dir -h
+# Example command to create a metadata.csv from a directory of genome files
+prokanota helper metadata-from-dir --path ./genomes --mode dna
+```
 
 ### `databases.yaml`
 
