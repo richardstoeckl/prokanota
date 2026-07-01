@@ -541,7 +541,7 @@ def version(**kwargs):
     click.echo(f"prokanota, version {__version__}")
 
 
-@click.group(cls=SplashCommand)
+@click.group(cls=SplashOrderedCommands)
 def helper():
     """Utility commands to help prepare inputs for prokanota"""
     pass
