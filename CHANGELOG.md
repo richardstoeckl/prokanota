@@ -7,13 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-beta.9] - 2026-07-01
+
 ### Added
-- Added more tests based on published rRNA and tRNA annotations for Pyrococcus furiosus (DSM 3638) to validate the RNA prediction step more thoroughly.
-- Added a check if the translation_table of pyrodigal in raining mode switches within a genome and warn the user if that is the case.
+- Added tests based on published rRNA and tRNA annotations for Pyrococcus furiosus (DSM 3638) to validate the RNA prediction step more thoroughly.
+- Added tests that validate genomic location, strand, and sequences of selected genes/proteins against published records (PfAgo).
+- Added detailed descriptions and comments to the test suite to clarify the biological context and intended purpose of each test.
+- Added a check if the translation_table of pyrodigal in training mode switches within a genome and warn the user if that is the case.
 - Added non-canonical bases to reverse complement function.
+- Added a helper function to quickly create a `metadata.csv` in the correct format from a directory with FASTA files (`prokanota helper metadata-from-dir -h`)
+- Added extensive linting via pre-commit hooks and CI to ensure code quality and consistency across the project.
 
 ### Fixed
 - Fixed some issues with the test suite regarding dependencies
+- Fixed an issue where .fna outputs could contain truncated genes on minus strand
+- Fixed an issue where .gbk files location feature was incorrectly written for genes on minus strand
 
 ## [2.0.0-beta.8] - 2026-05-27
 
@@ -174,7 +182,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ---
-[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.8...HEAD
+[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.9...HEAD
+[2.0.0-beta.9]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.8...v2.0.0-beta.9
 [2.0.0-beta.8]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.7...v2.0.0-beta.8
 [2.0.0-beta.7]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...v2.0.0-beta.7
 [2.0.0-beta.6]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.5...v2.0.0-beta.6
