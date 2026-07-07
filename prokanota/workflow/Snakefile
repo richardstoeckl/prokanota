@@ -391,7 +391,7 @@ for db in ENABLED_DBS:
             input:
                 faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
             output:
-                tblout=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tblout"),
+                tblout=temp(os.path.join(INTERIMPATH, "{id}", db_name, "hits.tblout")),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             log:
                 os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
@@ -425,7 +425,7 @@ for db in ENABLED_DBS:
             input:
                 faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
             output:
-                tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                tab=temp(os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv")),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             log:
                 os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
@@ -461,7 +461,7 @@ for db in ENABLED_DBS:
             input:
                 faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
             output:
-                tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                tab=temp(os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv")),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             log:
                 os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),
@@ -497,7 +497,7 @@ for db in ENABLED_DBS:
             input:
                 faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
             output:
-                tab=os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv"),
+                tab=temp(os.path.join(INTERIMPATH, "{id}", db_name, "hits.tsv")),
                 version=os.path.join(INTERIMPATH, "{id}", db_name, "tool_version.txt"),
             log:
                 os.path.join(LOGPATH, "{id}", "search", f"search_{db_name}.log"),

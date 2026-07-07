@@ -243,7 +243,7 @@ For archaeal genome annotation, we frequently use the following databases:
 
 If you use Prokanota in your research, please cite:
 
-> Stöckl, R. *Prokanota: a flexible pipeline for prokaryotic genome annotation with a modular database architecture. Version vX.X.X.* **(publication in preparation)**
+> Stöckl, R. *Prokanota: a flexible pipeline for prokaryotic genome annotation with a modular database architecture. Version v2.0.0.* **(publication in preparation)**
 
 Prokanota builds on the following tools — please consider also citing them as appropriate:
 

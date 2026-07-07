@@ -77,6 +77,10 @@ jobs:
         shell: bash -l {0}
         run: micromamba run -n snakemake python -m pip install .
 
+      - name: Test prokanota installation
+        shell: bash -l {0}
+        run: micromamba run -n snakemake prokanota run --help
+
       - name: Run full tests
         shell: bash -l {0}
         run: micromamba run -n snakemake prokanota test-full

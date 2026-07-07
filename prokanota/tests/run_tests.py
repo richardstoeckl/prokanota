@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ DATABASES_FULL = PACKAGE_ROOT / "tests" / "test-databases.yaml"
 DATABASES_PYHMMER = PACKAGE_ROOT / "tests" / "test-pyhmmer.yaml"
 INTERIM_DIR = PACKAGE_ROOT / "tests" / "output" / "interim"
 RESULTS_DIR = PACKAGE_ROOT / "tests" / "output" / "results"
+OUTPUT_DIR = PACKAGE_ROOT / "tests" / "output"
 EXPECTED_BASE_DIR = PACKAGE_ROOT / "tests" / "expected"
 SAMPLES = [
     "Pyrococcus_furiosus_DSM_3638-GCF_008245085",
@@ -207,6 +209,7 @@ def run_snakemake(configfile: Path, verbose: bool, very_verbose: bool) -> None:
         str(SNAKEFILE),
         "--configfile",
         str(configfile),
+        "--notemp",
         "--cores",
         "1",
         "--forceall",
@@ -1104,6 +1107,9 @@ def main() -> int:
         databases_path = DATABASES_FULL
     else:
         databases_path = DATABASES_PYHMMER
+
+    if OUTPUT_DIR.exists():
+        shutil.rmtree(OUTPUT_DIR)
 
     selected_databases = load_databases(databases_path)
     enabled_databases = get_enabled_databases(selected_databases)
