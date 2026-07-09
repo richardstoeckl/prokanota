@@ -1213,7 +1213,31 @@ def main() -> int:
             success = False
             print(f"    {Colors.RED}✗ Annotation directory{Colors.END}")
 
-    # 5. Cross-sample validation: Verify protein FASTA identity
+    # 5. Master table validation: Verify common table contains all sample rows
+    print(f"\n{Colors.BOLD}{Colors.BLUE}Master table checks:{Colors.END}")
+    common_annotation = RESULTS_DIR / "common" / "annotation" / "finalAnnotation.tsv"
+    sample_annotations = [
+        RESULTS_DIR / sample_id / "annotation" / f"{sample_id}_finalAnnotation.tsv"
+        for sample_id in SAMPLES
+    ]
+    total_checks += 1
+    try:
+        common_rows = len(parse_tsv_rows(common_annotation))
+        sample_rows = sum(len(parse_tsv_rows(path)) for path in sample_annotations)
+        if common_rows == sample_rows:
+            passed_checks += 1
+            print(f"  {Colors.GREEN}✓ Common annotation row count{Colors.END}")
+        else:
+            success = False
+            print(
+                f"  {Colors.RED}✗ Common annotation row count "
+                f"({common_rows} != {sample_rows}){Colors.END}"
+            )
+    except (FileNotFoundError, ValueError) as exc:
+        success = False
+        print(f"  {Colors.RED}✗ Common annotation row count: {exc}{Colors.END}")
+
+    # 6. Cross-sample validation: Verify protein FASTA identity
     print(f"\n{Colors.BOLD}{Colors.BLUE}Cross-sample checks:{Colors.END}")
     genome_id = SAMPLES[0]
     protein_id = SAMPLES[1]
@@ -1227,7 +1251,7 @@ def main() -> int:
         success = False
         print(f"  {Colors.RED}✗ Genome vs protein FAA sequences{Colors.END}")
 
-    # 6. GFF structure validations (integer indices and correct strand encodings)
+    # 7. GFF structure validations (integer indices and correct strand encodings)
     print(f"\n{Colors.BOLD}{Colors.BLUE}Structural validation:{Colors.END}")
     for sample_id in SAMPLES:
         print(f"  {sample_id}:")
@@ -1251,7 +1275,7 @@ def main() -> int:
 
     print(f"\n{Colors.BOLD}{Colors.BLUE}Biological validation:{Colors.END}")
 
-    # 7. Verify specialized features and biological truths (CRISPR geometry, tRNAs, rRNAs, PfAgo)
+    # 8. Verify specialized features and biological truths (CRISPR geometry, tRNAs, rRNAs, PfAgo)
     print(f"\n  {genome_sample} (specialized):")
     total_checks += 1
     if check_crispr_arrays(crispr_path):
@@ -1287,7 +1311,7 @@ def main() -> int:
         success = False
         print(f"    {Colors.RED}✗ Argonaute records{Colors.END}")
 
-    # 8. Report final pass/fail summary
+    # 9. Report final pass/fail summary
     print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 60}{Colors.END}")
     if success:
         print(
