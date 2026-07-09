@@ -7,7 +7,7 @@ name = "prokanota"
 dynamic = ["version"]
 description = "Flexible Snakemake pipeline for prokaryotic annotation with a code-free, modular database architecture."
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "BSL-1.0"
 license-files = ["LICENSE", "prokanota/prokanota.LICENSE"]
 authors = [
