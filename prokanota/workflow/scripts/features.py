@@ -917,6 +917,7 @@ def parse_fasta_and_predict(
 
     # Read the FASTA file to build a dict {original_header: sequence}, updating the hash
     contigs = {}
+    contig_ids = set()
     current_header, current_sequence = None, []
     with open(filename) as f:
         for line in f:
@@ -924,6 +925,12 @@ def parse_fasta_and_predict(
                 if current_header is not None:
                     contigs[current_header] = "".join(current_sequence)
                 current_header = line.strip()[1:]
+                header_id = current_header.split()[0] if current_header else ""
+                if not header_id:
+                    raise ValueError("FASTA contig headers must contain an ID.")
+                if header_id in contig_ids:
+                    raise ValueError(f"Duplicate FASTA contig ID '{header_id}'.")
+                contig_ids.add(header_id)
                 current_sequence = []
             else:
                 seq_line = line.strip().upper()
