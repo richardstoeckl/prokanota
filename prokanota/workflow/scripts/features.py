@@ -158,9 +158,28 @@ class GenePrediction:
         strand (str): '+' or '-' denoting the gene's strand.
         protein_seq (str): The amino acid sequence of the predicted gene.
         dna_seq (str): The nucleotide sequence of the predicted gene.
+        translation_table (int): Effective genetic code used for this call.
+        partial_begin (bool): Whether the CDS is partial at its lower coordinate.
+        partial_end (bool): Whether the CDS is partial at its upper coordinate.
+        reading_frame (int): Genomic reading frame (1, 2, or 3).
     """
 
-    def __init__(self, contig_id, gene_id, start, end, strand, protein_seq, dna_seq):
+    def __init__(
+        self,
+        contig_id,
+        gene_id,
+        start,
+        end,
+        strand,
+        protein_seq,
+        dna_seq,
+        translation_table,
+        partial_begin,
+        partial_end,
+        reading_frame,
+    ):
+        if reading_frame not in (1, 2, 3):
+            raise ValueError("reading_frame must be 1, 2, or 3")
         self.contig_id = contig_id
         self.gene_id = gene_id
         self.start = start
@@ -168,11 +187,30 @@ class GenePrediction:
         self.strand = strand
         self.protein_seq = protein_seq.removesuffix("*")
         self.dna_seq = dna_seq
+        self.translation_table = translation_table
+        self.partial_begin = partial_begin
+        self.partial_end = partial_end
+        self.reading_frame = reading_frame
 
     @property
     def has_internal_stop(self):
         """Whether translation contains a stop before the protein terminus."""
         return "*" in self.protein_seq
+
+    @property
+    def partial_code(self):
+        """Prodigal-compatible lower/upper-coordinate partial flag."""
+        return f"{int(self.partial_begin)}{int(self.partial_end)}"
+
+    @property
+    def partial_five_prime(self):
+        """Whether the CDS is incomplete at its biological 5-prime end."""
+        return self.partial_begin if self.strand == "+" else self.partial_end
+
+    @property
+    def phase(self):
+        """GFF CDS phase, using the stored frame only for 5-prime partials."""
+        return self.reading_frame - 1 if self.partial_five_prime else 0
 
 
 class RNAPrediction:
@@ -334,10 +372,14 @@ def write_gff(
     rows = []
 
     for record in gene_records:
+        attributes = (
+            f"ID={record.gene_id};partial={record.partial_code};"
+            f"transl_table={record.translation_table}"
+        )
         row = (
             f"{record.contig_id}\tPyrodigal\tCDS\t"
             f"{record.start}\t{record.end}\t.\t"
-            f"{record.strand}\t.\tID={record.gene_id}"
+            f"{record.strand}\t{record.phase}\t{attributes}"
         )
         rows.append((contig_order.get(record.contig_id, 0), record.start, row))
 
@@ -446,12 +488,19 @@ def write_gbk(
             if gene.contig_id == contig_tag:
                 qualifiers = [
                     Qualifier(key="locus_tag", value=gene.gene_id),
+                    Qualifier(key="codon_start", value=str(gene.phase + 1)),
+                    Qualifier(key="transl_table", value=str(gene.translation_table)),
                     Qualifier(key="translation", value=gene.protein_seq),
                 ]
                 # Convert to 0-based start for GenBank output.
                 adjusted_start = gene.start - 1
 
-                base_location = gb_io.Range(start=adjusted_start, end=gene.end)
+                base_location = gb_io.Range(
+                    start=adjusted_start,
+                    end=gene.end,
+                    before=gene.partial_begin,
+                    after=gene.partial_end,
+                )
                 # For negative strand, wrap in Complement.
                 if gene.strand == "-":
                     location = gb_io.Complement(base_location)
@@ -1021,6 +1070,11 @@ def parse_fasta_and_predict(
             gene_id = f"{contig_tag}_{j + 1:05d}"
             strand_symbol = "+" if gene.strand == 1 else "-"
             gene_dna_seq = dna_sequence[gene.begin - 1 : gene.end]
+            reading_frame = (
+                (gene.begin - 1) % 3 + 1
+                if gene.strand == 1
+                else (len(dna_sequence) - gene.end) % 3 + 1
+            )
             gene_records.append(
                 GenePrediction(
                     contig_id=contig_tag,
@@ -1030,6 +1084,10 @@ def parse_fasta_and_predict(
                     strand=strand_symbol,
                     protein_seq=protein_seq,
                     dna_seq=gene_dna_seq,
+                    translation_table=gene.translation_table,
+                    partial_begin=gene.partial_begin,
+                    partial_end=gene.partial_end,
+                    reading_frame=reading_frame,
                 )
             )
 
