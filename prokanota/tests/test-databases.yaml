@@ -27,7 +27,7 @@ databases:
     order: 20
     search_tool: rpsblast
     db_path: "tests/data/mockDB/rpsblast/rpsblast_mockDB"
-    mapping_path: "tests/data/mockDB/mockDB_profile_mapping.tsv"
+    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
     mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:

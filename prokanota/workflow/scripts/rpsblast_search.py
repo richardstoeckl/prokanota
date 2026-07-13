@@ -117,6 +117,8 @@ def main():
         sys.exit(1)
 
     # Run rpsblast
+    # "In the current RPS-BLAST version 2.13.0 (as of Oct. 2022), you can set parameters to replicate CD-Search settings by specifying "-comp_based_stats 1" and "-seg no" on the command line."
+    # See: https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#RPSB_web_vs_standalone
     cmd = [
         "rpsblast",
         "-query",
