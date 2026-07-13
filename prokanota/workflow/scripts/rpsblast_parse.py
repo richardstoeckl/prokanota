@@ -280,7 +280,7 @@ def main():
             )
 
     logger.info("Formatting output...")
-    output_df = format_output(joined_df, args.db_name, columns_config)
+    output_df = format_output(joined_df, args.db_name, columns_config).sort("gene_id")
 
     # Write output
     logger.info(f"Writing output to {args.output}...")
