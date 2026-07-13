@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added a test for the basic CLI functionality to the CI pipeline.
+- Added a test if the common annotation table contains all expected rows
+- Added the option to run the full test suite in the CI pipeline on demand.
+- Added handling for missing or duplicated contig fasta headers in input files.
+- Added the information for translation table, partial CDSs, and reading frames to all outputs that support this information (GFF, GBK)
+
+### Changed
+- Updated Python requirements in pyproject.toml to reflect the actual state
+- Updated the stop codon handling to reflect how bakta and prokka handle stop codons in the CDS prediction step. Since some tools calculate sequence length including the '*', these tools may report a very slighly different Evalue after this change.
+- Updated documentation regarding gene calling modes
+- Intermediary annotation results are now sorted, no changes to the final output.
+
+### Fixed
+- Fixed an issue where the minimal tests were not run in the CI pipeline because ubuntu-minimal does not have `pandas` installed by default.
+
 ## [2.0.0-beta.9] - 2026-07-01
 
 ### Added
