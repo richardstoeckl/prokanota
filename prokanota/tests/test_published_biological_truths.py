@@ -661,3 +661,25 @@ def test_hexdigest_mapping_alphabet():
     assert mapped == "ABCDEFGHIJKLMNOP"
     assert mapped.isalpha()
     assert mapped.isupper()
+
+
+# ---
+# 7. Sample ID Validation (validate_metadata_csv)
+# ---
+
+
+def test_duplicate_sample_ids_are_rejected(tmp_path):
+    """Duplicate sample IDs in metadata should raise an error."""
+    pytest.importorskip("snaketool_utils")
+    import click
+
+    from prokanota.__main__ import validate_metadata_csv
+
+    metadata_path = tmp_path / "metadata.csv"
+    metadata_path.write_text(
+        "sample_id,path\nsample_1,first.fasta\nsample_1,second.fasta\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(click.ClickException, match="duplicate sample_id"):
+        validate_metadata_csv(metadata_path)

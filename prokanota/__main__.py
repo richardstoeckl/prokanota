@@ -219,6 +219,25 @@ def validate_metadata_csv(metadata_path):
                 raise click.ClickException(
                     f"Invalid metadata file {metadata_path}: missing required column(s): {', '.join(sorted(missing))}"
                 )
+
+            sample_id_rows = {}
+            for row_number, row in enumerate(reader, start=2):
+                sample_id = row["sample_id"]
+                sample_id_rows.setdefault(sample_id, []).append(row_number)
+
+            duplicates = {
+                sample_id: row_numbers
+                for sample_id, row_numbers in sample_id_rows.items()
+                if len(row_numbers) > 1
+            }
+            if duplicates:
+                duplicate_details = ", ".join(
+                    f"{sample_id!r} (rows {', '.join(map(str, row_numbers))})"
+                    for sample_id, row_numbers in duplicates.items()
+                )
+                raise click.ClickException(
+                    f"Invalid metadata file {metadata_path}: duplicate sample_id value(s): {duplicate_details}"
+                )
     except click.ClickException:
         raise
     except Exception as exc:

@@ -72,7 +72,15 @@ validate(
     ),
 )
 
-metadata = pd.read_csv(metadataFile, sep=",").set_index("sample_id", drop=False)
+metadata = pd.read_csv(metadataFile, sep=",")
+duplicate_sample_ids = metadata.loc[
+    metadata["sample_id"].duplicated(keep=False), "sample_id"
+].unique()
+if len(duplicate_sample_ids):
+    duplicate_ids = ", ".join(map(str, duplicate_sample_ids))
+    raise ValueError(f"Duplicate sample_id values in metadata: {duplicate_ids}.")
+
+metadata = metadata.set_index("sample_id", drop=False)
 NAMES = metadata.sample_id.to_list()
 path = metadata.path.to_dict()
 
