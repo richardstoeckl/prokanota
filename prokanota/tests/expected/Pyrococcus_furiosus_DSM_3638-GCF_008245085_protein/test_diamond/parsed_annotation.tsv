@@ -1,9 +1,9 @@
 gene_id	diamond_hit	diamond_short_name	diamond_description	diamond_category	diamond_evalue	diamond_score	diamond_pident	diamond_length
-DLGPGJMI_00321	arCOG01829_80000013	FlaB	Archaeal flagellins	N	8.72e-37	119.0	47.4	135
-DLGPGJMI_01980	arCOG01920_80000039	NusG	Transcription antiterminator NusG	K	3.31e-108	298.0	100.0	152
-DLGPGJMI_00324	arCOG03422_80000005	EarA	Transcriptional activator of archaellum, contains HTH domain	K	2.45e-72	205.0	92.6	108
-DLGPGJMI_00320	arCOG01829_80000072	FlaB	Archaeal flagellins	N	7.73e-37	122.0	64.8	108
-DLGPGJMI_00322	arCOG01829_80000072	FlaB	Archaeal flagellins	N	1.86e-45	143.0	72.6	106
-DLGPGJMI_01795	arCOG04089_80000014	RPL19A	Ribosomal protein L19E	J	6.62e-96	267.0	92.0	150
-DLGPGJMI_01119	arCOG01452_80000051	Cas1	CRISPR-associated protein Cas1	V	1.83e-176	485.0	72.4	326
+DLGPGJMI_00320	arCOG01829_80000072	FlaB	Archaeal flagellins	N	7.53e-37	122.0	64.8	108
+DLGPGJMI_00321	arCOG01829_80000013	FlaB	Archaeal flagellins	N	8.46e-37	119.0	47.4	135
+DLGPGJMI_00324	arCOG03422_80000005	EarA	Transcriptional activator of archaellum, contains HTH domain	K	6.74e-72	204.0	92.6	108
 DLGPGJMI_00524	arCOG03890_80000003	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.0	1352.0	100.0	696
+DLGPGJMI_01795	arCOG04089_80000014	RPL19A	Ribosomal protein L19E	J	1.82e-95	266.0	92.0	150
+DLGPGJMI_00322	arCOG01829_80000072	FlaB	Archaeal flagellins	N	1.8e-45	143.0	72.6	106
+DLGPGJMI_01119	arCOG01452_80000051	Cas1	CRISPR-associated protein Cas1	V	1.76e-176	485.0	72.4	326
+DLGPGJMI_01980	arCOG01920_80000039	NusG	Transcription antiterminator NusG	K	6.41e-108	298.0	100.0	152
