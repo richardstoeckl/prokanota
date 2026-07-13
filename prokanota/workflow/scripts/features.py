@@ -166,8 +166,13 @@ class GenePrediction:
         self.start = start
         self.end = end
         self.strand = strand
-        self.protein_seq = protein_seq
+        self.protein_seq = protein_seq.removesuffix("*")
         self.dna_seq = dna_seq
+
+    @property
+    def has_internal_stop(self):
+        """Whether translation contains a stop before the protein terminus."""
+        return "*" in self.protein_seq
 
 
 class RNAPrediction:
@@ -277,6 +282,11 @@ def write_faa(genome_id, gene_records, faa_path):
     log.debug(f"Writing {len(gene_records)} protein sequences to {faa_path}")
     with open(faa_path, "w") as faa_file:
         for record in gene_records:
+            if record.has_internal_stop:
+                log.warning(
+                    "CDS %s contains an internal stop codon; retaining it as a QC condition.",
+                    record.gene_id,
+                )
             faa_file.write(f">{record.gene_id}\n{record.protein_seq}\n")
 
 
@@ -574,16 +584,11 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
                     # Calculate gene length from the stored nucleotide sequence.
                     gene_length = len(gene.dna_seq)
 
-                    # Remove stop codon from the protein sequence if present for length calculation
-                    if gene.protein_seq.endswith("*"):
-                        protein_seq = gene.protein_seq[:-1]
-                    else:
-                        protein_seq = gene.protein_seq
-                    protein_length = len(protein_seq)
+                    protein_length = len(gene.protein_seq)
 
                     # Calculate molecular weight (in Daltons),
                     # then convert to kDa and format to one decimal place for output
-                    mw_da = protein_molecular_weight(protein_seq)
+                    mw_da = protein_molecular_weight(gene.protein_seq)
                     mw_kda = mw_da / 1000.0
 
                     tsv_file.write(
@@ -1005,7 +1010,7 @@ def parse_fasta_and_predict(
             genetic_code_count[contig_translation_table] += 1
 
         for j, gene in enumerate(genes):
-            protein_seq = gene.translate()
+            protein_seq = gene.translate(translation_table=None, include_stop=False)
             gene_id = f"{contig_tag}_{j + 1:05d}"
             strand_symbol = "+" if gene.strand == 1 else "-"
             gene_dna_seq = dna_sequence[gene.begin - 1 : gene.end]
@@ -1361,6 +1366,11 @@ def process_protein_input(
             protein_seq_no_stop = (
                 protein_seq[:-1] if protein_seq.endswith("*") else protein_seq
             )
+            if "*" in protein_seq_no_stop:
+                log.warning(
+                    "Imported protein %s contains an internal stop; retaining it as a QC condition.",
+                    record.id,
+                )
 
             protein_length = len(protein_seq_no_stop)
             mw_da = protein_molecular_weight(protein_seq_no_stop)
@@ -1369,7 +1379,7 @@ def process_protein_input(
             orig_cont_header = record.description
             missing_value = "*"
 
-            faa_file.write(f">{gene_id}\n{protein_seq}\n")
+            faa_file.write(f">{gene_id}\n{protein_seq_no_stop}\n")
             tsv_file.write(
                 f"{sample_id}\t{orig_cont_header}\t{missing_value}\t{missing_value}\t"
                 f"{gene_id}\t{missing_value}\t{missing_value}\t{missing_value}\t"
