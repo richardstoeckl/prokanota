@@ -110,7 +110,6 @@ LOG_REDIRECT = "2>&1 | tee {log}" if PROKANOTA_VERBOSE else "1> {log} 2>&1"
 
 FEATURES_DEFAULTS = {
     "translation_table": 11,
-    "meta": False,
     "run_rrna": True,
     "run_trna": True,
     "run_crispr": True,
@@ -133,7 +132,7 @@ def resolve_feature_settings(cfg):
     if resolved["minimum_gene_length"] < 1:
         raise ValueError("features.minimum_gene_length must be >= 1.")
 
-    for key in ("meta", "run_rrna", "run_trna", "run_crispr"):
+    for key in ("run_rrna", "run_trna", "run_crispr"):
         if not isinstance(resolved[key], bool):
             raise ValueError(f"features.{key} must be a boolean.")
 
@@ -345,8 +344,6 @@ rule predict_features:
     threads: 4
     params:
         sample_id="{id}",
-        meta_flag="--meta" if FEATURE_SETTINGS["meta"] else "",
-        closed=False,
         translation_table=FEATURE_SETTINGS["translation_table"],
         minimum_gene_length=FEATURE_SETTINGS["minimum_gene_length"],
         rrna_flag="--run_rrna" if FEATURE_SETTINGS["run_rrna"] else "",
@@ -367,7 +364,6 @@ rule predict_features:
         --fna_path {output.fna} \
         --tsv_path {output.tsv} \
         --genome_path {output.genome} \
-        {params.meta_flag} \
         {params.rrna_flag} {params.trna_flag} {params.crispr_flag} \
         --rna_tsv_path {output.rna} \
         --crispr_tsv_path {output.crispr} \

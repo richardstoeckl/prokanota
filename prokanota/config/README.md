@@ -13,13 +13,19 @@ You can optionally add a `features` section in `config/config.yaml` to control g
 ```yaml
 features:
 	translation_table: 11      # allowed range: 1-25
-	meta: false                # force pyrodigal metagenomic mode
 	run_rrna: true             # run pybarrnap rRNA prediction
 	run_trna: true             # run tRNAscan-SE prediction
 	run_crispr: true           # run DICED CRISPR detection
 	minimum_gene_length: 90    # minimum CDS length (bp)
 ```
 
+Gene calling is selected automatically from total input length: assemblies of
+at least 20 kbp use single-genome training, while shorter assemblies use
+Pyrodigal's metagenomic models and therefore require translation table 11.
+This fallback supports short assemblies; Prokanota does not currently support
+metagenome annotation. All contigs are treated as linear fragments, including
+edge CDS, until topology can be supplied per sample. Pyrodigal masking is
+enabled, so runs of at least 50 unknown bases are masked during gene calling.
 If omitted, these defaults are used automatically.
 
 # Sample setup

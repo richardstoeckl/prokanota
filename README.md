@@ -163,7 +163,6 @@ global:
 
 features:
   translation_table: 11         # allowed range: 1-25
-  meta: false                   # force pyrodigal metagenomic mode
   run_rrna: true                # run pybarrnap rRNA prediction
   run_trna: true                # run tRNAscan-SE prediction
   run_crispr: true              # run DICED CRISPR detection

@@ -7,7 +7,6 @@ global:
 
 features:
   translation_table: 11
-  meta: false
   run_rrna: true
   run_trna: true
   run_crispr: true

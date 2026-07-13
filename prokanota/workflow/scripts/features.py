@@ -927,8 +927,6 @@ def predict_crisprs(tagged_contigs, threads=1):
 def parse_fasta_and_predict(
     sample_id,
     filename,
-    meta_mode,
-    closed,
     translation_table,
     minimum_gene_length=90,
     run_rrna=False,
@@ -1012,21 +1010,26 @@ def parse_fasta_and_predict(
     total_length = sum(len(seq) for seq in tagged_contigs.values())
     min_training_length = 20000  # Minimum length required for pyrodigal training
 
-    # Check if we need to force meta mode due to insufficient sequence length
-    original_meta_mode = meta_mode
-    if not meta_mode and total_length < min_training_length:
+    meta_mode = total_length < min_training_length
+    if meta_mode and translation_table != 11:
+        raise ValueError(
+            f"Inputs below {min_training_length} bp use Pyrodigal metagenomic "
+            "models and currently require translation table 11."
+        )
+    if meta_mode:
         cds_logger.warning(
             f"Total sequence length ({total_length} bp) is below the minimum required "
             f"for normal mode training ({min_training_length} bp). "
             f"Automatically switching to metagenomic mode."
         )
-        meta_mode = True
 
     # max_overlap must not exceed min_gene.
     max_overlap = min(60, minimum_gene_length)
     gene_finder = pyrodigal.GeneFinder(
         meta=meta_mode,
-        closed=closed,
+        closed=False,
+        mask=True,
+        min_mask=50,
         min_gene=minimum_gene_length,
         min_edge_gene=minimum_gene_length,
         max_overlap=max_overlap,
@@ -1038,7 +1041,7 @@ def parse_fasta_and_predict(
 
     # Iterate through each tagged contig and predict genes
     mode_description = "metagenomic mode" if meta_mode else "normal mode"
-    if meta_mode != original_meta_mode:
+    if meta_mode:
         cds_logger.info(
             "Starting CDS prediction on %d contigs in %s (auto-switched): %s",
             len(tagged_contigs),
@@ -1201,8 +1204,6 @@ def process_genome(
     gbk_path=None,
     fna_path=None,
     tsv_path=None,
-    meta_mode=False,
-    closed=False,
     translation_table=11,
     minimum_gene_length=90,
     genome_path=None,
@@ -1225,8 +1226,6 @@ def process_genome(
         gbk_path (str, optional): Output path for the .gbk file.
         fna_path (str, optional): Output path for the .fna file.
         tsv_path (str, optional): Output path for the .tsv file.
-        meta_mode (bool): True if running Pyrodigal in metagenomic mode.
-        closed (bool): True if the genome is closed-ended.
         translation_table (int): Translation table used to decode the DNA into proteins.
         minimum_gene_length (int): Minimum gene length (bp) to keep a CDS prediction.
         genome_path (str, optional): Output path for the genome FASTA file.
@@ -1262,8 +1261,6 @@ def process_genome(
     log_parameters(
         log,
         sample_id=sample_id,
-        meta_mode=meta_mode,
-        closed=closed,
         translation_table=translation_table,
         minimum_gene_length=minimum_gene_length,
         run_rrna=run_rrna,
@@ -1284,8 +1281,6 @@ def process_genome(
     ) = parse_fasta_and_predict(
         sample_id,
         filename,
-        meta_mode,
-        closed,
         translation_table,
         minimum_gene_length,
         run_rrna,
@@ -1506,8 +1501,6 @@ if __name__ == "__main__":
     )
 
     # Prediction options
-    parser.add_argument("--meta", action="store_true", help="Metagenomic mode")
-    parser.add_argument("--closed", action="store_true", help="Closed ends")
     parser.add_argument(
         "--translation_table",
         type=int,
@@ -1584,8 +1577,6 @@ if __name__ == "__main__":
             gbk_path=a.gbk_path,
             fna_path=a.fna_path,
             tsv_path=a.tsv_path,
-            meta_mode=a.meta,
-            closed=a.closed,
             translation_table=a.translation_table,
             minimum_gene_length=a.minimum_gene_length,
             genome_path=a.genome_path,

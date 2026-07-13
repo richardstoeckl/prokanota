@@ -73,13 +73,10 @@
       "properties": {
         "translation_table": {
           "type": "integer",
+          "description": "Genetic code used for single-genome training. Inputs below 20 kbp use metagenomic models and require table 11.",
           "minimum": 1,
           "maximum": 25,
           "default": 11
-        },
-        "meta": {
-          "type": "boolean",
-          "default": false
         },
         "run_rrna": {
           "type": "boolean",
