@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a test if the common annotation table contains all expected rows
 - Added the option to run the full test suite in the CI pipeline on demand.
 - Added handling for missing or duplicated contig fasta headers in input files.
-- Added the information for translation table, partial CDSs, and reading frames to all outputs that support this information (GFF, GBK)
+- Added translation-table and partial-CDS information to all outputs that support it (GFF, GBK)
 
 ### Changed
 - Updated Python requirements in pyproject.toml to reflect the actual state

@@ -161,7 +161,6 @@ class GenePrediction:
         translation_table (int): Effective genetic code used for this call.
         partial_begin (bool): Whether the CDS is partial at its lower coordinate.
         partial_end (bool): Whether the CDS is partial at its upper coordinate.
-        reading_frame (int): Genomic reading frame (1, 2, or 3).
     """
 
     def __init__(
@@ -176,10 +175,7 @@ class GenePrediction:
         translation_table,
         partial_begin,
         partial_end,
-        reading_frame,
     ):
-        if reading_frame not in (1, 2, 3):
-            raise ValueError("reading_frame must be 1, 2, or 3")
         self.contig_id = contig_id
         self.gene_id = gene_id
         self.start = start
@@ -190,7 +186,6 @@ class GenePrediction:
         self.translation_table = translation_table
         self.partial_begin = partial_begin
         self.partial_end = partial_end
-        self.reading_frame = reading_frame
 
     @property
     def has_internal_stop(self):
@@ -203,14 +198,16 @@ class GenePrediction:
         return f"{int(self.partial_begin)}{int(self.partial_end)}"
 
     @property
-    def partial_five_prime(self):
-        """Whether the CDS is incomplete at its biological 5-prime end."""
-        return self.partial_begin if self.strand == "+" else self.partial_end
-
-    @property
     def phase(self):
-        """GFF CDS phase, using the stored frame only for 5-prime partials."""
-        return self.reading_frame - 1 if self.partial_five_prime else 0
+        """Return the GFF phase for a codon-aligned Pyrodigal CDS interval.
+
+        Pyrodigal adjusts predicted CDS boundaries to complete codons and emits phase 0
+        from its native GFF writer. A non-multiple-of-three interval would violate that
+        contract and must not be assigned a phase from its genomic reading frame.
+        """
+        if len(self.dna_seq) % 3 != 0:
+            raise ValueError("Pyrodigal CDS length must be divisible by 3")
+        return 0
 
 
 class RNAPrediction:
@@ -1073,11 +1070,6 @@ def parse_fasta_and_predict(
             gene_id = f"{contig_tag}_{j + 1:05d}"
             strand_symbol = "+" if gene.strand == 1 else "-"
             gene_dna_seq = dna_sequence[gene.begin - 1 : gene.end]
-            reading_frame = (
-                (gene.begin - 1) % 3 + 1
-                if gene.strand == 1
-                else (len(dna_sequence) - gene.end) % 3 + 1
-            )
             gene_records.append(
                 GenePrediction(
                     contig_id=contig_tag,
@@ -1090,7 +1082,6 @@ def parse_fasta_and_predict(
                     translation_table=gene.translation_table,
                     partial_begin=gene.partial_begin,
                     partial_end=gene.partial_end,
-                    reading_frame=reading_frame,
                 )
             )
 
