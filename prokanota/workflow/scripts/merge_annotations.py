@@ -55,6 +55,11 @@ def merge_annotations(
 
         # Get columns to add (everything except gene_id)
         new_cols = [c for c in db_df.columns if c != gene_id_column]
+        collisions = set(result.columns).intersection(new_cols)
+        if collisions:
+            raise ValueError(
+                f"Database '{db_name}' reuses output columns: {sorted(collisions)}"
+            )
 
         # Left join to preserve all genes
         result = result.join(

@@ -975,6 +975,9 @@ def parse_fasta_and_predict(
         if current_header is not None:
             contigs[current_header] = "".join(current_sequence)
 
+    if not contigs:
+        raise ValueError(f"Input FASTA '{filename}' contains no sequences.")
+
     genome_id = generate_prokanota_id(
         sample_id=sample_id,
         mode="genome",
@@ -1390,6 +1393,8 @@ def process_protein_input(
         raise ValueError("Protein input requires --faa_path and --tsv_path.")
 
     protein_records = list(SeqIO.parse(filename, "fasta"))
+    if not protein_records:
+        raise ValueError(f"Input FASTA '{filename}' contains no sequences.")
     protein_id = generate_prokanota_id(
         sample_id=sample_id,
         mode="protein",
@@ -1437,12 +1442,6 @@ def process_protein_input(
 
     # Log statistics
     log_statistics(log, imported_proteins=protein_count)
-
-    # Check for no proteins imported
-    if protein_count == 0:
-        log.error(
-            "No proteins imported from input file. Check input format or file validity."
-        )
 
     if gff_path:
         ensure_empty_file(gff_path)
