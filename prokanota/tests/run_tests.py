@@ -902,7 +902,7 @@ def check_argonaute_records(
     and sequences across GFF, GBK, TSV, and FASTA outputs.
     Reference: https://www.ncbi.nlm.nih.gov/datasets/gene/41712340/
     """
-    feature_id = "JLPIBLAO_1_00524"
+    feature_id = "BFDTYSCHFX_1_00524"
     expected_start = "535964"
     expected_end = "538276"
     expected_strand = "-"

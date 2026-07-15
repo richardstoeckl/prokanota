@@ -26,7 +26,7 @@ logger = None
 def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
     """
     Parse pyhmmer tblout format:
-    # target name        query name           accession    E-value  score  bias
+    # target name        query name           accession    E-value  score  bias  model coverage
     """
     # do I really need to check the file size and the "if not rows" later again or does one check suffice?
     # -> The first check catches truly empty files upfront (fast). The second catches files with only comments or whitespace (which would parse to zero rows).
@@ -40,6 +40,7 @@ def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
                 "evalue": pl.Float64,
                 "score": pl.Float64,
                 "bias": pl.Float64,
+                "reference_coverage": pl.Float64,
             }
         )
     rows = []
@@ -48,7 +49,7 @@ def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
             if line.startswith("#") or not line.strip():
                 continue
             parts = line.split()
-            if len(parts) >= 6:
+            if len(parts) >= 7:
                 rows.append(
                     {
                         "gene_id": parts[0],
@@ -57,6 +58,7 @@ def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
                         "evalue": float(parts[3]),
                         "score": float(parts[4]),
                         "bias": float(parts[5]),
+                        "reference_coverage": float(parts[6]),
                     }
                 )
     if not rows:
@@ -72,6 +74,7 @@ def parse_pyhmmer_tblout(tblout_path: Path) -> pl.DataFrame:
                 "evalue": pl.Float64,
                 "score": pl.Float64,
                 "bias": pl.Float64,
+                "reference_coverage": pl.Float64,
             }
         )
     return pl.DataFrame(rows)
@@ -92,11 +95,21 @@ def filter_and_deduplicate(
 ) -> pl.DataFrame:
     """
     Apply e-value cutoff, then keep best hit per gene_id.
-    Best = highest score, then lowest e-value (ties).
+    Best = highest score, lowest e-value, highest model coverage, then accession
+    (or query name when the accession is missing).
     """
     return (
         df.filter(pl.col("evalue") <= evalue_cutoff)
-        .sort(["score", "evalue"], descending=[True, False])
+        .with_columns(
+            pl.when(pl.col("accession") == "-")
+            .then(pl.col("query_name"))
+            .otherwise(pl.col("accession"))
+            .alias("identifier")
+        )
+        .sort(
+            ["score", "evalue", "reference_coverage", "identifier"],
+            descending=[True, False, True, False],
+        )
         .unique(subset=["gene_id"], keep="first")
     )
 

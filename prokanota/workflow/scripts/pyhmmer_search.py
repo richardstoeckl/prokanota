@@ -145,7 +145,7 @@ def main():
 
         # Write tblout header without separator
         tblout.write(
-            "# target name        query name           accession    E-value  score  bias\n"
+            "# target name        query name           accession    E-value  score  bias  model coverage\n"
         )
 
         # Optional headers
@@ -170,10 +170,18 @@ def main():
                 full_evalue = hit.evalue
                 full_score = hit.score
                 full_bias = hit.bias
+                model_coverage = max(
+                    (
+                        (domain.alignment.hmm_to - domain.alignment.hmm_from + 1)
+                        / domain.alignment.hmm_length
+                        for domain in hit.domains
+                    ),
+                    default=0.0,
+                )
 
                 # Write to tblout with query accession
                 tblout.write(
-                    f"{hit_name:<20} {hmm_name:<20} {hmm_acc:<12} {full_evalue:<9.1e} {full_score:<6.1f} {full_bias:<5.1f}\n"
+                    f"{hit_name:<20} {hmm_name:<20} {hmm_acc:<12} {full_evalue:<9.1e} {full_score:<6.1f} {full_bias:<5.1f} {model_coverage:.8f}\n"
                 )
 
                 # Optional outputs

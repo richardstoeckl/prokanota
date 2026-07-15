@@ -1,12 +1,12 @@
 gene_id	test_pyhmmer_hit	test_pyhmmer_accession	test_pyhmmer_short_name	test_pyhmmer_description	test_pyhmmer_category	test_pyhmmer_evalue	test_pyhmmer_score
-JLPIBLAO_1_00218	arCOG03422	-	EarA	Transcriptional activator of archaellum, contains HTH domain	K	0.00018	18.2
-JLPIBLAO_1_00320	arCOG01829	-	FlaB	Archaeal flagellins	N	2.7e-39	131.9
-JLPIBLAO_1_00321	arCOG01829	-	FlaB	Archaeal flagellins	N	2.7e-38	128.7
-JLPIBLAO_1_00322	arCOG01829	-	FlaB	Archaeal flagellins	N	2.1e-41	138.8
-JLPIBLAO_1_00324	arCOG03422	-	EarA	Transcriptional activator of archaellum, contains HTH domain	K	1.5e-42	140.8
-JLPIBLAO_1_00524	arCOG03890	-	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	7.5e-200	662.6
-JLPIBLAO_1_01119	arCOG01452	-	Cas1	CRISPR-associated protein Cas1	V	1.3e-97	323.8
-JLPIBLAO_1_01406	arCOG03422	-	EarA	Transcriptional activator of archaellum, contains HTH domain	K	0.00025	17.7
-JLPIBLAO_1_01795	arCOG04089	-	RPL19A	Ribosomal protein L19E	J	5.9e-64	211.5
-JLPIBLAO_1_01802	arCOG01920	-	NusG	Transcription antiterminator NusG	K	0.000018	21.4
-JLPIBLAO_1_01980	arCOG01920	-	NusG	Transcription antiterminator NusG	K	9.3e-62	204.1
+BFDTYSCHFX_1_00218	arCOG03422	-	EarA	Transcriptional activator of archaellum, contains HTH domain	K	0.00018	18.2
+BFDTYSCHFX_1_00320	arCOG01829	-	FlaB	Archaeal flagellins	N	2.7e-39	131.9
+BFDTYSCHFX_1_00321	arCOG01829	-	FlaB	Archaeal flagellins	N	2.7e-38	128.7
+BFDTYSCHFX_1_00322	arCOG01829	-	FlaB	Archaeal flagellins	N	2.1e-41	138.8
+BFDTYSCHFX_1_00324	arCOG03422	-	EarA	Transcriptional activator of archaellum, contains HTH domain	K	1.5e-42	140.8
+BFDTYSCHFX_1_00524	arCOG03890	-	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	7.5e-200	662.6
+BFDTYSCHFX_1_01119	arCOG01452	-	Cas1	CRISPR-associated protein Cas1	V	1.3e-97	323.8
+BFDTYSCHFX_1_01406	arCOG03422	-	EarA	Transcriptional activator of archaellum, contains HTH domain	K	0.00025	17.7
+BFDTYSCHFX_1_01795	arCOG04089	-	RPL19A	Ribosomal protein L19E	J	5.9e-64	211.5
+BFDTYSCHFX_1_01802	arCOG01920	-	NusG	Transcription antiterminator NusG	K	0.000018	21.4
+BFDTYSCHFX_1_01980	arCOG01920	-	NusG	Transcription antiterminator NusG	K	9.3e-62	204.1

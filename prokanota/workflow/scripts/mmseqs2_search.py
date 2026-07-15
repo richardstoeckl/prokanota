@@ -152,7 +152,7 @@ def main():
     tmp_dir = output_path.with_suffix(".mmseqs_tmp")
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
-    format_output = "query,target,pident,alnlen,mismatch,gapopen,qstart,qend,tstart,tend,evalue,bits"
+    format_output = "query,target,pident,alnlen,mismatch,gapopen,qstart,qend,tstart,tend,evalue,bits,tlen"
 
     cmd = [
         "mmseqs",

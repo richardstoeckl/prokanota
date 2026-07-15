@@ -132,7 +132,7 @@ def main():
         "-comp_based_stats",
         "1",
         "-outfmt",
-        "6",
+        "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore slen",
         "-evalue",
         str(args.evalue),
         "-num_threads",

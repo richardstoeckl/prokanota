@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import sys
 import tempfile
 from pathlib import Path
@@ -176,6 +177,9 @@ def test_evalue_filtering_removes_insignificant_hits():
             "accession": ["acc1", "acc2", "acc3"],
             "evalue": [1e-10, 1e-3, 0.01],  # significant, borderline, insignificant
             "score": [100.0, 50.0, 30.0],
+            "sstart": [1, 1, 1],
+            "send": [100, 100, 100],
+            "subject_length": [100, 100, 100],
         }
     )
 
@@ -204,6 +208,9 @@ def test_best_hit_selection_by_score():
             "accession": ["pfam1", "pfam2", "pfam3"],
             "evalue": [1e-20, 1e-25, 1e-15],
             "score": [150.0, 200.0, 100.0],  # pfam2 has highest score
+            "sstart": [1, 1, 1],
+            "send": [100, 100, 100],
+            "subject_length": [100, 100, 100],
         }
     )
 
@@ -229,12 +236,50 @@ def test_tiebreaker_uses_evalue():
             "accession": ["hit_a", "hit_b"],
             "evalue": [1e-30, 1e-20],  # hit_a has better e-value
             "score": [100.0, 100.0],  # Same score
+            "sstart": [1, 1],
+            "send": [100, 100],
+            "subject_length": [100, 100],
         }
     )
 
     filtered = diamond_parse.filter_and_deduplicate(hits_df, evalue_cutoff=1e-3)
 
     assert filtered["accession"][0] == "hit_a"  # Lower e-value wins tie
+
+
+@pytest.mark.parametrize(
+    "module_name",
+    ["diamond_parse", "mmseqs2_parse", "rpsblast_parse", "pyhmmer_parse"],
+)
+def test_exact_tiebreakers_use_reference_coverage_then_identifier(module_name):
+    """Exact score/E-value ties prefer coverage, then a stable identifier."""
+    pytest.importorskip("polars")
+    import polars as pl
+
+    parser = importlib.import_module(f"prokanota.workflow.scripts.{module_name}")
+    data = {
+        "gene_id": ["coverage", "coverage", "identifier", "identifier"],
+        "accession": ["hit_a", "hit_z", "hit_z", "hit_a"],
+        "query_name": ["hit_a", "hit_z", "hit_z", "hit_a"],
+        "evalue": [1e-20] * 4,
+        "score": [100.0] * 4,
+    }
+    if module_name == "pyhmmer_parse":
+        data["accession"] = ["-"] * 4
+        data["reference_coverage"] = [0.5, 0.9, 0.9, 0.9]
+    else:
+        data.update(
+            {
+                "sstart": [1] * 4,
+                "send": [50, 90, 90, 90],
+                "subject_length": [100] * 4,
+            }
+        )
+
+    filtered = parser.filter_and_deduplicate(pl.DataFrame(data))
+    selected = dict(zip(filtered["gene_id"], filtered["query_name"], strict=True))
+
+    assert selected == {"coverage": "hit_z", "identifier": "hit_a"}
 
 
 # ---

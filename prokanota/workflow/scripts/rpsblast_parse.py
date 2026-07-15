@@ -26,7 +26,7 @@ logger = None
 def parse_rpsblast_output(output_path: Path) -> pl.DataFrame:
     """
     Parse RPS-BLAST outfmt 6 output.
-    Columns: qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore
+    Columns: qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore slen
     """
     if output_path.stat().st_size == 0:
         logger.warning("RPS-BLAST output '%s' is empty; returning no hits", output_path)
@@ -44,6 +44,7 @@ def parse_rpsblast_output(output_path: Path) -> pl.DataFrame:
                 "send": pl.Int64,
                 "evalue": pl.Float64,
                 "score": pl.Float64,
+                "subject_length": pl.Int64,
             }
         )
 
@@ -60,6 +61,7 @@ def parse_rpsblast_output(output_path: Path) -> pl.DataFrame:
         "send": pl.Int64,
         "evalue": pl.Float64,
         "score": pl.Float64,
+        "subject_length": pl.Int64,
     }
     return pl.read_csv(
         output_path,
@@ -78,6 +80,7 @@ def parse_rpsblast_output(output_path: Path) -> pl.DataFrame:
             "send",
             "evalue",
             "score",
+            "subject_length",
         ],
         schema=schema,
     )
@@ -101,11 +104,19 @@ def filter_and_deduplicate(
 ) -> pl.DataFrame:
     """
     Apply e-value cutoff, then keep best hit per gene_id.
-    Best = highest score, then lowest e-value (ties).
+    Best = highest score, lowest e-value, highest model coverage, then accession.
     """
     return (
         df.filter(pl.col("evalue") <= evalue_cutoff)
-        .sort(["score", "evalue"], descending=[True, False])
+        .with_columns(
+            ((pl.col("send") - pl.col("sstart")).abs() + 1)
+            .truediv(pl.col("subject_length"))
+            .alias("reference_coverage")
+        )
+        .sort(
+            ["score", "evalue", "reference_coverage", "accession"],
+            descending=[True, False, True, False],
+        )
         .unique(subset=["gene_id"], keep="first")
     )
 

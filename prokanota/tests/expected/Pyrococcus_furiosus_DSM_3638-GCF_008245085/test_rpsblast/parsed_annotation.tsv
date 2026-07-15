@@ -1,21 +1,21 @@
 gene_id	cdd_accession	cdd_gene	cdd_description	cdd_category	cdd_evalue
-JLPIBLAO_1_00037	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.000572
-JLPIBLAO_1_00218	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	1.46e-6
-JLPIBLAO_1_00320	arCOG01829_80000158	FlaB	Archaeal flagellins	N	2.28e-16
-JLPIBLAO_1_00321	arCOG01829_80000158	FlaB	Archaeal flagellins	N	1.07e-15
-JLPIBLAO_1_00322	arCOG01829_80000158	FlaB	Archaeal flagellins	N	2.77e-17
-JLPIBLAO_1_00324	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	6.42e-40
-JLPIBLAO_1_00458	arCOG01829_80000158	FlaB	Archaeal flagellins	N	0.0000701
-JLPIBLAO_1_00524	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	3.43e-119
-JLPIBLAO_1_00572	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	0.000662
-JLPIBLAO_1_00620	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.000845
-JLPIBLAO_1_00888	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.0000334
-JLPIBLAO_1_01117	arCOG01452_80000155	Cas1	CRISPR-associated protein Cas1	V	0.000288
-JLPIBLAO_1_01119	arCOG01452_80000155	Cas1	CRISPR-associated protein Cas1	V	7.41e-82
-JLPIBLAO_1_01177	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.000294
-JLPIBLAO_1_01406	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	6.73e-6
-JLPIBLAO_1_01795	arCOG04089_80000127	RPL19A	Ribosomal protein L19E	J	5.59e-59
-JLPIBLAO_1_01802	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.0000201
-JLPIBLAO_1_01913	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.000478
-JLPIBLAO_1_01980	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	3.92e-61
-JLPIBLAO_1_02010	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.0000713
+BFDTYSCHFX_1_00037	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.000572
+BFDTYSCHFX_1_00218	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	1.46e-6
+BFDTYSCHFX_1_00320	arCOG01829_80000158	FlaB	Archaeal flagellins	N	2.28e-16
+BFDTYSCHFX_1_00321	arCOG01829_80000158	FlaB	Archaeal flagellins	N	1.07e-15
+BFDTYSCHFX_1_00322	arCOG01829_80000158	FlaB	Archaeal flagellins	N	2.77e-17
+BFDTYSCHFX_1_00324	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	6.42e-40
+BFDTYSCHFX_1_00458	arCOG01829_80000158	FlaB	Archaeal flagellins	N	0.0000701
+BFDTYSCHFX_1_00524	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	3.43e-119
+BFDTYSCHFX_1_00572	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	0.000662
+BFDTYSCHFX_1_00620	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.000845
+BFDTYSCHFX_1_00888	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.0000334
+BFDTYSCHFX_1_01117	arCOG01452_80000155	Cas1	CRISPR-associated protein Cas1	V	0.000288
+BFDTYSCHFX_1_01119	arCOG01452_80000155	Cas1	CRISPR-associated protein Cas1	V	7.41e-82
+BFDTYSCHFX_1_01177	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.000294
+BFDTYSCHFX_1_01406	arCOG03422_80000007	EarA	Transcriptional activator of archaellum, contains HTH domain	K	6.73e-6
+BFDTYSCHFX_1_01795	arCOG04089_80000127	RPL19A	Ribosomal protein L19E	J	5.59e-59
+BFDTYSCHFX_1_01802	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.0000201
+BFDTYSCHFX_1_01913	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	0.000478
+BFDTYSCHFX_1_01980	arCOG01920_80000158	NusG	Transcription antiterminator NusG	K	3.92e-61
+BFDTYSCHFX_1_02010	arCOG03890_80000007	*	Argonaute homolog, implicated in RNA metabolism and viral defense	V	0.0000713
