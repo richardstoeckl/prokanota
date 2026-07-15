@@ -468,7 +468,7 @@ def write_gbk(
         f"{len(crispr_records)} CRISPR) across {len(contigs)} contigs to {gbk_path}"
     )
     records = []
-    for contig_tag, header_id in contig_mapping.items():
+    for contig_tag in contig_mapping:
         dna_sequence = contigs[contig_tag]
         # Encode to bytes if required
         if isinstance(dna_sequence, str):
@@ -574,7 +574,7 @@ def write_gbk(
         features = [feat for _start, feat in feature_entries]
 
         record = Record(
-            name=header_id,
+            name=contig_tag,
             sequence=dna_sequence,
             features=features,
             accession=genome_id,
