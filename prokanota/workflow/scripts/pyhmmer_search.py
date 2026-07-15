@@ -68,6 +68,7 @@ def main():
     parser.add_argument(
         "--threads", type=int, default=1, help="Number of threads (CPUs) to use"
     )
+    parser.add_argument("--evalue-cutoff", type=float, default=1e-3)
     args = parser.parse_args()
 
     db_name = args.db_name or Path(args.db).stem
@@ -134,7 +135,9 @@ def main():
 
     # Run hmmsearch
     logger.info("Running hmmsearch...")
-    results = pyhmmer.hmmer.hmmsearch(hmms, sequences, cpus=args.threads)
+    results = pyhmmer.hmmer.hmmsearch(
+        hmms, sequences, cpus=args.threads, E=args.evalue_cutoff
+    )
 
     # Open output files conditionally
     hit_count = 0

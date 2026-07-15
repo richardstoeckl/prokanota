@@ -405,6 +405,7 @@ for db in ENABLED_DBS:
             params:
                 db_path=db["db_path"],
                 db_name=db_name,
+                evalue_cutoff=db.get("evalue_cutoff", 1e-3),
                 scriptpath=os.path.join(
                     workflow.basedir, "scripts", "pyhmmer_search.py"
                 ),
@@ -419,6 +420,7 @@ for db in ENABLED_DBS:
                     --tblout {output.tblout} \
                     --toolversion {output.version} \
                     --threads {threads} \
+                    --evalue-cutoff {params.evalue_cutoff} \
                 """ + LOG_REDIRECT
 
     elif db["search_tool"] == "rpsblast":
