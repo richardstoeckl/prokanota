@@ -11,13 +11,11 @@ Feature extraction and GFF manipulation for prokaryotic genome annotation.
 This module handles:
 - Parsing annotation from gene prediction tool (Pyrodigal)
 - Extracting and formatting protein/nucleotide sequences
-- Generating unique, reproducible identifiers using MD5 hashing
+- Generating reproducible ten-letter identifiers using SHA-256 hashing
 - Writing standardized output files (GFF, FASTA, feature tables)
 
-The MD5-based ID generation ensures:
-1. Deterministic IDs: Same input always produces the same ID
-2. Collision resistance: Different sequences get different IDs.
-3. Fixed length: All IDs are 32 characters (hex digest)
+ID generation includes the sample ID, input mode, and all normalized sequences
+in input order. Sequence lengths preserve contig and protein boundaries.
 
 This module relies on external tools:
 - Pyrodigal for gene prediction
@@ -28,7 +26,6 @@ This module relies on external tools:
 
 # tRNAscan-SE is assumed to be available in the PATH
 import argparse
-import hashlib
 import logging
 import platform
 import subprocess as sp
@@ -44,8 +41,7 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from feature_utils import (
     ensure_empty_file,
-    hash_sample_id,
-    map_hexdigest_to_id,
+    generate_prokanota_id,
     protein_molecular_weight,
     reverse_complement,
 )
@@ -310,7 +306,7 @@ def write_faa(genome_id, gene_records, faa_path):
     followed by the amino acid sequence.
 
     Args:
-        genome_id (str): The unique genome ID, used as the file name prefix.
+        genome_id (str): The Prokanota genome ID, used as the file name prefix.
         gene_records (list): A list of GenePrediction objects.
         faa_path (str): Path to the output .faa file.
     """
@@ -341,7 +337,7 @@ def write_gff(
     All features are sorted by contig order and then by start position.
 
     Args:
-        genome_id (str): The unique genome ID, used as the file name prefix.
+        genome_id (str): The Prokanota genome ID, used as the file name prefix.
         gene_records (list): A list of GenePrediction objects.
         gff_path (str): Path to the output .gff file.
         contigs (dict): Dictionary mapping contig_ids to their sequences.
@@ -450,7 +446,7 @@ def write_gbk(
     All features per contig are sorted by start position.
 
     Args:
-        genome_id (str): The generated 8-character genome ID.
+        genome_id (str): The generated 10-character genome ID.
         contigs (dict): A dictionary of contig_header -> contig_sequence.
         gene_records (list): A list of GenePrediction objects.
         contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
@@ -708,7 +704,7 @@ def write_genome(genome_id, tagged_contigs, genome_path):
     This basically creates a copy of the input fasta file, but with the internal contig IDs.
 
     Args:
-        genome_id (str): The unique genome ID
+        genome_id (str): The Prokanota genome ID
         tagged_contigs (dict): Dictionary mapping contig_tag -> sequence
         genome_path (str): Path to output FASTA file
     """
@@ -932,7 +928,7 @@ def parse_fasta_and_predict(
     threads=1,
 ):
     """
-    Reads the FASTA file, computes a genome ID using MD5 hashing and a custom mapping,
+    Reads the FASTA file, computes a genome ID from the sample and ordered contigs,
     then uses Pyrodigal to predict genes.
 
     Additionally, creates a dictionary mapping contig_tag to the original FASTA header id.
@@ -942,7 +938,7 @@ def parse_fasta_and_predict(
 
     Returns:
         tuple: (genome_id, tagged_contigs, gene_records, contig_mapping)
-            - genome_id (str): The generated 8-character genome ID.
+            - genome_id (str): The generated 10-character genome ID.
             - tagged_contigs (dict): A dictionary of contig_tag -> contig_sequence.
             - gene_records (list): A list of GenePrediction objects.
             - contig_mapping (dict): Mapping of contig_tag -> original FASTA header id.
@@ -956,10 +952,7 @@ def parse_fasta_and_predict(
     log.info(f"Using {threads} threads for RNA predictions.")
     log.info(f"Using minimum gene length cutoff of {minimum_gene_length} bp.")
 
-    # Initialize MD5 hash object with the sample_id
-    hash_obj = hashlib.md5(sample_id.encode("utf-8"))
-
-    # Read the FASTA file to build a dict {original_header: sequence}, updating the hash
+    # Read the FASTA file to build a dict {original_header: sequence}.
     contigs = {}
     contig_ids = set()
     current_header, current_sequence = None, []
@@ -978,14 +971,15 @@ def parse_fasta_and_predict(
                 current_sequence = []
             else:
                 seq_line = line.strip().upper()
-                hash_obj.update(seq_line.encode("utf-8"))
                 current_sequence.append(seq_line)
         if current_header is not None:
             contigs[current_header] = "".join(current_sequence)
 
-    # Compute the genome ID from the first 8 hex digits
-    hexdigest = hash_obj.hexdigest()
-    genome_id = map_hexdigest_to_id(hexdigest, length=8)
+    genome_id = generate_prokanota_id(
+        sample_id=sample_id,
+        mode="genome",
+        sequences=contigs.values(),
+    )
 
     log.info(f"The internal contig_id is {genome_id}.")
 
@@ -1395,8 +1389,12 @@ def process_protein_input(
     if not faa_path or not tsv_path:
         raise ValueError("Protein input requires --faa_path and --tsv_path.")
 
-    sample_hash = hash_sample_id(sample_id)
-    hashed_sample_id = map_hexdigest_to_id(sample_hash, length=8)
+    protein_records = list(SeqIO.parse(filename, "fasta"))
+    protein_id = generate_prokanota_id(
+        sample_id=sample_id,
+        mode="protein",
+        sequences=(str(record.seq) for record in protein_records),
+    )
 
     faa_out = Path(faa_path)
     tsv_out = Path(tsv_path)
@@ -1410,10 +1408,10 @@ def process_protein_input(
             "gene_id\tstart\tend\tstrand\tgene_length\tprotein_length\tprotein_mw_kDa\n"
         )
 
-        for idx, record in enumerate(SeqIO.parse(filename, "fasta"), start=1):
+        for idx, record in enumerate(protein_records, start=1):
             protein_count += 1
-            gene_id = f"{hashed_sample_id}_{idx:05d}"
-            protein_seq = str(record.seq).strip()
+            gene_id = f"{protein_id}_{idx:05d}"
+            protein_seq = str(record.seq).strip().upper()
             protein_seq_no_stop = (
                 protein_seq[:-1] if protein_seq.endswith("*") else protein_seq
             )
@@ -1459,7 +1457,7 @@ def process_protein_input(
     if crispr_tsv_path:
         ensure_empty_file(crispr_tsv_path)
 
-    log.info(f"Finished processing protein input {filename} => {hashed_sample_id}.")
+    log.info(f"Finished processing protein input {filename} => {protein_id}.")
 
 
 # ---------------------------

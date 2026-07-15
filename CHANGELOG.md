@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated the stop codon handling to reflect how bakta and prokka handle stop codons in the CDS prediction step. Since some tools calculate sequence length including the '*', these tools may report a very slighly different Evalue after this change.
 - Updated documentation regarding gene calling modes
 - Intermediary annotation results are now sorted, no changes to the final output.
+- Enhanced Prokanota ID generation to greatly decrease the chances of samples getting identical IDs by chance. Its now based on a hash of the user-supplied sample ID, whether the input is a genome or protein collection, and every normalized sequence in input order with its length. Additionally, the Prokanota ID is now always 10 characters long and made up of the letters A-Z.
 
 ### Fixed
 - Fixed an issue where the minimal tests were not run in the CI pipeline because ubuntu-minimal does not have `pandas` installed by default.

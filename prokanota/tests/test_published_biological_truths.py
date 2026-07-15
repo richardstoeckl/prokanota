@@ -606,61 +606,194 @@ def test_merge_fills_missing_with_asterisk():
 
 
 # ---
-# 6. ID Generation Determinism (feature_utils.py)
+# 6. Prokanota ID Generation (feature_utils.py)
 # ---
 
-# Test that genome/gene IDs are deterministic and reproducible.
-# MD5-based ID generation ensures same input always produces same output.
-# This is critical for reproducibility and tracking samples across runs.
+# Test that genome and protein IDs are deterministic and reflect all biological
+# input used to generate feature identifiers. This is critical for comparing
+# annotations across runs without silently reusing an ID for changed input.
 
 
-def test_genome_id_deterministic():
+def test_prokanota_id_is_deterministic():
     """
-    Verify same sample_id + sequence produces identical genome_id.
+    Verify the same sample, mode, and sequences always produce the same ID.
     Reproducibility is essential for comparing results across pipeline runs.
     """
-    sample_id = "test_sample"
-
-    hash1 = feature_utils.hash_sample_id(sample_id)
-    hash2 = feature_utils.hash_sample_id(sample_id)
-
-    assert hash1 == hash2
-
-    id1 = feature_utils.map_hexdigest_to_id(hash1, length=8)
-    id2 = feature_utils.map_hexdigest_to_id(hash2, length=8)
+    id1 = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT", "TGCA"],
+    )
+    id2 = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT", "TGCA"],
+    )
 
     assert id1 == id2
 
 
-def test_genome_id_uniqueness():
+def test_prokanota_id_known_result():
     """
-    Verify different sample_ids produce different genome_ids.
-    MD5 collision resistance ensures unique identifiers.
+    Verify a fixed reference example remains stable after implementation changes.
+    This expected result fixes the exact SHA-256 input order, length encoding,
+    and ten-letter conversion as part of Prokanota's reproducibility contract.
     """
-    id1 = feature_utils.map_hexdigest_to_id(
-        feature_utils.hash_sample_id("sample_A"), length=8
+    prokanota_id = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT", "TGCA"],
     )
-    id2 = feature_utils.map_hexdigest_to_id(
-        feature_utils.hash_sample_id("sample_B"), length=8
+
+    assert prokanota_id == "IQPATDKZLQ"
+
+
+def test_prokanota_id_uses_sample_id():
+    """
+    Verify changing the sample ID changes the generated Prokanota ID.
+    The sample ID is intentionally part of the identifier calculation.
+    """
+    id1 = feature_utils.generate_prokanota_id(
+        sample_id="sample_A",
+        mode="genome",
+        sequences=["ACGT"],
+    )
+    id2 = feature_utils.generate_prokanota_id(
+        sample_id="sample_B",
+        mode="genome",
+        sequences=["ACGT"],
     )
 
     assert id1 != id2
 
 
-def test_hexdigest_mapping_alphabet():
+def test_prokanota_id_contains_ten_uppercase_letters():
     """
-    Verify hex-to-alphabetic mapping produces only uppercase letters.
-    The mapping converts 0-9 to A-J and a-f to K-P, ensuring IDs
-    are filesystem-safe and visually distinct from accession numbers.
+    Verify Prokanota IDs contain exactly ten letters from A to Z.
+    The letters are a compact representation of the SHA-256 hash and do not
+    encode biological meaning individually.
     """
-    # MD5 produces lowercase hex: 0-9, a-f
-    test_hex = "0123456789abcdef"
-    mapped = feature_utils.map_hexdigest_to_id(test_hex, length=16)
+    prokanota_id = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT"],
+    )
 
-    # Should produce: ABCDEFGHIJKLMNOP
-    assert mapped == "ABCDEFGHIJKLMNOP"
-    assert mapped.isalpha()
-    assert mapped.isupper()
+    assert len(prokanota_id) == 10
+    assert set(prokanota_id) <= set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+
+def test_prokanota_id_preserves_sequence_boundaries():
+    """
+    Verify different contig boundaries produce different IDs.
+    AC + GT and ACG + T both concatenate to ACGT, but they represent
+    different genome assemblies and must remain distinguishable.
+    """
+    two_equal_contigs = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["AC", "GT"],
+    )
+    unequal_contigs = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACG", "T"],
+    )
+
+    assert two_equal_contigs != unequal_contigs
+
+
+def test_prokanota_id_preserves_sequence_order():
+    """
+    Verify reordering otherwise identical contigs changes the ID.
+    Prokanota assigns feature numbers in input order, so sequence order is
+    part of the identifier and must be represented by the hash.
+    """
+    original_order = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT", "TGCA"],
+    )
+    reversed_order = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["TGCA", "ACGT"],
+    )
+
+    assert original_order != reversed_order
+
+
+def test_prokanota_id_separates_genome_and_protein_modes():
+    """
+    Verify identical character sequences differ between input modes.
+    A sequence such as ACGT is valid text for both DNA and protein input, so
+    the mode must prevent cross-mode identifier reuse.
+    """
+    genome_id = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT"],
+    )
+    protein_id = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="protein",
+        sequences=["ACGT"],
+    )
+
+    assert genome_id != protein_id
+
+
+def test_prokanota_id_normalizes_sequence_case():
+    """
+    Verify upper- and lowercase FASTA sequences produce the same ID.
+    Sequence case is formatting rather than a biological difference.
+    """
+    uppercase_id = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["ACGT"],
+    )
+    lowercase_id = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="genome",
+        sequences=["acgt"],
+    )
+
+    assert uppercase_id == lowercase_id
+
+
+def test_prokanota_id_ignores_terminal_protein_stop_symbol():
+    """
+    Verify an optional terminal protein stop symbol does not change the ID.
+    The terminal star is translation notation rather than an amino acid and
+    is removed from Prokanota's imported protein output.
+    """
+    without_stop = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="protein",
+        sequences=["MPEPTIDE"],
+    )
+    with_stop = feature_utils.generate_prokanota_id(
+        sample_id="test_sample",
+        mode="protein",
+        sequences=["MPEPTIDE*"],
+    )
+
+    assert without_stop == with_stop
+
+
+def test_prokanota_id_rejects_unknown_mode():
+    """
+    Verify misspelled or unsupported input modes are rejected.
+    Accepting an unknown mode could create IDs outside the documented genome
+    and protein namespaces.
+    """
+    with pytest.raises(ValueError, match="genome.*protein"):
+        feature_utils.generate_prokanota_id(
+            sample_id="test_sample",
+            mode="unknown",
+            sequences=["ACGT"],
+        )
 
 
 # ---
