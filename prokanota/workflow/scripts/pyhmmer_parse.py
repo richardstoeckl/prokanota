@@ -165,7 +165,15 @@ def format_output(df, db_name, columns_config):
         source = col_def["source"]
         col_name = col_def["name"]
         if source in df.columns:
-            exprs.append(pl.col(source).alias(col_name))
+            expression = pl.col(source)
+            if source in ("score", "bias"):
+                expression = expression.round(1)
+            elif source == "evalue":
+                expression = expression.map_elements(
+                    lambda value: float(f"{value:.1e}"),
+                    return_dtype=pl.Float64,
+                )
+            exprs.append(expression.alias(col_name))
         else:
             exprs.append(pl.lit(None).alias(col_name))
     return df.select(exprs).fill_null("*")

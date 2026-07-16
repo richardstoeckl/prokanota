@@ -184,7 +184,9 @@ def main():
 
                 # Write to tblout with query accession
                 tblout.write(
-                    f"{hit_name:<20} {hmm_name:<20} {hmm_acc:<12} {full_evalue:<9.1e} {full_score:<6.1f} {full_bias:<5.1f} {model_coverage:.8f}\n"
+                    f"{hit_name:<20} {hmm_name:<20} {hmm_acc:<12} "
+                    f"{full_evalue:.17g} {full_score:.17g} {full_bias:.17g} "
+                    f"{model_coverage:.17g}\n"
                 )
 
                 # Optional outputs
