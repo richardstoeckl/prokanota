@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "prokanota"
 dynamic = ["version"]
-description = "Flexible Snakemake pipeline for prokaryotic annotation with a code-free, modular database architecture."
+description = "A modular, configuration-driven workflow for prokaryotic genome annotation."
 readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
 license = "BSL-1.0"
