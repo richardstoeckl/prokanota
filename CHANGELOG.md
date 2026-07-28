@@ -7,11 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0-beta.10] - 2026-07-28
+
 ### Added
 - Added a test for the basic CLI functionality to the CI pipeline.
 - Added a test if the common annotation table contains all expected rows
 - Added the option to run the full test suite in the CI pipeline on demand.
 - Added handling for missing or duplicated contig fasta headers in input files.
+- Added handling for empty or duplicated database column names and sample IDs.
 - Added translation-table and partial-CDS information to all outputs that support it (GFF, GBK)
 
 ### Changed
@@ -20,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated documentation regarding gene calling modes
 - Intermediary annotation results are now sorted, no changes to the final output.
 - Enhanced Prokanota ID generation to greatly decrease the chances of samples getting identical IDs by chance. Its now based on a hash of the user-supplied sample ID, whether the input is a genome or protein collection, and every normalized sequence in input order with its length. Additionally, the Prokanota ID is now always 10 characters long and made up of the letters A-Z.
+- Enhanced the pyhmmer parsing to use the full precision available, while still displaying the E-value in a readable format.
+- Reordered the exisiting tests into separate files.
 
 ### Fixed
 - Fixed an issue where the minimal tests were not run in the CI pipeline because ubuntu-minimal does not have `pandas` installed by default.
@@ -199,7 +204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ---
-[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.9...HEAD
+[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.10...HEAD
+[2.0.0-beta.10]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.9...v2.0.0-beta.10
 [2.0.0-beta.9]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.8...v2.0.0-beta.9
 [2.0.0-beta.8]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.7...v2.0.0-beta.8
 [2.0.0-beta.7]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...v2.0.0-beta.7
