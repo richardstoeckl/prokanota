@@ -8,6 +8,7 @@ https://github.com/beardymcjohnface/Snaketool/wiki/Customising-your-Snaketool
 import csv
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -221,9 +222,23 @@ def validate_metadata_csv(metadata_path):
                 )
 
             sample_id_rows = {}
+            invalid_sample_ids = []
             for row_number, row in enumerate(reader, start=2):
                 sample_id = row["sample_id"]
                 sample_id_rows.setdefault(sample_id, []).append(row_number)
+                if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", sample_id or ""):
+                    invalid_sample_ids.append((sample_id, row_number))
+
+            if invalid_sample_ids:
+                invalid_details = ", ".join(
+                    f"{sample_id!r} (row {row_number})"
+                    for sample_id, row_number in invalid_sample_ids
+                )
+                raise click.ClickException(
+                    f"Invalid metadata file {metadata_path}: sample_id values must start "
+                    "with an ASCII letter or digit and contain only ASCII letters, digits, "
+                    f"'.', '_' or '-'. Invalid value(s): {invalid_details}"
+                )
 
             duplicates = {
                 sample_id: row_numbers

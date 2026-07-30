@@ -114,7 +114,7 @@ if isinstance(prokanota_cfg, dict):
 if not PROKANOTA_VERBOSE:
     PROKANOTA_VERBOSE = bool(config.get("prokanota_verbose", False))
 
-LOG_REDIRECT = "2>&1 | tee {log}" if PROKANOTA_VERBOSE else "1> {log} 2>&1"
+LOG_REDIRECT = "2>&1 | tee {log:q}" if PROKANOTA_VERBOSE else "1> {log:q} 2>&1"
 
 FEATURES_DEFAULTS = {
     "translation_table": 11,
@@ -212,7 +212,7 @@ def build_mmseqs2_extra_args(db_config):
     if coverage is not None:
         args.extend(["--coverage", str(coverage)])
 
-    return " ".join(args)
+    return args
 
 
 ENABLED_DBS = get_enabled_databases()
@@ -354,27 +354,27 @@ rule predict_features:
         sample_id="{id}",
         translation_table=FEATURE_SETTINGS["translation_table"],
         minimum_gene_length=FEATURE_SETTINGS["minimum_gene_length"],
-        rrna_flag="--run_rrna" if FEATURE_SETTINGS["run_rrna"] else "",
-        trna_flag="--run_trna" if FEATURE_SETTINGS["run_trna"] else "",
-        crispr_flag="--run_crispr" if FEATURE_SETTINGS["run_crispr"] else "",
+        rrna_flag=["--run_rrna"] if FEATURE_SETTINGS["run_rrna"] else [],
+        trna_flag=["--run_trna"] if FEATURE_SETTINGS["run_trna"] else [],
+        crispr_flag=["--run_crispr"] if FEATURE_SETTINGS["run_crispr"] else [],
         input_type=lambda wildcards: input_type[wildcards.id],
         scriptpath=os.path.join(workflow.basedir, "scripts", "features.py"),
     message:
         "Predicting features for {wildcards.id}"
     shell:
         """
-        python {params.scriptpath} \
-        {params.sample_id} {input.fasta} \
-        --input_type {params.input_type} \
-        --faa_path {output.faa} \
-        --gff_path {output.gff} \
-        --gbk_path {output.gbk} \
-        --fna_path {output.fna} \
-        --tsv_path {output.tsv} \
-        --genome_path {output.genome} \
-        {params.rrna_flag} {params.trna_flag} {params.crispr_flag} \
-        --rna_tsv_path {output.rna} \
-        --crispr_tsv_path {output.crispr} \
+        python {params.scriptpath:q} \
+        {params.sample_id:q} {input.fasta:q} \
+        --input_type {params.input_type:q} \
+        --faa_path {output.faa:q} \
+        --gff_path {output.gff:q} \
+        --gbk_path {output.gbk:q} \
+        --fna_path {output.fna:q} \
+        --tsv_path {output.tsv:q} \
+        --genome_path {output.genome:q} \
+        {params.rrna_flag:q} {params.trna_flag:q} {params.crispr_flag:q} \
+        --rna_tsv_path {output.rna:q} \
+        --crispr_tsv_path {output.crispr:q} \
         --translation_table {params.translation_table} \
         --minimum_gene_length {params.minimum_gene_length} \
         --threads {threads} """ + LOG_REDIRECT
@@ -413,12 +413,12 @@ for db in ENABLED_DBS:
                 f"Searching {{wildcards.id}} against {db_name}"
             shell:
                 """
-                python {params.scriptpath} \
-                    --db {params.db_path} \
-                    --db-name {params.db_name} \
-                    --faa {input.faa} \
-                    --tblout {output.tblout} \
-                    --toolversion {output.version} \
+                python {params.scriptpath:q} \
+                    --db {params.db_path:q} \
+                    --db-name {params.db_name:q} \
+                    --faa {input.faa:q} \
+                    --tblout {output.tblout:q} \
+                    --toolversion {output.version:q} \
                     --threads {threads} \
                     --evalue-cutoff {params.evalue_cutoff} \
                 """ + LOG_REDIRECT
@@ -449,12 +449,12 @@ for db in ENABLED_DBS:
                 f"Searching {{wildcards.id}} against {db_name}"
             shell:
                 """
-                python {params.scriptpath} \
-                    --db {params.db_path} \
-                    --db-name {params.db_name} \
-                    --faa {input.faa} \
-                    --output {output.tab} \
-                    --toolversion {output.version} \
+                python {params.scriptpath:q} \
+                    --db {params.db_path:q} \
+                    --db-name {params.db_name:q} \
+                    --faa {input.faa:q} \
+                    --output {output.tab:q} \
+                    --toolversion {output.version:q} \
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
                 """ + LOG_REDIRECT
@@ -485,12 +485,12 @@ for db in ENABLED_DBS:
                 f"Searching {{wildcards.id}} against {db_name}"
             shell:
                 """
-                python {params.scriptpath} \
-                    --db {params.db_path} \
-                    --db-name {params.db_name} \
-                    --faa {input.faa} \
-                    --output {output.tab} \
-                    --toolversion {output.version} \
+                python {params.scriptpath:q} \
+                    --db {params.db_path:q} \
+                    --db-name {params.db_name:q} \
+                    --faa {input.faa:q} \
+                    --output {output.tab:q} \
+                    --toolversion {output.version:q} \
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
                 """ + LOG_REDIRECT
@@ -522,15 +522,15 @@ for db in ENABLED_DBS:
                 f"Searching {{wildcards.id}} against {db_name}"
             shell:
                 """
-                python {params.scriptpath} \
-                    --db {params.db_path} \
-                    --db-name {params.db_name} \
-                    --faa {input.faa} \
-                    --output {output.tab} \
-                    --toolversion {output.version} \
+                python {params.scriptpath:q} \
+                    --db {params.db_path:q} \
+                    --db-name {params.db_name:q} \
+                    --faa {input.faa:q} \
+                    --output {output.tab:q} \
+                    --toolversion {output.version:q} \
                     --threads {threads} \
                     --evalue {params.evalue_cutoff} \
-                    {params.extra_args} \
+                    {params.extra_args:q} \
                 """ + LOG_REDIRECT
 
 
@@ -569,14 +569,14 @@ for db in ENABLED_DBS:
                 f"Parsing {{wildcards.id}} {db_name} results"
             shell:
                 """
-                python {workflow.basedir}/scripts/pyhmmer_parse.py \
-                    --tblout {input.tblout} \
-                    --mapping {input.mapping} \
-                    --output {output.tsv} \
-                    --db-name {params.db_name} \
-                    --mapping-key {params.mapping_key} \
+                python {workflow.basedir:q}/scripts/pyhmmer_parse.py \
+                    --tblout {input.tblout:q} \
+                    --mapping {input.mapping:q} \
+                    --output {output.tsv:q} \
+                    --db-name {params.db_name:q} \
+                    --mapping-key {params.mapping_key:q} \
                     --evalue-cutoff {params.evalue_cutoff} \
-                    --columns '{params.columns_json}' \
+                    --columns {params.columns_json:q} \
                 """ + LOG_REDIRECT
 
     elif db["search_tool"] == "rpsblast":
@@ -607,14 +607,14 @@ for db in ENABLED_DBS:
                 f"Parsing {{wildcards.id}} {db_name} results"
             shell:
                 """
-                python {workflow.basedir}/scripts/rpsblast_parse.py \
-                    --rpsblast-output {input.rpsblast_output} \
-                    --mapping {input.mapping} \
-                    --output {output.tsv} \
-                    --db-name {params.db_name} \
-                    --mapping-key {params.mapping_key} \
+                python {workflow.basedir:q}/scripts/rpsblast_parse.py \
+                    --rpsblast-output {input.rpsblast_output:q} \
+                    --mapping {input.mapping:q} \
+                    --output {output.tsv:q} \
+                    --db-name {params.db_name:q} \
+                    --mapping-key {params.mapping_key:q} \
                     --evalue-cutoff {params.evalue_cutoff} \
-                    --columns '{params.columns_json}' \
+                    --columns {params.columns_json:q} \
                 """ + LOG_REDIRECT
 
     elif db["search_tool"] == "diamond":
@@ -645,14 +645,14 @@ for db in ENABLED_DBS:
                 f"Parsing {{wildcards.id}} {db_name} results"
             shell:
                 """
-                python {workflow.basedir}/scripts/diamond_parse.py \
-                    --diamond-output {input.diamond_output} \
-                    --mapping {input.mapping} \
-                    --output {output.tsv} \
-                    --db-name {params.db_name} \
-                    --mapping-key {params.mapping_key} \
+                python {workflow.basedir:q}/scripts/diamond_parse.py \
+                    --diamond-output {input.diamond_output:q} \
+                    --mapping {input.mapping:q} \
+                    --output {output.tsv:q} \
+                    --db-name {params.db_name:q} \
+                    --mapping-key {params.mapping_key:q} \
                     --evalue-cutoff {params.evalue_cutoff} \
-                    --columns '{params.columns_json}' \
+                    --columns {params.columns_json:q} \
                 """ + LOG_REDIRECT
 
     elif db["search_tool"] == "mmseqs2":
@@ -683,14 +683,14 @@ for db in ENABLED_DBS:
                 f"Parsing {{wildcards.id}} {db_name} results"
             shell:
                 """
-                python {workflow.basedir}/scripts/mmseqs2_parse.py \
-                    --mmseqs-output {input.mmseqs_output} \
-                    --mapping {input.mapping} \
-                    --output {output.tsv} \
-                    --db-name {params.db_name} \
-                    --mapping-key {params.mapping_key} \
+                python {workflow.basedir:q}/scripts/mmseqs2_parse.py \
+                    --mmseqs-output {input.mmseqs_output:q} \
+                    --mapping {input.mapping:q} \
+                    --output {output.tsv:q} \
+                    --db-name {params.db_name:q} \
+                    --mapping-key {params.mapping_key:q} \
                     --evalue-cutoff {params.evalue_cutoff} \
-                    --columns '{params.columns_json}' \
+                    --columns {params.columns_json:q} \
                 """ + LOG_REDIRECT
 
 
@@ -743,10 +743,10 @@ rule merge_sample_annotations:
         "Merging annotations for {wildcards.id}"
     shell:
         """
-        python {params.scriptpath} \
-            --base-table {input.base_table} \
-            --output {output.final} \
-            --db-results '{params.db_results_json}' \
+        python {params.scriptpath:q} \
+            --base-table {input.base_table:q} \
+            --output {output.final:q} \
+            --db-results {params.db_results_json:q} \
         """ + LOG_REDIRECT
 
 

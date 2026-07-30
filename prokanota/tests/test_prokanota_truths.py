@@ -811,3 +811,22 @@ def test_duplicate_sample_ids_are_rejected(tmp_path):
 
     with pytest.raises(click.ClickException, match="duplicate sample_id"):
         validate_metadata_csv(metadata_path)
+
+
+def test_path_unsafe_sample_id_is_rejected(tmp_path):
+    """Sample IDs that would create unsafe paths should identify their CSV row."""
+    pytest.importorskip("snaketool_utils")
+    import click
+
+    from prokanota.__main__ import validate_metadata_csv
+
+    metadata_path = tmp_path / "metadata.csv"
+    metadata_path.write_text(
+        "sample_id,path\nsample_1,first.fasta\n../escape,second.fasta\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        click.ClickException, match=r"ASCII letter or digit.*\.\./escape.*row 3"
+    ):
+        validate_metadata_csv(metadata_path)
