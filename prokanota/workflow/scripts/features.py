@@ -577,7 +577,7 @@ def write_gbk(
             name=contig_tag,
             sequence=dna_sequence,
             features=features,
-            accession=genome_id,
+            accession=contig_tag,
         )
         records.append(record)
 

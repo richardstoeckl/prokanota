@@ -1,5 +1,5 @@
 LOCUS       BFDTYSCHFX_1         1889914 bp            linear UNK 01-JAN-1970
-ACCESSION   BFDTYSCHFX
+ACCESSION   BFDTYSCHFX_1
 FEATURES             Location/Qualifiers
      CDS             <1..1263
                      /locus_tag="BFDTYSCHFX_1_00001"
