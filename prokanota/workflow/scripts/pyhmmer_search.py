@@ -113,6 +113,15 @@ def main():
         logger.error(f"FASTA file {args.faa} does not exist")
         sys.exit(1)
 
+    # Handle empty input
+    if os.path.getsize(args.faa) == 0:
+        logger.warning("Input FASTA file is empty")
+        for output_path in (args.tblout, args.allresults, args.domtblout):
+            if output_path:
+                open(output_path, "w").close()
+        logger.info("Created empty output file(s)")
+        sys.exit(0)
+
     file_size = os.path.getsize(args.faa) / (1024 * 1024)  # Size in MB
     available_memory = psutil.virtual_memory().available / (
         1024 * 1024

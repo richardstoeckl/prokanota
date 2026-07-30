@@ -1290,7 +1290,7 @@ def process_genome(
 
     # Check for no gene predictions
     if len(gene_records) == 0:
-        log.error(
+        log.warning(
             "No genes predicted from input. This may indicate invalid input format or a prediction failure."
         )
 

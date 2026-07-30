@@ -92,17 +92,6 @@ def main():
         logger.error(f"FASTA file {args.faa} does not exist")
         sys.exit(1)
 
-    # Handle empty input
-    if os.path.getsize(args.faa) == 0:
-        logger.warning("Input FASTA file is empty")
-        open(args.output, "w").close()
-        logger.info("Created empty output file")
-        sys.exit(0)
-
-    # Count input sequences
-    input_count = count_fasta_sequences(args.faa)
-    logger.info(f"Input sequences: {input_count}")
-
     # Record tool version
     try:
         version_result = subprocess.run(
@@ -115,6 +104,17 @@ def main():
     except subprocess.CalledProcessError as e:
         logger.error(f"Error getting diamond version: {e}")
         sys.exit(1)
+
+    # Handle empty input
+    if os.path.getsize(args.faa) == 0:
+        logger.warning("Input FASTA file is empty")
+        open(args.output, "w").close()
+        logger.info("Created empty output file")
+        sys.exit(0)
+
+    # Count input sequences
+    input_count = count_fasta_sequences(args.faa)
+    logger.info(f"Input sequences: {input_count}")
 
     # Run diamond blastp
     cmd = [

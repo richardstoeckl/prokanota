@@ -120,17 +120,6 @@ def main():
         logger.error(f"FASTA file {args.faa} does not exist")
         sys.exit(1)
 
-    # Handle empty input
-    if os.path.getsize(args.faa) == 0:
-        logger.warning("Input FASTA file is empty")
-        open(args.output, "w").close()
-        logger.info("Created empty output file")
-        sys.exit(0)
-
-    # Count input sequences
-    input_count = count_fasta_sequences(args.faa)
-    logger.info(f"Input sequences: {input_count}")
-
     # Record tool version
     try:
         version_result = subprocess.run(
@@ -147,6 +136,17 @@ def main():
         logger.error(f"Error getting mmseqs2 version: {e}")
         logger.error(f"stderr: {e.stderr}")
         sys.exit(1)
+
+    # Handle empty input
+    if os.path.getsize(args.faa) == 0:
+        logger.warning("Input FASTA file is empty")
+        open(args.output, "w").close()
+        logger.info("Created empty output file")
+        sys.exit(0)
+
+    # Count input sequences
+    input_count = count_fasta_sequences(args.faa)
+    logger.info(f"Input sequences: {input_count}")
 
     output_path = Path(args.output)
     tmp_dir = output_path.with_suffix(".mmseqs_tmp")
