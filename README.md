@@ -83,7 +83,7 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 
     ```bash
     # create new conda environment
-    conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    conda create -n prokanotaENV -c bioconda "snakemake>=9.0.1"
     # activate environment
     conda activate prokanotaENV
     # install prokanota and all dependencies
@@ -128,7 +128,7 @@ Or do the steps manually:
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
 2. Install snakemake with:
     ```bash
-    conda create -n prokanotaENV -c bioconda snakemake>=9.0.1
+    conda create -n prokanotaENV -c bioconda "snakemake>=9.0.1"
     conda activate prokanotaENV
     ```
 3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
