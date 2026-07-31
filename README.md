@@ -215,7 +215,41 @@ Here you need to tell prokanota which databases to use for annotation and how. A
          - {name: MyDB_evalue, source: evalue}
     # A note on the mapping_key: For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession. For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
    ```
+
 > **Note:** For a detailed database setup protocol, see the [publication](#configuration--adding-custom-databases), or the [protocol on Zenodo](#configuration--adding-custom-databases) *(links to be added on publication)*.
+
+#### Using an AI assistant for database setup
+
+If you would like help preparing your database and mapping file, a web-enabled
+AI assistant may guide you through the steps. As a starting point, copy the prompt below and replace
+the bracketed text with your information.
+
+> **Note:** AI-generated instructions can be incorrect or outdated. Prokanota is not affiliated with any AI service and cannot guarantee its output. Check the generated commands, configuration, and validation results carefully before using them in a scientific workflow.
+
+```text
+Help me set up [DATABASE NAME] for use with Prokanota. I am not a
+bioinformatician, so guide me in small steps and briefly explain each command.
+
+- I have downloaded the database to: `[PATH]`
+- I downloaded a mapping file to: [PATHS, OR "NONE"]
+- I am using prokanota version: [OUTPUT OF `prokanota --version`, OR "UNKNOWN"]
+- I am on a [Linux/macOS] system.
+
+Use the Prokanota files from the following URLs, but make sure they match the prokanota version I specified.
+https://raw.githubusercontent.com/richardstoeckl/prokanota/refs/heads/main/prokanota/config/schemas/databases.schema.json
+https://raw.githubusercontent.com/richardstoeckl/prokanota/refs/heads/main/prokanota/config/databases.yaml
+https://raw.githubusercontent.com/richardstoeckl/prokanota/refs/heads/main/prokanota/config/README.md
+Also use the database provider's official documentation for the downloaded
+release. If you cannot retrieve these sources, tell me and stop; do not answer
+from memory.
+
+Inspect the files read-only first. If you cannot access them, give me commands to
+inspect them and wait for the results. Then provide safe copy-paste commands to
+prepare the database and mapping file, one ready-to-paste `databases.yaml` entry,
+and checks that confirm the identifiers match. Do not use `sudo`, overwrite my
+downloads, or invent missing details. Ask me when essential information is missing.
+```
+
 
 ## Recommended Databases to use
 For archaeal genome annotation, we frequently use the following databases:
@@ -235,7 +269,7 @@ For archaeal genome annotation, we frequently use the following databases:
   - The molecular weight is estimated by summing the average residue masses in the protein sequence and adding the mass of one water molecule, as described in [GASTEIGER, Elisabeth, et al. The proteomics protocols handbook, 2005, S. 571-607](https://doi.org/10.1385/1-59259-890-0:571). The molecular weights are taken from the [here](https://web.expasy.org/findmod/findmod_masses.html#AA) and the function can be found in [`prokanota/workflow/scripts/features.py`](https://github.com/richardstoeckl/prokanota/blob/c2dc89227d3171187cf6949af15b27dddd4aa390/workflow/scripts/features.py#L398-L416)
 - **Can I use this pipeline for bacterial genomes?**
   - Absolutely! While the pipeline was designed with archaeal annotation challenges in mind, it works equally well for bacterial genomes.
-- **What if I don't want to use all the built-in databases?**
+- **What if I don't want to use a database for a specific run?**
   - Simply set `enabled: false` for any database in `config/databases.yaml`.
 
 ## Citation
