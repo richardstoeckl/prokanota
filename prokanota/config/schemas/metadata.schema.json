@@ -40,8 +40,8 @@
     "properties": {
         "sample_id": {
             "type": "string",
-            "description": "Sample/genome identifier",
-            "minLength": 1
+            "description": "Filesystem-safe sample/genome identifier",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
         },
         "path": {
             "description": "Path to input FASTA file",

@@ -386,6 +386,7 @@ def run(**kwargs):
         verbose = True
 
     config_schema = snake_base(os.path.join("config", "schemas", "config.schema.json"))
+    db_schema = snake_base(os.path.join("config", "schemas", "databases.schema.json"))
 
     config_data = read_yaml_file(configfile, "config")
     if not isinstance(config_data, dict):
@@ -422,10 +423,7 @@ def run(**kwargs):
     config_data["global"]["metadata"] = str(metadata_path)
 
     validate_config_schema(config_data, config_schema, configfile)
-    # TODO: Rework database file validation. The current validation
-    # implementation needs a complete rework; temporarily disable it
-    # to avoid blocking runs until a proper reimplementation is available.
-    # validate_yaml_schema(databases_path, db_schema, "databases")
+    validate_yaml_schema(databases_path, db_schema, "databases")
     validate_metadata_csv(metadata_path)
 
     for output_key in ("logs", "interim", "results"):

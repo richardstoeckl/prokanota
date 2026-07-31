@@ -226,36 +226,12 @@ ENABLED_DB_NAMES = [db["name"] for db in ENABLED_DBS]
 
 
 # =============================================================================
-# Validation Functions
+# Mapping File Validation
 # =============================================================================
 
 
-def validate_search_tool(tool):
-    """Ensure search tool is in allowed set."""
-    allowed = {"pyhmmer", "rpsblast", "diamond", "mmseqs2"}
-    if tool not in allowed:
-        raise ValueError(f"search_tool '{tool}' not in allowed set: {allowed}")
-
-
 def validate_mapping_file(mapping_path):
-    """
-    Validate that mapping file follows the correct TSV structure.
-
-    Expected format:
-    - TSV file (tab-separated, no header)
-    - empty markers are normalized to '*'
-    - Exactly 4 columns per row:
-        1. Accession ID (string)
-        2. Gene symbol / short name (string)
-        3. HMM name / description (string)
-        4. Category (string)
-
-    Args:
-        mapping_path: Path to the mapping file
-
-    Raises:
-        ValueError: If the file structure is invalid or malformed
-    """
+    """Validate a database mapping TSV and log summary statistics."""
     mapping_path = Path(mapping_path)
     stats = validate_mapping_file_shared(mapping_path)
     logger.debug(
@@ -264,47 +240,8 @@ def validate_mapping_file(mapping_path):
     )
 
 
-def validate_database_files(db_config):
-    """Check that required database files exist and mapping file is properly structured."""
-    db_path = Path(db_config["db_path"])
-    mapping_path = Path(db_config["mapping_path"])
-
-    # For diamond, only check that the user-provided database file exists
-    if db_config["search_tool"] == "diamond":
-        if not db_path.exists():
-            raise FileNotFoundError(f"Database file not found: {db_path}")
-
-    # For mmseqs2, only check that the user-provided database path exists
-    if db_config["search_tool"] == "mmseqs2":
-        if not db_path.exists():
-            raise FileNotFoundError(f"Database path not found: {db_path}")
-
-    # For pyhmmer, check for pressed HMM files
-    if db_config["search_tool"] == "pyhmmer":
-        # Check if database is a pre-pressed flatfile with .LIB extension
-        lib_path = db_path.with_suffix(".LIB")
-        if lib_path.exists():
-            # Flatfile database, no additional pressed files needed
-            pass
-        else:
-            # Check for standard pressed HMM files
-            required_extensions = [".h3m", ".h3i", ".h3f", ".h3p"]
-            base = db_path.with_suffix("")
-            for ext in required_extensions:
-                if not Path(str(base) + ext).exists():
-                    raise FileNotFoundError(f"Missing pressed HMM file: {base}{ext}")
-
-    # Validate mapping file structure
-    validate_mapping_file(mapping_path)
-
-
-# Validate all enabled databases at workflow start
 for db in ENABLED_DBS:
-    validate_search_tool(db["search_tool"])
-    # TODO: Rework database file validation. The current validation
-    # implementation needs a complete rework; temporarily disable it
-    # to avoid blocking runs until a proper reimplementation is available.
-    # validate_database_files(db)
+    validate_mapping_file(db["mapping_path"])
 
 
 # =============================================================================
