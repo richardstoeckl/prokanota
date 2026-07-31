@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-07-31
+
+> ⚠️ **BREAKING CHANGES** ⚠️ — Prokanota 2.0 is a complete rewrite. Users upgrading from 1.x should review their configuration and downstream assumptions before migrating.
+
+Prokanota 2.0 rebuilds the annotation pipeline around a modular,
+configuration-driven architecture. Database integrations are no longer tied to a
+fixed workflow: supported searches can be configured and combined while producing
+consistent, interoperable annotation output.
+
+### Highlights
+
+- Configure HMM, RPS-BLAST, BLASTp, DIAMOND, and MMseqs2 databases without editing the
+  Snakemake workflow; rules are generated dynamically for the enabled databases.
+- Annotate genomes, precomputed protein collections, or both in the same run.
+- Produce standardized annotation tables alongside richer GFF3, GenBank, FASTA,
+  and TSV outputs with stable identifiers and retained biological metadata.
+- Use a packaged command-line interface for configuration, validation, execution,
+  testing, and common setup tasks while retaining direct Snakemake compatibility.
+- Benefit from stricter input and configuration validation, safer path handling,
+  clearer logging, reproducible packaging, and substantially expanded automated
+  regression and biological validation.
+
 ## [2.0.0-beta.10] - 2026-07-28
 
 ### Added
@@ -204,21 +226,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ---
-[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.10...HEAD
-[2.0.0-beta.10]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.9...v2.0.0-beta.10
-[2.0.0-beta.9]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.8...v2.0.0-beta.9
-[2.0.0-beta.8]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.7...v2.0.0-beta.8
-[2.0.0-beta.7]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.6...v2.0.0-beta.7
-[2.0.0-beta.6]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.5...v2.0.0-beta.6
-[2.0.0-beta.5]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.4...v2.0.0-beta.5
-[2.0.0-beta.4]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.3...v2.0.0-beta.4
-[2.0.0-beta.3]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.2...v2.0.0-beta.3
-[2.0.0-beta.2]: https://github.com/richardstoeckl/prokanota/compare/v2.0.0-beta.1...v2.0.0-beta.2
-[2.0.0-beta.1]: https://github.com/richardstoeckl/prokanota/compare/v1.2.0...v2.0.0-beta.1
-[1.2.0]: https://github.com/richardstoeckl/prokanota/compare/v1.1.1...v1.2.0
-[1.1.1]: https://github.com/richardstoeckl/prokanota/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/richardstoeckl/prokanota/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/richardstoeckl/prokanota/compare/v0.2.0...v1.0.0
-[0.2.0]: https://github.com/richardstoeckl/prokanota/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/richardstoeckl/prokanota/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/richardstoeckl/prokanota/releases/tag/v0.1.0
+[Unreleased]: https://github.com/richardstoeckl/prokanota/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/richardstoeckl/prokanota/compare/1.2.0...2.0.0
+[2.0.0-beta.10]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.9...2.0.0-beta.10
+[2.0.0-beta.9]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.8...2.0.0-beta.9
+[2.0.0-beta.8]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.7...2.0.0-beta.8
+[2.0.0-beta.7]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.6...2.0.0-beta.7
+[2.0.0-beta.6]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.5...2.0.0-beta.6
+[2.0.0-beta.5]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.4...2.0.0-beta.5
+[2.0.0-beta.4]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.3...2.0.0-beta.4
+[2.0.0-beta.3]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.2...2.0.0-beta.3
+[2.0.0-beta.2]: https://github.com/richardstoeckl/prokanota/compare/2.0.0-beta.1...2.0.0-beta.2
+[2.0.0-beta.1]: https://github.com/richardstoeckl/prokanota/compare/1.2.0...2.0.0-beta.1
+[1.2.0]: https://github.com/richardstoeckl/prokanota/compare/1.1.1...1.2.0
+[1.1.1]: https://github.com/richardstoeckl/prokanota/compare/1.1.0...1.1.1
+[1.1.0]: https://github.com/richardstoeckl/prokanota/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/richardstoeckl/prokanota/compare/0.2.0...1.0.0
+[0.2.0]: https://github.com/richardstoeckl/prokanota/compare/0.1.1...0.2.0
+[0.1.1]: https://github.com/richardstoeckl/prokanota/compare/0.1.0...0.1.1
+[0.1.0]: https://github.com/richardstoeckl/prokanota/releases/tag/0.1.0
