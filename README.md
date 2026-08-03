@@ -7,6 +7,8 @@ state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
 ![GitHub Stable Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?display_name=release&label=Latest%20stable%20release)
 ![GitHub Latest Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?include_prereleases&display_name=release&label=Latest%20release)
+[![Conda Version](https://img.shields.io/conda/vn/bioconda/prokanota?color=brightgreen)](https://anaconda.org/bioconda/prokanota)
+[![PyPI Version](https://img.shields.io/pypi/v/prokanota?label=pypi%20package)](https://pypi.org/project/prokanota/)
 [![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.1-brightgreen.svg)](https://snakemake.github.io)
 [![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml)
 ![OS compatibility](https://img.shields.io/badge/os_compatibility-Linux%2FmacOS:_x86%2Farm64-salmon)
@@ -79,15 +81,13 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 
 ### Option 1 - The simple option
 
-1. Prokanota is available via `pip`, but requires [conda](https://docs.conda.io/en/latest/miniconda.html) or mamba to manage its dependencies. Install into a conda environment:
+1. Prokanota is available via [bioconda](https://anaconda.org/bioconda/prokanota) or [PyPI](https://pypi.org/project/prokanota/), but we recommend installing it in a new conda environment to avoid dependency conflicts. You can do this with the following commands:
 
     ```bash
-    # create new conda environment
-    conda create -n prokanotaENV -c bioconda "snakemake>=9.0.1"
+    # create new conda environment with prokanota installed
+    conda create -n prokanotaENV -c bioconda prokanota
     # activate environment
     conda activate prokanotaENV
-    # install prokanota and all dependencies
-    pip install prokanota
     ```
 
     When you run `prokanota` for the first time, all the required dependencies will be installed as required, so it will take longer than usual (usually a few minutes). Every time you run it afterwards, it will be a lot faster as the dependencies will be installed.
@@ -122,14 +122,14 @@ The pipeline uses a **config-driven modular architecture** that separates databa
 
 Since `prokanota` is actually just a Snakemake workflow with a [Snaketool](https://doi.org/10.1371/journal.pcbi.1010705) wrapper, you can simply use it as a Snakemake workflow.
 
-**[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl/prokanota.html)**
+<!-- **[Check out the usage instructions in the snakemake workflow catalog](https://snakemake.github.io/snakemake-workflow-catalog/docs/workflows/richardstoeckl/prokanota.html)** -->
 
-Or do the steps manually:
+<!-- Or do the steps manually: -->
 1. Install [conda](https://docs.conda.io/en/latest/miniconda.html) (miniforge or miniconda is fine).
 2. Install snakemake with:
     ```bash
-    conda create -n prokanotaENV -c bioconda "snakemake>=9.0.1"
-    conda activate prokanotaENV
+    conda create -n snakemakeENV -c bioconda "snakemake>=9.0.1"
+    conda activate snakemakeENV
     ```
 3. [Download the latest release from this repo](https://github.com/richardstoeckl/prokanota/releases/latest) and cd into it, or download the development version [directly from github](https://github.com/richardstoeckl/prokanota/archive/refs/heads/main.zip)
 4. Edit the `prokanota/config/config.yaml` to provide the paths to your results/logs directories, and the path to where you want the databases to be downloaded to.
