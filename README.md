@@ -1,22 +1,14 @@
-# `Prokanota`
+# `Prokanota` - A modular, configuration-driven workflow for for **proka**ryotic genome **an**n**ota**tion
 
 <!-- badges: start -->
+[![F1000Research](https://img.shields.io/badge/F1000Research-10.12688%2Ff1000research.188674.1-F15A24?logo=doi)](https://doi.org/10.12688/f1000research.188674.1)
+[![GitHub Stable Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?display_name=release&label=release&logo=github&color=d3d3d3)](https://github.com/richardstoeckl/prokanota/releases/latest)
+[![Conda Version](https://img.shields.io/conda/vn/bioconda/prokanota?logo=anaconda&color=44A833)](https://anaconda.org/bioconda/prokanota)
+[![PyPI Version](https://img.shields.io/pypi/v/prokanota?logo=pypi&color=3775A9)](https://pypi.org/project/prokanota/)
+[![Tests](https://img.shields.io/github/actions/workflow/status/richardstoeckl/prokanota/tests.yml?branch=main&label=tests&logo=githubactions)](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml)
+![platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20·%20x86__64%20%7C%20arm64-d3d3d3)
 ![GitHub License](https://shields.io/github/license/richardstoeckl/prokanota)
-[![Project Status: Active – The project has reached a stable, usable
-state and is being actively
-developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/)
-![GitHub Stable Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?display_name=release&label=Latest%20stable%20release)
-![GitHub Latest Release](https://img.shields.io/github/v/release/richardstoeckl/prokanota?include_prereleases&display_name=release&label=Latest%20release)
-[![Conda Version](https://img.shields.io/conda/vn/bioconda/prokanota?color=brightgreen)](https://anaconda.org/bioconda/prokanota)
-[![PyPI Version](https://img.shields.io/pypi/v/prokanota?label=pypi%20package)](https://pypi.org/project/prokanota/)
-[![Snakemake](https://img.shields.io/badge/snakemake-≥9.0.1-brightgreen.svg)](https://snakemake.github.io)
-[![Tests](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml/badge.svg)](https://github.com/richardstoeckl/prokanota/actions/workflows/tests.yml)
-![OS compatibility](https://img.shields.io/badge/os_compatibility-Linux%2FmacOS:_x86%2Farm64-salmon)
 <!-- badges: end -->
-
-Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic **an**n**ota**tion with a code-free*, modular database architecture.
-
-*Code free if you really force the issue. Some limited knowledge will make your life much easier.
 
 ## Table of Contents
 
@@ -40,15 +32,13 @@ Flexible [Snakemake](https://snakemake.github.io) pipeline for **proka**ryotic *
 
 ## About
 
-Prokaryotic genome annotation is a complex, multi-faceted task. Excellent tools like [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta) provide streamlined, user-friendly annotation that works well for most bacterial genomes. However, their hierarchical annotation systems can lose important nuances, and they often struggle with non-standard organisms—particularly archaeal species—where database coverage is more limited.
+Prokaryotic genome annotation is a complex task. Established tools like [Prokka](https://github.com/tseemann/prokka) and [Bakta](https://github.com/oschwengers/bakta) provide streamlined, user-friendly annotation workflows that work well for most bacterial genomes. However, their predefined database choices and hierarchical annotation strategies can limit flexibility, especially for non-model organisms such as archaea, or for specialized annotation tasks. On the other end of the spectrum, custom annotation pipelines offer exceptional flexibility and depth, but require substantial bioinformatics expertise to build and maintain.
 
-On the other end of the spectrum, sophisticated custom annotation pipelines like those described by [Dombrowski, et al. (2020)](https://doi.org/10.1038/s41467-020-17408-w) provide exceptional flexibility and depth, but require substantial bioinformatics expertise and manual configuration.
-
-**Prokanota fills the gap between these approaches.** It provides:
+**Prokanota (PROKAryotic ANnOTAtion) fills this practical gap between fixed, standardized annotation tools and fully custom expert-built workflows.** It provides an accessible, reproducible annotation backbone while allowing project-specific databases and evidence layers to be incorporated without modifying workflow code:
 
 - **An efficient, well-tested backbone** that handles gene prediction and feature annotation automatically
-- **A modular, config-driven database system** that allows users to customize their annotations without writing code
-- **Multi-database top-hit reporting** that preserves annotation nuances and allows informed manual curation
+- **A modular, config-driven database system** that lets users start with widely used reference databases and expand as project-specific needs evolve...no code changes required
+- **Multi-database top-hit reporting** that retains database-specific top-hit information from general-purpose and specialist resources alike, enabling informed manual curation
 
 ## Features
 
@@ -216,7 +206,7 @@ Here you need to tell prokanota which databases to use for annotation and how. A
     # A note on the mapping_key: For pyhmmer databases, use "query_name" if the mapping file is keyed by HMM name, or "accession" if keyed by HMM accession. For other tools, typically use "accession". No normalization is performed; keys must match exactly in the mapping file.
    ```
 
-> **Note:** For a detailed database setup protocol, see the [publication](#configuration--adding-custom-databases), or the [protocol on Zenodo](#configuration--adding-custom-databases) *(links to be added on publication)*.
+> **Note:** For a detailed database setup protocol, see the [Benchmark Github repository](https://github.com/richardstoeckl/prokanota-bench), and the [publication](https://f1000research.com/articles/15-1421) ([DOI:10.12688/f1000research.188674.1](https://doi.org/10.12688/f1000research.188674.1))
 
 #### Using an AI assistant for database setup
 
@@ -251,13 +241,21 @@ downloads, or invent missing details. Ask me when essential information is missi
 ```
 
 
-## Recommended Databases to use
-For archaeal genome annotation, we frequently use the following databases:
+## Opinionated databases recommendations
+
+Every project is different, and therefore might require different databases for optimal annotation. The following list is explicitly **NOT** a list of must-haves or a list of the "best" databases. It is simply a non-exhaustive list of databases we frequently use for some of our use-cases of annotating mostly archaeal genomes.
+
 - **Databases**
     - **[CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd_help.shtml#NCBI_curated_domains) - The Conserved Domains Database curated by NCBI.** *Sources information from the [SMART](http://smart.embl-heidelberg.de/), [Pfam](http://pfam.sanger.ac.uk/), [COG](https://www.ncbi.nlm.nih.gov/COG/), [TIGR](https://www.ncbi.nlm.nih.gov/Structure/cdd/docs/tigrfams.html), and [PRK](https://www.ncbi.nlm.nih.gov/proteinclusters) databases. This makes it a good consolidated database for annotation purposes.*
     - **[COG](https://www.ncbi.nlm.nih.gov/COG/) - The Clusters of Orthologous Genes (COG) database.** *Even though the CDD sources some information from this DB as well, this is such a good resource that it deserves to be included in full and on its own.*
-    - **[arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/) - The archaea specific version of the COG database.** *This provides accurate annotation of archaeal genomes. You can use [this conversion script](https://gist.github.com/richardstoeckl/84be97d0c6dfeb360d04bf17629751a7) to convert the arCOG alignment files to a HMM database.*
+    - **[arCOG](https://pubmed.ncbi.nlm.nih.gov/25764277/) - The archaea specific version of the COG database.** *This provides accurate annotation of archaeal genomes. You can use [this conversion script](https://github.com/richardstoeckl/prokanota-bench/blob/main/code/helpers/convertArCOGdbToHMM.py) to convert the arCOG alignment files to a HMM database.*
+    - **[KOfam](https://www.genome.jp/ftp/db/kofam/) - the pHMM models employed by KofamKOALA and KofamScan.** *A large function-oriented HMM resource.*
     - **[PGAP](https://ftp.ncbi.nlm.nih.gov/hmm/) - HMMs are used by the [NCBI Prokaryotic Genome Annotation Pipeline (PGAP)](https://pubmed.ncbi.nlm.nih.gov/33270901/).** *Most novel prokaryotic genome submissions are evaluated by PGAP, so using its HMMs helps anticipate those annotations.*
+
+Check out the [Benchmark Github repository](https://github.com/richardstoeckl/prokanota-bench), and the [publication](https://f1000research.com/articles/15-1421) ([DOI:10.12688/f1000research.188674.1](https://doi.org/10.12688/f1000research.188674.1)), where we used the CDD, arCOG, and KOfam databases to annotate eight bacterial and eight archaeal reference organism genomes:
+
+![Benchmark Prokanota-2.0.0](https://github.com/richardstoeckl/prokanota-bench/blob/f06ff384f17698675a37042e7594f54f5e1902ed/results/figures/prokanota-2.0.0_annotatedProportions.png?raw=true)
+
 
 ## FAQ
 
@@ -276,7 +274,7 @@ For archaeal genome annotation, we frequently use the following databases:
 
 If you use Prokanota in your research, please cite:
 
-> Stöckl, R. *Prokanota: a flexible pipeline for prokaryotic genome annotation with a modular database architecture. Version v2.0.0.* **(publication in preparation)**
+>  Stöckl R, Grünberger F and Grohmann D. Prokanota: a modular, configuration-driven workflow for prokaryotic genome annotation [version 1; peer review: awaiting peer review]. F1000Research 2026, 15:1421 (https://doi.org/10.12688/f1000research.188674.1)
 
 Prokanota builds on the following tools — please consider also citing them as appropriate:
 
