@@ -261,13 +261,24 @@ def validate_metadata_csv(metadata_path):
         ) from exc
 
 
+def parse_threads(ctx, param, value):
+    """Pass automatic CPU selection to Snakemake; let Click validate counts."""
+    if value in ("all", "0", "-1"):
+        return "all"
+    return click.IntRange(min=1).convert(value, param, ctx)
+
+
 def common_options(func):
     """Common command line args
     Define common command line args here, and include them with the @common_options decorator below.
     """
     options = [
         click.option(
-            "--threads", help="Number of threads to use", default=1, show_default=True
+            "--threads",
+            help="Maximum number of threads: all, 0, or -1 uses all available.",
+            default="all",
+            callback=parse_threads,
+            show_default=True,
         ),
         click.option(
             "--profile",
