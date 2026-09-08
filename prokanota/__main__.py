@@ -9,6 +9,7 @@ import csv
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -19,6 +20,7 @@ from pathlib import Path
 import click
 import jsonschema
 import yaml
+from click.shell_completion import get_completion_class
 from snaketool_utils.cli_utils import OrderedCommands, echo_click, run_snakemake
 
 from prokanota import __version__
@@ -584,6 +586,70 @@ def version(**kwargs):
     click.echo(f"prokanota, version {__version__}")
 
 
+# Completion suggests commands, options and filenames when you press Tab.
+# The Click library has some great support for this built-in
+# https://click.palletsprojects.com/en/stable/shell-completion/
+def completion_source(shell):
+    return get_completion_class(shell)(
+        cli, {}, "prokanota", "_PROKANOTA_COMPLETE"
+    ).source()
+
+
+# This gorups the commands for viewing and installing completion instructions (leaving out the banner).
+@click.group()
+def completion():
+    """Show or install Click shell completion scripts."""
+
+
+# Show the instructions so users can read or save them. This changes no files or terminal settings.
+@completion.command(name="show")
+@click.argument("shell", type=click.Choice(["bash", "zsh", "fish"]))
+def completion_show(shell):
+    """Print a completion script."""
+    click.echo(completion_source(shell), nl=False)
+
+
+# Save the completion instructions in the user's own folders, replacing any previous copy for the selected shell.
+# If none is specified, use the user's default. Leave existing terminal settings alone and print any steps needed to enable it.
+#
+# Bash: save where the optional bash-completion tool looks for instructions.
+# The printed `source` command enables completion in the current terminal too.
+# https://github.com/scop/bash-completion#faq
+# https://www.gnu.org/software/bash/manual/bash.html#Bourne-Shell-Builtins
+#
+# Zsh: save in ~/.zfunc. Saving alone does not enable completion; the printed command turns on Zsh's completion support and loads the instructions.
+# If that support is already enabled, only the `source` part is needed.
+# https://zsh.sourceforge.io/Doc/Release/Completion-System.html#Use-of-compinit
+#
+# Fish: save in its completion folder, where Fish finds the instructions when needed. No extra activation command is required.
+# https://fishshell.com/docs/current/completions.html#where-to-put-completions
+@completion.command(name="install")
+@click.argument("shell", required=False, type=click.Choice(["bash", "zsh", "fish"]))
+def completion_install(shell):
+    """Install a script; leave shell startup files untouched."""
+    shell = shell or Path(os.environ.get("SHELL", "")).name
+    if shell not in ("bash", "zsh", "fish"):
+        raise click.ClickException("Specify a shell: completion install bash|zsh|fish")
+    data = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share")
+    config = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+    path = {
+        "bash": data / "bash-completion/completions/prokanota",
+        "zsh": Path.home() / ".zfunc/_prokanota",
+        "fish": config / "fish/completions/prokanota.fish",
+    }[shell]
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(completion_source(shell), encoding="utf-8")
+    except OSError as exc:
+        raise click.ClickException(str(exc)) from exc
+    click.echo(f"Installed {path}")
+    if shell != "fish":
+        setup = "autoload -Uz compinit; compinit; " if shell == "zsh" else ""
+        click.echo(
+            f"Run or add to your shell startup file: {setup}source {shlex.quote(str(path))}"
+        )
+
+
 @click.group(cls=SplashOrderedCommands)
 def helper():
     """Utility commands to help prepare inputs for prokanota"""
@@ -647,6 +713,7 @@ cli.add_command(test_minimal)
 cli.add_command(test_full)
 cli.add_command(citation)
 cli.add_command(version)
+cli.add_command(completion)
 cli.add_command(helper)
 helper.add_command(metadata_from_dir)
 
