@@ -47,10 +47,6 @@ def merge_annotations(
     result = base_df
 
     for db_name, db_path in db_annotations:
-        if not db_path.exists():
-            logger.warning(f"{db_path} does not exist, skipping {db_name}")
-            continue
-
         db_df = load_db_annotation(db_path)
 
         # Get columns to add (everything except gene_id)

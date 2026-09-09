@@ -179,14 +179,6 @@ def get_enabled_databases():
     return sorted(dbs, key=lambda x: x.get("order", 100))
 
 
-def get_db_by_name(name):
-    """Get database config by name."""
-    for db in databases_config["databases"]:
-        if db["name"] == name:
-            return db
-    raise ValueError(f"Database '{name}' not found in config")
-
-
 def get_columns_json(db_config):
     """Convert columns config to JSON string for script argument."""
     return json.dumps(db_config["columns"])
@@ -222,7 +214,6 @@ if not HAS_DATABASES:
         "No annotation databases are enabled (see config/databases.yaml). "
         "Continuing with feature prediction only."
     )
-ENABLED_DB_NAMES = [db["name"] for db in ENABLED_DBS]
 
 
 # =============================================================================
