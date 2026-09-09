@@ -116,38 +116,8 @@ if not PROKANOTA_VERBOSE:
 
 LOG_REDIRECT = "2>&1 | tee {log:q}" if PROKANOTA_VERBOSE else "1> {log:q} 2>&1"
 
-FEATURES_DEFAULTS = {
-    "translation_table": 11,
-    "run_rrna": True,
-    "run_trna": True,
-    "run_crispr": True,
-    "minimum_gene_length": 90,
-}
-
-
-def resolve_feature_settings(cfg):
-    """Resolve optional global feature settings with fail-fast validation."""
-    user_features = cfg.get("features", {})
-    resolved = {**FEATURES_DEFAULTS, **user_features}
-
-    if not isinstance(resolved["translation_table"], int):
-        raise ValueError("features.translation_table must be an integer.")
-    if resolved["translation_table"] < 1 or resolved["translation_table"] > 25:
-        raise ValueError("features.translation_table must be between 1 and 25.")
-
-    if not isinstance(resolved["minimum_gene_length"], int):
-        raise ValueError("features.minimum_gene_length must be an integer.")
-    if resolved["minimum_gene_length"] < 1:
-        raise ValueError("features.minimum_gene_length must be >= 1.")
-
-    for key in ("run_rrna", "run_trna", "run_crispr"):
-        if not isinstance(resolved[key], bool):
-            raise ValueError(f"features.{key} must be a boolean.")
-
-    return resolved
-
-
-FEATURE_SETTINGS = resolve_feature_settings(config)
+# Schema validation above supplies all feature defaults for either entry point.
+FEATURE_SETTINGS = config["features"]
 
 
 # =============================================================================

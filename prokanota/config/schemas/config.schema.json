@@ -70,6 +70,7 @@
     },
     "features": {
       "type": "object",
+      "default": {},
       "properties": {
         "translation_table": {
           "type": "integer",
