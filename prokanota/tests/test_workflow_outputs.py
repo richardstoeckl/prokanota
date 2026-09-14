@@ -22,6 +22,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from prokanota.workflow.scripts.feature_utils import reverse_complement
+
 TEST_MODE = os.environ.get("PROKANOTA_TEST_MODE")
 if TEST_MODE not in {"pyhmmer", "full"}:
     # A normal `pytest` invocation has not generated fresh workflow outputs.
@@ -503,6 +505,48 @@ def test_crispr_array_geometry_is_consistent():
             (repeat_count - 1) * spacer_length
         )
         assert abs(length - inferred_length) <= repeat_count - 1
+
+
+def test_published_pfu_crispr_7_01_spacer_is_recovered_at_array_end():
+    """
+    Recover the published P. furiosus spacer 7.01 at its array's leader end.
+
+    Hale et al., 2009 (https://doi.org/10.1016/j.cell.2009.07.040) report a 45-nt RNA 7.01.
+    Removing its 8-nt repeat-derived tag (AUUGAAAG) leaves the 37-nt spacer-derived guide below, written as DNA (U -> T).
+
+    The array and spacer numbering is an historical artifact from Hale et al., 2008 (https://doi.org/10.1261/rna.1246808).
+    Since DICED does not infer array directionality, and the arrays are numbered simply with increasing genomic coordinates,
+    we cannot directly check for the published fact "The first spacer of the seventh array has exactly this sequence".
+    Instead we check the following:
+    1. A found spacer must have the exact sequence as the published sequence, or, its direct reverse complement
+    2. This spacer must be the very first in its array, or, if it matched the reverse complement, the very last in its array
+    """
+    expected_spacer = "TTGTAGTATGCGGTCCTTGCGGCTGAGAGCACTTCAG"
+    reverse_spacer = reverse_complement(expected_spacer)
+    path = RESULTS_DIR / GENOME_SAMPLE / "features" / f"{GENOME_SAMPLE}_crispr.fasta"
+    records = parse_fasta(path)
+    spacers = {
+        record_id: sequence
+        for record_id, sequence in records.items()
+        if record_id.rsplit("_", 2)[-2] == "spacer"
+    }
+    matches = [
+        record_id
+        for record_id, sequence in spacers.items()
+        if sequence in (expected_spacer, reverse_spacer)
+    ]
+    assert len(matches) == 1, "Expected exactly one complete published spacer 7.01"
+
+    spacer_id = matches[0]
+    array_id = spacer_id.rsplit("_", 2)[0]
+    # Dictionaries retain FASTA record order; do not sort by generated numbers.
+    array_spacers = [
+        record_id for record_id in spacers if record_id.rsplit("_", 2)[0] == array_id
+    ]
+    expected_end = 0 if spacers[spacer_id] == expected_spacer else -1
+    assert array_spacers[expected_end] == spacer_id, (
+        "Published spacer 7.01 must be at the orientation-appropriate array end"
+    )
 
 
 def test_reference_trna_records_are_present():

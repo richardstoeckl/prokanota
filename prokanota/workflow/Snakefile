@@ -242,6 +242,7 @@ rule predict_features:
         tsv=os.path.join(RESULTPATH, "{id}", "features", "{id}.tsv"),
         rna=os.path.join(RESULTPATH, "{id}", "features", "{id}_rna.tsv"),
         crispr=os.path.join(RESULTPATH, "{id}", "features", "{id}_crispr.tsv"),
+        crispr_fasta=os.path.join(RESULTPATH, "{id}", "features", "{id}_crispr.fasta"),
         genome=os.path.join(RESULTPATH, "{id}", "features", "{id}.fasta"),
     log:
         os.path.join(LOGPATH, "{id}", "features", "{id}_predict_features.log"),
@@ -273,6 +274,7 @@ rule predict_features:
         {params.rrna_flag:q} {params.trna_flag:q} {params.crispr_flag:q} \
         --rna_tsv_path {output.rna:q} \
         --crispr_tsv_path {output.crispr:q} \
+        --crispr_fasta_path {output.crispr_fasta:q} \
         --translation_table {params.translation_table} \
         --minimum_gene_length {params.minimum_gene_length} \
         --threads {threads} """ + LOG_REDIRECT

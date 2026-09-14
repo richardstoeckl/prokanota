@@ -264,6 +264,8 @@ class CRISPRPrediction:
         spacer_length (int): Average length of spacer sequences
         num_repeats (int): Number of repeats in the array
         repeat_sequence (str): Consensus repeat sequence
+        repeats (list): DICED repeats, retaining their sequences and coordinates
+        spacers (list): DICED spacers, retaining their sequences and coordinates
     """
 
     def __init__(
@@ -277,6 +279,8 @@ class CRISPRPrediction:
         spacer_length,
         num_repeats,
         repeat_sequence,
+        repeats=None,
+        spacers=None,
     ):
         self.contig_id = contig_id
         self.crispr_id = crispr_id
@@ -287,6 +291,8 @@ class CRISPRPrediction:
         self.spacer_length = spacer_length
         self.num_repeats = num_repeats
         self.repeat_sequence = repeat_sequence
+        self.repeats = repeats or []
+        self.spacers = spacers or []
 
     @property
     def length(self):
@@ -698,6 +704,29 @@ def write_crispr_tsv(crispr_records, tsv_path):
             )
 
 
+def write_crispr_fasta(crispr_records, fasta_path):
+    """Write each array's repeats and spacers, keeping their individual IDs."""
+    contig_order = {
+        contig: i
+        for i, contig in enumerate(dict.fromkeys(r.contig_id for r in crispr_records))
+    }
+    with open(fasta_path, "w") as handle:
+        for record in sorted(
+            crispr_records, key=lambda r: (contig_order[r.contig_id], r.start)
+        ):
+            # Use their positions on the contig to write repeats and spacers in order.
+            regions = [
+                (region, kind, i)
+                for kind, entries in (
+                    ("repeat", record.repeats),
+                    ("spacer", record.spacers),
+                )
+                for i, region in enumerate(entries, 1)
+            ]
+            for region, kind, i in sorted(regions, key=lambda entry: entry[0].start):
+                handle.write(f">{record.crispr_id}_{kind}_{i:03d}\n{region}\n")
+
+
 def write_genome(genome_id, tagged_contigs, genome_path):
     """
     Writes contigs to a FASTA file using the internal contig IDs as headers.
@@ -906,6 +935,9 @@ def predict_crisprs(tagged_contigs, threads=1):
                     spacer_length=spacer_length,
                     num_repeats=num_repeats,
                     repeat_sequence=repeat_sequence,
+                    # Read only the reported entries: DICED can crash when iteration reaches the end.
+                    repeats=[crispr.repeats[j] for j in range(num_repeats)],
+                    spacers=[crispr.spacers[j] for j in range(num_spacers)],
                 )
             )
 
@@ -1201,6 +1233,7 @@ def process_genome(
     rna_tsv_path=None,
     crispr_tsv_path=None,
     threads=1,
+    crispr_fasta_path=None,
 ):
     """
     Master function to process a single genome. Parses the FASTA, runs predictions,
@@ -1222,6 +1255,7 @@ def process_genome(
         run_crispr (bool): Flag to run CRISPR detection.
         rna_tsv_path (str, optional): Output path for the RNA TSV file.
         crispr_tsv_path (str, optional): Output path for the CRISPR TSV file.
+        crispr_fasta_path (str, optional): Output path for repeats and spacers FASTA.
         threads (int): Number of threads to use for RNA/CRISPR predictions.
     """
     # Log versions of all tools
@@ -1240,6 +1274,7 @@ def process_genome(
         "genome": genome_path,
         "rna_tsv": rna_tsv_path,
         "crispr_tsv": crispr_tsv_path,
+        "crispr_fasta": crispr_fasta_path,
     }
     for output_name, output_path in output_files.items():
         if output_path:
@@ -1333,6 +1368,8 @@ def process_genome(
     # Write CRISPR predictions if path is provided (even if empty)
     if crispr_tsv_path:
         write_crispr_tsv(crispr_records, crispr_tsv_path)
+    if crispr_fasta_path:
+        write_crispr_fasta(crispr_records, crispr_fasta_path)
 
     # Log processed file info
     log.info(f"Finished processing {filename} => {genome_id}.")
@@ -1349,6 +1386,7 @@ def process_protein_input(
     genome_path=None,
     rna_tsv_path=None,
     crispr_tsv_path=None,
+    crispr_fasta_path=None,
 ):
     """
     Process protein-only FASTA input and write base outputs.
@@ -1364,6 +1402,7 @@ def process_protein_input(
         genome_path (str, optional): Output path for empty genome FASTA file.
         rna_tsv_path (str, optional): Output path for empty RNA TSV file.
         crispr_tsv_path (str, optional): Output path for empty CRISPR TSV file.
+        crispr_fasta_path (str, optional): Output path for empty CRISPR FASTA file.
     """
     # Log versions of all tools
     log_versions(log)
@@ -1381,6 +1420,7 @@ def process_protein_input(
         "genome": genome_path,
         "rna_tsv": rna_tsv_path,
         "crispr_tsv": crispr_tsv_path,
+        "crispr_fasta": crispr_fasta_path,
     }
     for output_name, output_path in output_files.items():
         if output_path:
@@ -1455,6 +1495,8 @@ def process_protein_input(
         ensure_empty_file(rna_tsv_path)
     if crispr_tsv_path:
         ensure_empty_file(crispr_tsv_path)
+    if crispr_fasta_path:
+        ensure_empty_file(crispr_fasta_path)
 
     log.info(f"Finished processing protein input {filename} => {protein_id}.")
 
@@ -1516,6 +1558,10 @@ if __name__ == "__main__":
         "--crispr_tsv_path", help="Output path for CRISPR predictions TSV file"
     )
     parser.add_argument(
+        "--crispr_fasta_path",
+        help="Output FASTA for individual CRISPR repeats and spacers",
+    )
+    parser.add_argument(
         "--input_type",
         choices=["dna", "protein"],
         default="dna",
@@ -1554,6 +1600,7 @@ if __name__ == "__main__":
             genome_path=a.genome_path,
             rna_tsv_path=a.rna_tsv_path,
             crispr_tsv_path=a.crispr_tsv_path,
+            crispr_fasta_path=a.crispr_fasta_path,
         )
     else:
         # Run process_genome with the given arguments
@@ -1573,5 +1620,6 @@ if __name__ == "__main__":
             run_crispr=a.run_crispr,
             rna_tsv_path=a.rna_tsv_path,
             crispr_tsv_path=a.crispr_tsv_path,
+            crispr_fasta_path=a.crispr_fasta_path,
             threads=a.threads,
         )
