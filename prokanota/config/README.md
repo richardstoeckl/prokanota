@@ -47,3 +47,16 @@ Database mapping files are tab-separated (`.tsv`) with no header and exactly fou
 
 The default sample sheet is `config/metadata.csv` (as configured in `config/config.yaml`).
 Each row usually corresponds to one genome with the first collumn being the sampleID (Note: The sampleID, input type, and ordered sequences are used to calculate the gene_ids!), and the second column being the path to the genome assembly in `FASTA` format. The third column indicates wether the fasta file is a genome ("dna") and the feature prediction module is run, or the fasta file is a proteome ("protein") and the feature prediction module is skipped.
+
+## Path resolution
+
+Both `prokanota run` and direct Snakemake execution use these rules:
+
+- Paths inside `config.yaml` (`global.metadata`, `global.databases`, `global.logs`,
+  `global.interim`, `global.results`) resolve against that config file's directory.
+- Database `db_path` and `mapping_path` resolve against the databases YAML directory.
+  This includes prepared database prefixes as well as trusted raw references.
+- Sample `path` values resolve against the metadata CSV directory.
+- Command-line paths, including `--cfg`, `--db`, and `--meta`, resolve against the
+  working directory. Direct Snakemake `--config` path overrides do likewise.
+- Absolute paths remain absolute.

@@ -62,6 +62,9 @@ def build_snakemake_config(
     global_config["databases"] = str(databases_path)
     logs_dir = OUTPUT_DIR / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
+    # Normalize before moving configuration into the generated logs directory.
+    for key in ("metadata", "logs", "interim", "results"):
+        global_config[key] = str((config_path.parent / global_config[key]).resolve())
     target_path = logs_dir / f"test-config-{mode_label}.yaml"
     target_path.write_text(yaml.safe_dump(config_data, sort_keys=False))
     return target_path

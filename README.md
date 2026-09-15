@@ -269,6 +269,8 @@ Check out the [Benchmark Github repository](https://github.com/richardstoeckl/pr
   - Absolutely! While the pipeline was designed with archaeal annotation challenges in mind, it works equally well for bacterial genomes.
 - **What if I don't want to use a database for a specific run?**
   - Simply set `enabled: false` for any database in `config/databases.yaml`.
+- **How are relative paths resolved?**
+  - Paths inside configuration, database, and metadata files resolve against the file containing them. Command-line paths resolve against the working directory; absolute paths remain absolute.
 
 ## Citation
 

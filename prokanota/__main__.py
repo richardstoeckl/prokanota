@@ -193,8 +193,24 @@ def stage_runtime_files(config_path, config_data, databases_path, metadata_path)
     staged_metadata = staging_dir / "metadata.csv"
     staged_config = staging_dir / "config.yaml"
 
-    shutil.copy2(databases_path, staged_databases)
-    shutil.copy2(metadata_path, staged_metadata)
+    databases_data = read_yaml_file(databases_path, "databases")
+    for db in databases_data["databases"]:
+        for key in ("db_path", "mapping_path"):
+            if key in db and not Path(db[key]).is_absolute():
+                db[key] = str((Path(databases_path).parent / db[key]).resolve())
+    with open(staged_databases, "w", encoding="utf-8") as handle:
+        yaml.safe_dump(databases_data, handle, sort_keys=False)
+    with open(metadata_path, newline="", encoding="utf-8") as source:
+        reader = csv.DictReader(source)
+        with open(staged_metadata, "w", newline="", encoding="utf-8") as target:
+            writer = csv.DictWriter(target, fieldnames=reader.fieldnames)
+            writer.writeheader()
+            for row in reader:
+                if not Path(row["path"]).is_absolute():
+                    row["path"] = str(
+                        (Path(metadata_path).parent / row["path"]).resolve()
+                    )
+                writer.writerow(row)
 
     runtime_config = deepcopy(config_data)
     runtime_config.setdefault("global", {})

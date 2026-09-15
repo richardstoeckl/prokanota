@@ -3,8 +3,8 @@ databases:
     enabled: true
     order: 10
     search_tool: pyhmmer
-    db_path: "tests/data/mockDB/hmm/hmm_mockDB.hmm.h3m"
-    mapping_path: "tests/data/mockDB/mockDB_profile_mapping.tsv"
+    db_path: "data/mockDB/hmm/hmm_mockDB.hmm.h3m"
+    mapping_path: "data/mockDB/mockDB_profile_mapping.tsv"
     mapping_key: query_name
     evalue_cutoff: 1.0e-3
     columns:
@@ -26,8 +26,8 @@ databases:
     enabled: true
     order: 20
     search_tool: rpsblast
-    db_path: "tests/data/mockDB/rpsblast/rpsblast_mockDB"
-    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    db_path: "data/mockDB/rpsblast/rpsblast_mockDB"
+    mapping_path: "data/mockDB/mockDB_seq_mapping.tsv"
     mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:
@@ -45,8 +45,8 @@ databases:
     enabled: true
     order: 30
     search_tool: diamond
-    db_path: "tests/data/mockDB/blastp/blastp_mockDB"
-    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    db_path: "data/mockDB/blastp/blastp_mockDB"
+    mapping_path: "data/mockDB/mockDB_seq_mapping.tsv"
     mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:
@@ -70,8 +70,8 @@ databases:
     enabled: true
     order: 40
     search_tool: diamond
-    db_path: "tests/data/mockDB/diamond/diamond_mockDB.dmnd"
-    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    db_path: "data/mockDB/diamond/diamond_mockDB.dmnd"
+    mapping_path: "data/mockDB/mockDB_seq_mapping.tsv"
     mapping_key: accession
     evalue_cutoff: 1.0e-3
     columns:
@@ -95,8 +95,8 @@ databases:
     enabled: true
     order: 50
     search_tool: mmseqs2
-    db_path: "tests/data/mockDB/mmseqs2/mmseqs2_mockDB"
-    mapping_path: "tests/data/mockDB/mockDB_seq_mapping.tsv"
+    db_path: "data/mockDB/mmseqs2/mmseqs2_mockDB"
+    mapping_path: "data/mockDB/mockDB_seq_mapping.tsv"
     mapping_key: accession
     evalue_cutoff: 1.0e-3
     mmseqs2_sensitivity: 5.7

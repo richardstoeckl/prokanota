@@ -277,7 +277,7 @@ def parse_gff_features(path: Path) -> list[list[str]]:
     assert path.exists(), f"Missing GFF: {path}"
     features = []
     for line in path.read_text().splitlines():
-        if line.startswith("##FASTA") or line.startswith(">"):
+        if line.startswith(("##FASTA", ">")):
             break
         if not line.strip() or line.startswith("#"):
             continue

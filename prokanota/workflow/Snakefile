@@ -55,6 +55,27 @@ def load_and_validate_config(config_path, schema_path):
 configfile: os.path.join(workflow.basedir, "../", "config", "config.yaml")
 
 
+# Resolve each path against the file that supplied it, respecting config-file
+# layering. Explicit --config values are relative to the working directory.
+CONFIG_PATH_KEYS = ("metadata", "databases", "logs", "interim", "results")
+for config_path in [
+    Path(workflow.basedir) / "../config/config.yaml",
+    *workflow.overwrite_configfiles,
+]:
+    with open(config_path) as handle:
+        source_global = yaml.safe_load(handle).get("global", {})
+    for key in CONFIG_PATH_KEYS:
+        if key in source_global:
+            value = Path(source_global[key])
+            config["global"][key] = str(
+                value
+                if value.is_absolute()
+                else (Path(config_path).parent / value).resolve()
+            )
+for key, value in workflow.config_settings.config.get("global", {}).items():
+    if key in CONFIG_PATH_KEYS:
+        config["global"][key] = str(Path(value).absolute())
+
 validate(
     config,
     schema=os.path.join(
@@ -62,9 +83,7 @@ validate(
     ),
 )
 
-metadataFile = os.path.join(
-    workflow.basedir, "../", "config", config["global"]["metadata"]
-)
+metadataFile = config["global"]["metadata"]
 validate(
     metadataFile,
     schema=os.path.join(
@@ -82,7 +101,14 @@ if len(duplicate_sample_ids):
 
 metadata = metadata.set_index("sample_id", drop=False)
 NAMES = metadata.sample_id.to_list()
-path = metadata.path.to_dict()
+path = {
+    sample: str(
+        Path(value)
+        if Path(value).is_absolute()
+        else (Path(metadataFile).parent / value).resolve()
+    )
+    for sample, value in metadata.path.to_dict().items()
+}
 
 if "input_type" in metadata.columns:
     input_type = metadata.input_type.fillna("dna").str.lower().to_dict()
@@ -124,18 +150,18 @@ FEATURE_SETTINGS = config["features"]
 # Load and Validate Databases Config
 # =============================================================================
 
-DATABASES_CONFIG_PATH = os.path.join(
-    workflow.basedir,
-    "../",
-    "config",
-    config["global"].get("databases", "databases.yaml"),
-)
+DATABASES_CONFIG_PATH = config["global"]["databases"]
 DATABASES_SCHEMA_PATH = os.path.join(
     workflow.basedir, "../", "config", "schemas", "databases.schema.json"
 )
 databases_config = load_and_validate_config(
     DATABASES_CONFIG_PATH, DATABASES_SCHEMA_PATH
 )
+
+for db in databases_config["databases"]:
+    for key in ("db_path", "mapping_path"):
+        if key in db and not Path(db[key]).is_absolute():
+            db[key] = str((Path(DATABASES_CONFIG_PATH).parent / db[key]).resolve())
 
 
 # =============================================================================
