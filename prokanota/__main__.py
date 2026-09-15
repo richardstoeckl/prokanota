@@ -323,7 +323,7 @@ def common_options(func):
 
 @click.group(
     cls=SplashOrderedCommands,
-    context_settings=dict(help_option_names=["-h", "--help"]),
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 @click.version_option(__version__, "-v", "--version", is_flag=True)
 def cli():
@@ -331,7 +331,6 @@ def cli():
     \b
     For more options, run:
     prokanota command --help"""
-    pass
 
 
 help_msg_extra = """
@@ -359,9 +358,10 @@ Available targets:
 @click.command(
     cls=SplashCommand,
     epilog=help_msg_extra,
-    context_settings=dict(
-        help_option_names=["-h", "--help"], ignore_unknown_options=True
-    ),
+    context_settings={
+        "help_option_names": ["-h", "--help"],
+        "ignore_unknown_options": True,
+    },
 )
 @click.option(
     "--cfg",
@@ -653,7 +653,6 @@ def completion_install(shell):
 @click.group(cls=SplashOrderedCommands)
 def helper():
     """Utility commands to help prepare inputs for prokanota"""
-    pass
 
 
 @click.command(cls=SplashCommand)
