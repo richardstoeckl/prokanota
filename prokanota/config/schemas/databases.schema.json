@@ -43,7 +43,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "search_tool", "db_path", "mapping_path", "columns"],
+        "required": ["name", "search_tool", "db_path"],
         "properties": {
           "name": {
             "type": "string",
@@ -63,8 +63,8 @@
           },
           "search_tool": {
             "type": "string",
-            "enum": ["pyhmmer", "rpsblast", "diamond", "mmseqs2"],
-            "description": "Search tool to use for this database"
+            "enum": ["pyhmmer", "rpsblast", "diamond", "mmseqs2", "trusted_protein"],
+            "description": "Search tool, or trusted_protein specialized workflow"
           },
           "db_path": {
             "allOf": [
@@ -72,7 +72,7 @@
                 "$ref": "#/$defs/pathField"
               }
             ],
-            "description": "Path to prepared database files"
+            "description": "Prepared database path, or raw FASTA/GenBank reference for trusted_protein"
           },
           "mapping_path": {
             "allOf": [
@@ -159,8 +159,42 @@
             },
             "description": "Column definitions for output"
           }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "search_tool": {
+                  "const": "trusted_protein"
+                }
+              },
+              "required": ["search_tool"]
+            },
+            "then": {
+              "propertyNames": {
+                "enum": ["name", "search_tool", "db_path", "enabled"]
+              }
+            },
+            "else": {
+              "required": ["mapping_path", "columns"]
+            }
+          }
+        ]
+      },
+      "contains": {
+        "type": "object",
+        "required": ["search_tool"],
+        "properties": {
+          "search_tool": {
+            "const": "trusted_protein"
+          },
+          "enabled": {
+            "const": true
+          }
         }
-      }
+      },
+      "minContains": 0,
+      "maxContains": 1
     }
   }
 }

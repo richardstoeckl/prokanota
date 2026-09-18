@@ -179,7 +179,8 @@ def normalize_annotation(path: Path) -> str:
         return [
             index
             for index, column in enumerate(header_columns)
-            if column in ENABLED_DB_COLUMNS or column not in ALL_DB_COLUMNS
+            if not column.startswith("trusted_")
+            and (column in ENABLED_DB_COLUMNS or column not in ALL_DB_COLUMNS)
         ]
 
     return normalize_tsv(
@@ -757,3 +758,40 @@ def test_reference_argonaute_record_is_consistent_across_outputs():
     assert nucleotide == expected_nucleotide
     assert protein == expected_protein
     assert extract_gbk_translation(gbk_path, feature_id) == expected_protein
+
+
+@pytest.mark.skipif(TEST_MODE != "full", reason="Trusted search uses DIAMOND")
+@pytest.mark.parametrize("sample_id", SAMPLES)
+def test_trusted_protein_annotation(sample_id):
+    """
+    Both input modes (dna/protein) contain the Pyrococcus furiosus Argonaute protein.
+    The full test suite constructs a mock "trusted_protein.fasta" from the reference sequence
+    for PfAgo (https://www.uniprot.org/uniprotkb/Q8U3D2/entry). The trusted-protein search
+    should identify this exact sequence and transfer the curated gene and product names to the final
+    annotation.
+    """
+    # Exact expected translation sequence of PfAgo (UniProt Q8U3D2).
+    PF_AGO = "MKAKVVINLVKINKKIIPDKIYVYRLFNDPEEELQKEGYSIYRLAYENVGIVIDPENLIIATTKELEYEGEFIPEGEISFSELRNDYQSKLVLRLLKENGIGEYELSKLLRKFRKPKTFGDYKVIPSVEMSVIKHDEDFYLVIHIIHQIQSMKTLWELVNKDPKELEEFLMTHKENLMLKDIASPLKTVYKPCFEEYTKKPKLDHNQEIVKYWYNYHIERYWNTPEAKLEFYRKFGQVDLKQPAILAKFASKIKKNKNYKIYLLPQLVVPTYNAEQLESDVAKEILEYTKLMPEERKELLENILAEVDSDIIDKSLSEIEVEKIAQELENKIRVRDDKGNSVPISQLNVQKSQLLLWTNYSRKYPVILPYEVPEKFRKIREIPMFIILDSGLLADIQNFATNEFRELVKSMYYSLAKKYNSLAKKARSTNEIGLPFLDFRGKEKVITEDLNSDKGIIEVVEQVSSFMKGKELGLAFIAARNKLSSEKFEEIKRRLFNLNVISQVVNEDTLKNKRDKYDRNRLDLFVRHNLLFQVLSKLGVKYYVLDYRFNYDYIIGIDVAPMKRSEGYIGGSAVMFDSQGYIRKIVPIKIGEQRGESVDMNEFFKEMVDKFKEFNIKLDNKKILLLRDGRITNNEEEGLKYISEMFDIEVVTMDVIKNHPVRAFANMKMYFNLGGAIYLIPHKLKQAKGTPIPIKLAKKRIIKNGKVEKQSITRQDVLDIFILTRLNYGSISADMRLPAPVHYAHKFANAIRNEWKIKEEFLAEGFLYFV"
+
+    sample_dir = RESULTS_DIR / sample_id
+
+    # First we find the predicted Ago in the test dataset via the exact sequence, to be able to get its Prokanota internal ID
+    proteins = parse_fasta(sample_dir / "features" / f"{sample_id}.faa")
+    ago_ids = {
+        gene_id
+        for gene_id, sequence in proteins.items()
+        if sequence.removesuffix("*") == PF_AGO
+    }
+    assert ago_ids, "The existing sample must contain the Ago protein"
+
+    rows = parse_tsv_rows(
+        sample_dir / "annotation" / f"{sample_id}_finalAnnotation.tsv"
+    )
+    assert ago_ids <= {row["gene_id"] for row in rows}
+
+    # Every exact PfAgo match must receive the curated UniProt identifier, gene name, and product at 100% amino-acid identity.
+    for row in rows:
+        if row["gene_id"] in ago_ids:
+            assert row["trusted_reference_id"] == "Q8U3D2"
+            assert row["trusted_gene"] == "PfAgo"
+            assert row["trusted_product"] == "Argonaute"

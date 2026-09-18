@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added optional shell completion for Bash, Zsh, and Fish via `prokanota completion show` and `prokanota completion install`.
+- Added FASTA output for individual CRISPR repeats and spacers in `features/{id}_crispr.fasta`, with identifiers linking each sequence to its array.
+- Added regression tests for CRISPR FASTA sequences, identifiers, and empty output for protein-only samples.
+- Added "Trusted protein references" workflow. Use this if you want to ensure the naming is consistent across closely related genomes.
+
+### Changed
+- Changed the CLI to use all available threads by default. `--threads` accepts a positive count, or `all`, `0`, and `-1` for automatic CPU selection.
+- Updated Pyrodigal to 3.7.1 and PyHMMER to 0.12.3.
+- Simplified feature settings validation and default handling to use the configuration schema.
+- Simplified and unified the parsers to remove redundancy. Parsers can now be a tiny script using common utils and dont need to implement as much from scratch.
+- Removed unused workflow code and stale test fixtures, and applied linting fixes.
+- Updated the README with Bioconda installation instructions, publication and benchmark links, and database recommendations.
+
+### Fixed
+- Fixed automated release asset uploads by explicitly specifying the GitHub repository.
+- Fixed relative file paths resolving inconsistently
+
 ## [2.0.0] - 2026-07-31
 
 > ⚠️ **BREAKING CHANGES** ⚠️ — Prokanota 2.0 is a complete rewrite. Users upgrading from 1.x should review their configuration and downstream assumptions before migrating.

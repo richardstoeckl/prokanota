@@ -228,7 +228,8 @@ def validate_mapping_file(mapping_path):
 
 
 for db in ENABLED_DBS:
-    validate_mapping_file(db["mapping_path"])
+    if db["search_tool"] != "trusted_protein":
+        validate_mapping_file(db["mapping_path"])
 
 
 # =============================================================================
@@ -260,6 +261,11 @@ rule all:
 rule predict_features:
     input:
         fasta=lambda wildcards: path[wildcards.id],
+        trusted=lambda wildcards: (
+            [os.path.join(TRUSTED_DIR, "annotations.json")]
+            if TRUSTED_DB is not None
+            else []
+        ),
     output:
         faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
         gff=os.path.join(RESULTPATH, "{id}", "features", "{id}.gff"),
@@ -304,6 +310,81 @@ rule predict_features:
         --translation_table {params.translation_table} \
         --minimum_gene_length {params.minimum_gene_length} \
         --threads {threads} """ + LOG_REDIRECT
+
+
+# =============================================================================
+# Shared Trusted Reference Preparation and Search
+# =============================================================================
+
+TRUSTED_DB = next(
+    (db for db in ENABLED_DBS if db["search_tool"] == "trusted_protein"), None
+)
+if TRUSTED_DB is not None:
+    trusted_reference = Path(TRUSTED_DB["db_path"])
+    if not trusted_reference.is_absolute():
+        trusted_reference = Path(DATABASES_CONFIG_PATH).parent / trusted_reference
+    TRUSTED_DIR = os.path.join(INTERIMPATH, "common", TRUSTED_DB["name"])
+
+    rule prepare_trusted_reference:
+        input:
+            reference=str(trusted_reference.resolve()),
+        output:
+            faa=os.path.join(TRUSTED_DIR, "reference.faa"),
+            annotations=os.path.join(TRUSTED_DIR, "annotations.json"),
+        log:
+            os.path.join(LOGPATH, "common", "prepare_trusted_reference.log"),
+        conda:
+            os.path.join(workflow.basedir, "envs", "features.yaml")
+        params:
+            scriptpath=os.path.join(workflow.basedir, "scripts", "trusted_protein.py"),
+        shell:
+            """
+            python {params.scriptpath:q} prepare --reference {input.reference:q} \
+                --fasta {output.faa:q} --annotations {output.annotations:q}
+            """ + LOG_REDIRECT
+
+    rule build_trusted_database:
+        input:
+            faa=os.path.join(TRUSTED_DIR, "reference.faa"),
+        output:
+            database=os.path.join(TRUSTED_DIR, "reference.dmnd"),
+        log:
+            os.path.join(LOGPATH, "common", "build_trusted_database.log"),
+        conda:
+            os.path.join(workflow.basedir, "envs", "diamond.yaml")
+        threads: workflow.cores
+        shell:
+            """
+            diamond makedb --in {input.faa:q} --db {output.database:q} --threads {threads}
+            """ + LOG_REDIRECT
+
+    rule search_trusted_protein:
+        input:
+            faa=os.path.join(RESULTPATH, "{id}", "features", "{id}.faa"),
+            database=os.path.join(TRUSTED_DIR, "reference.dmnd"),
+            annotations=os.path.join(TRUSTED_DIR, "annotations.json"),
+        output:
+            hits=temp(os.path.join(INTERIMPATH, "{id}", TRUSTED_DB["name"], "hits.tsv")),
+            tsv=os.path.join(
+                INTERIMPATH, "{id}", TRUSTED_DB["name"], "parsed_annotation.tsv"
+            ),
+            version=os.path.join(
+                INTERIMPATH, "{id}", TRUSTED_DB["name"], "tool_version.txt"
+            ),
+        log:
+            os.path.join(LOGPATH, "{id}", "search", "trusted_protein.log"),
+        conda:
+            os.path.join(workflow.basedir, "envs", "diamond.yaml")
+        threads: max(1, int(workflow.cores * 0.5))
+        params:
+            scriptpath=os.path.join(workflow.basedir, "scripts", "trusted_protein.py"),
+        shell:
+            """
+            python {params.scriptpath:q} search --fasta {input.faa:q} \
+                --database {input.database:q} --annotations {input.annotations:q} \
+                --hits {output.hits:q} --output {output.tsv:q} \
+                --version {output.version:q} --threads {threads}
+            """ + LOG_REDIRECT
 
 
 # =============================================================================
@@ -643,7 +724,11 @@ def get_db_results_json(wildcards):
                 "path": os.path.join(
                     INTERIMPATH, wildcards.id, db["name"], "parsed_annotation.tsv"
                 ),
-                "order": db.get("order", 100),
+                "order": (
+                    -1
+                    if db["search_tool"] == "trusted_protein"
+                    else db.get("order", 100)
+                ),
             }
         )
     return json.dumps(results)
@@ -692,6 +777,23 @@ rule collect_master_table:
     run:
         import pandas as pd
 
-        dfs = [pd.read_csv(path, sep="\t") for path in input.tables]
+        trusted_types = (
+            {
+                "trusted_reference_id": str,
+                "trusted_gene": str,
+                "trusted_product": str,
+            }
+            if TRUSTED_DB is not None
+            else None
+        )
+        dfs = [
+            pd.read_csv(
+                path,
+                sep="\t",
+                dtype=trusted_types,
+                keep_default_na=TRUSTED_DB is None,
+            )
+            for path in input.tables
+        ]
         combined = pd.concat(dfs, ignore_index=True)
         combined.to_csv(output.final, sep="\t", index=False)

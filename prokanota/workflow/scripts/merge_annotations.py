@@ -1,10 +1,10 @@
-#!/usr/bin/env python3
 """
 Merge all database annotation results with the base feature table.
 Dynamically handles any number of databases based on config.
 """
 
 import argparse
+import csv
 import json
 from datetime import datetime
 from pathlib import Path
@@ -28,7 +28,16 @@ def load_base_table(path: Path) -> pl.DataFrame:
 
 def load_db_annotation(path: Path) -> pl.DataFrame:
     """Load a single database annotation result."""
-    return pl.read_csv(path, separator="\t")
+    # Reference accessions and biological names are text, even if all values
+    # happen to be numeric (for example, accession "00123").
+    with path.open(newline="") as handle:
+        columns = next(csv.reader(handle, delimiter="\t"))
+    trusted_text = {"trusted_reference_id", "trusted_gene", "trusted_product"}
+    return pl.read_csv(
+        path,
+        separator="\t",
+        schema_overrides={name: pl.Utf8 for name in columns if name in trusted_text},
+    )
 
 
 def merge_annotations(
@@ -48,6 +57,13 @@ def merge_annotations(
 
     for db_name, db_path in db_annotations:
         db_df = load_db_annotation(db_path)
+        if "trusted_reference_id" in db_df.columns:
+            db_df = db_df.select(
+                gene_id_column,
+                "trusted_reference_id",
+                "trusted_gene",
+                "trusted_product",
+            )
 
         # Get columns to add (everything except gene_id)
         new_cols = [c for c in db_df.columns if c != gene_id_column]

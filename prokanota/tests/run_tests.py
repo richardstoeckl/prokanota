@@ -65,6 +65,27 @@ def build_snakemake_config(
     # Normalize before moving configuration into the generated logs directory.
     for key in ("metadata", "logs", "interim", "results"):
         global_config[key] = str((config_path.parent / global_config[key]).resolve())
+    if mode_label == "full":
+        # Sequence from https://www.uniprot.org/uniprotkb/Q8U3D2/entry
+        PF_AGO = "MKAKVVINLVKINKKIIPDKIYVYRLFNDPEEELQKEGYSIYRLAYENVGIVIDPENLIIATTKELEYEGEFIPEGEISFSELRNDYQSKLVLRLLKENGIGEYELSKLLRKFRKPKTFGDYKVIPSVEMSVIKHDEDFYLVIHIIHQIQSMKTLWELVNKDPKELEEFLMTHKENLMLKDIASPLKTVYKPCFEEYTKKPKLDHNQEIVKYWYNYHIERYWNTPEAKLEFYRKFGQVDLKQPAILAKFASKIKKNKNYKIYLLPQLVVPTYNAEQLESDVAKEILEYTKLMPEERKELLENILAEVDSDIIDKSLSEIEVEKIAQELENKIRVRDDKGNSVPISQLNVQKSQLLLWTNYSRKYPVILPYEVPEKFRKIREIPMFIILDSGLLADIQNFATNEFRELVKSMYYSLAKKYNSLAKKARSTNEIGLPFLDFRGKEKVITEDLNSDKGIIEVVEQVSSFMKGKELGLAFIAARNKLSSEKFEEIKRRLFNLNVISQVVNEDTLKNKRDKYDRNRLDLFVRHNLLFQVLSKLGVKYYVLDYRFNYDYIIGIDVAPMKRSEGYIGGSAVMFDSQGYIRKIVPIKIGEQRGESVDMNEFFKEMVDKFKEFNIKLDNKKILLLRDGRITNNEEEGLKYISEMFDIEVVTMDVIKNHPVRAFANMKMYFNLGGAIYLIPHKLKQAKGTPIPIKLAKKRIIKNGKVEKQSITRQDVLDIFILTRLNYGSISADMRLPAPVHYAHKFANAIRNEWKIKEEFLAEGFLYFV"
+
+        reference = logs_dir / "trusted_ago.faa"
+        reference.write_text(f">Q8U3D2 PfAgo~~~Argonaute~~~\n{PF_AGO}\n")
+        registry = yaml.safe_load(databases_path.read_text())
+        for db in registry["databases"]:
+            for key in ("db_path", "mapping_path"):
+                if key in db:
+                    db[key] = str((databases_path.parent / db[key]).resolve())
+        registry["databases"].append(
+            {
+                "name": "trusted_protein",
+                "search_tool": "trusted_protein",
+                "db_path": str(reference),
+            }
+        )
+        generated_databases = logs_dir / "databases-full.yaml"
+        generated_databases.write_text(yaml.safe_dump(registry, sort_keys=False))
+        global_config["databases"] = str(generated_databases)
     target_path = logs_dir / f"test-config-{mode_label}.yaml"
     target_path.write_text(yaml.safe_dump(config_data, sort_keys=False))
     return target_path

@@ -208,6 +208,17 @@ Here you need to tell prokanota which databases to use for annotation and how. A
 
 > **Note:** For a detailed database setup protocol, see the [Benchmark Github repository](https://github.com/richardstoeckl/prokanota-bench), and the [publication](https://f1000research.com/articles/15-1421) ([DOI:10.12688/f1000research.188674.1](https://doi.org/10.12688/f1000research.188674.1))
 
+#### Trusted protein references
+
+Some species use very specific terminology in their protein naming, and sometimes you might have have good quality reference genomes/proteomes and want to ensure the naming is consistent across closely related genomes.
+
+
+If you have Genbank or Protein FASTA file(s) that you want to annotate genes from
+
+Use `search_tool: trusted_protein` with a raw GenBank or Bakta short-form FASTA
+in `db_path` to share trusted names across samples. No mapping file is needed.
+See [trusted reference configuration and matching rules](prokanota/config/README.md#trusted-protein-references).
+
 #### Using an AI assistant for database setup
 
 If you would like help preparing your database and mapping file, a web-enabled
