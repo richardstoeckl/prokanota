@@ -91,7 +91,7 @@ validate(
     ),
 )
 
-metadata = pd.read_csv(metadataFile, sep=",")
+metadata = pd.read_csv(metadataFile, sep=",", dtype=str, keep_default_na=False)
 duplicate_sample_ids = metadata.loc[
     metadata["sample_id"].duplicated(keep=False), "sample_id"
 ].unique()
@@ -777,21 +777,12 @@ rule collect_master_table:
     run:
         import pandas as pd
 
-        trusted_types = (
-            {
-                "trusted_reference_id": str,
-                "trusted_gene": str,
-                "trusted_product": str,
-            }
-            if TRUSTED_DB is not None
-            else None
-        )
         dfs = [
             pd.read_csv(
                 path,
                 sep="\t",
-                dtype=trusted_types,
-                keep_default_na=TRUSTED_DB is None,
+                dtype=str,
+                keep_default_na=False,
             )
             for path in input.tables
         ]

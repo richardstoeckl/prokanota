@@ -4,7 +4,6 @@ Dynamically handles any number of databases based on config.
 """
 
 import argparse
-import csv
 import json
 from datetime import datetime
 from pathlib import Path
@@ -23,21 +22,14 @@ logger = setup_logger(build_part("FINALIZE", "MERGE"))
 
 def load_base_table(path: Path) -> pl.DataFrame:
     """Load the base annotation table (e.g., from feature prediction)."""
-    return pl.read_csv(path, separator="\t")
+    return pl.read_csv(path, separator="\t", infer_schema=False)
 
 
 def load_db_annotation(path: Path) -> pl.DataFrame:
     """Load a single database annotation result."""
     # Reference accessions and biological names are text, even if all values
     # happen to be numeric (for example, accession "00123").
-    with path.open(newline="") as handle:
-        columns = next(csv.reader(handle, delimiter="\t"))
-    trusted_text = {"trusted_reference_id", "trusted_gene", "trusted_product"}
-    return pl.read_csv(
-        path,
-        separator="\t",
-        schema_overrides={name: pl.Utf8 for name in columns if name in trusted_text},
-    )
+    return pl.read_csv(path, separator="\t", infer_schema=False)
 
 
 def merge_annotations(
