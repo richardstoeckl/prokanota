@@ -540,7 +540,11 @@ def write_gbk(
                     Qualifier(key="product", value=rna.rna_type),
                 ]
                 if rna.anti_codon:
-                    qualifiers.append(Qualifier(key="anticodon", value=rna.anti_codon))
+                    qualifiers.append(
+                        Qualifier(
+                            key="note", value=f"anticodon sequence: {rna.anti_codon}"
+                        )
+                    )
                 adjusted_start = rna.start - 1
                 if rna.strand == "+":
                     location = gb_io.Range(start=adjusted_start, end=rna.end)

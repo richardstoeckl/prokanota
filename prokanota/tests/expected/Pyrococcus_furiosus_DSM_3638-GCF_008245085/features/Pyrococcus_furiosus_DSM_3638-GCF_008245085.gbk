@@ -587,11 +587,11 @@ FEATURES             Location/Qualifiers
      tRNA            complement(61424..61498)
                      /locus_tag="BFDTYSCHFX_1_trna_046"
                      /product="tRNA-Gly"
-                     /anticodon=tcc
+                     /note="anticodon sequence: tcc"
      tRNA            complement(61509..61582)
                      /locus_tag="BFDTYSCHFX_1_trna_045"
                      /product="tRNA-Phe"
-                     /anticodon=gaa
+                     /note="anticodon sequence: gaa"
      CDS             complement(61780..63198)
                      /locus_tag="BFDTYSCHFX_1_00057"
                      /codon_start=1
@@ -1207,7 +1207,7 @@ FEATURES             Location/Qualifiers
      tRNA            122243..122320
                      /locus_tag="BFDTYSCHFX_1_trna_001"
                      /product="tRNA-Ala"
-                     /anticodon=tgc
+                     /note="anticodon sequence: tgc"
      rRNA            122443..125493
                      /locus_tag="BFDTYSCHFX_1_rrna_002"
                      /product="23S_rRNA"
@@ -2225,7 +2225,7 @@ FEATURES             Location/Qualifiers
      tRNA            224160..224236
                      /locus_tag="BFDTYSCHFX_1_trna_002"
                      /product="tRNA-Arg"
-                     /anticodon=tct
+                     /note="anticodon sequence: tct"
      CDS             complement(224691..226310)
                      /locus_tag="BFDTYSCHFX_1_00215"
                      /codon_start=1
@@ -2773,7 +2773,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(280300..280374)
                      /locus_tag="BFDTYSCHFX_1_trna_044"
                      /product="tRNA-Met"
-                     /anticodon=cat
+                     /note="anticodon sequence: cat"
      CDS             280593..284789
                      /locus_tag="BFDTYSCHFX_1_00270"
                      /codon_start=1
@@ -3033,7 +3033,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(308250..308324)
                      /locus_tag="BFDTYSCHFX_1_trna_043"
                      /product="tRNA-Glu"
-                     /anticodon=ttc
+                     /note="anticodon sequence: ttc"
      CDS             complement(308376..309653)
                      /locus_tag="BFDTYSCHFX_1_00293"
                      /codon_start=1
@@ -3169,11 +3169,11 @@ FEATURES             Location/Qualifiers
      tRNA            complement(320916..321000)
                      /locus_tag="BFDTYSCHFX_1_trna_042"
                      /product="tRNA-Leu"
-                     /anticodon=caa
+                     /note="anticodon sequence: caa"
      tRNA            complement(321068..321140)
                      /locus_tag="BFDTYSCHFX_1_trna_041"
                      /product="tRNA-Gln"
-                     /anticodon=ctg
+                     /note="anticodon sequence: ctg"
      CDS             321340..321780
                      /locus_tag="BFDTYSCHFX_1_00306"
                      /codon_start=1
@@ -3437,11 +3437,11 @@ FEATURES             Location/Qualifiers
      tRNA            complement(345078..345152)
                      /locus_tag="BFDTYSCHFX_1_trna_040"
                      /product="tRNA-Arg"
-                     /anticodon=gcg
+                     /note="anticodon sequence: gcg"
      tRNA            complement(345262..345336)
                      /locus_tag="BFDTYSCHFX_1_trna_039"
                      /product="tRNA-Gly"
-                     /anticodon=gcc
+                     /note="anticodon sequence: gcc"
      CDS             complement(345400..346101)
                      /locus_tag="BFDTYSCHFX_1_00333"
                      /codon_start=1
@@ -3833,7 +3833,7 @@ FEATURES             Location/Qualifiers
      tRNA            381543..381618
                      /locus_tag="BFDTYSCHFX_1_trna_003"
                      /product="tRNA-Gln"
-                     /anticodon=ttg
+                     /note="anticodon sequence: ttg"
      CDS             381677..382834
                      /locus_tag="BFDTYSCHFX_1_00374"
                      /codon_start=1
@@ -4915,7 +4915,7 @@ FEATURES             Location/Qualifiers
      tRNA            490741..490818
                      /locus_tag="BFDTYSCHFX_1_trna_004"
                      /product="tRNA-Lys"
-                     /anticodon=ttt
+                     /note="anticodon sequence: ttt"
      CDS             490877..492856
                      /locus_tag="BFDTYSCHFX_1_00479"
                      /codon_start=1
@@ -5397,7 +5397,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(538450..538524)
                      /locus_tag="BFDTYSCHFX_1_trna_038"
                      /product="tRNA-Arg"
-                     /anticodon=cct
+                     /note="anticodon sequence: cct"
      CDS             complement(539156..540592)
                      /locus_tag="BFDTYSCHFX_1_00525"
                      /codon_start=1
@@ -5447,7 +5447,7 @@ FEATURES             Location/Qualifiers
      tRNA            543579..543665
                      /locus_tag="BFDTYSCHFX_1_trna_005"
                      /product="tRNA-Ser"
-                     /anticodon=cga
+                     /note="anticodon sequence: cga"
      CDS             543694..544899
                      /locus_tag="BFDTYSCHFX_1_00530"
                      /codon_start=1
@@ -8012,11 +8012,11 @@ FEATURES             Location/Qualifiers
      tRNA            780251..780328
                      /locus_tag="BFDTYSCHFX_1_trna_006"
                      /product="tRNA-Glu"
-                     /anticodon=ctc
+                     /note="anticodon sequence: ctc"
      tRNA            780332..780409
                      /locus_tag="BFDTYSCHFX_1_trna_007"
                      /product="tRNA-Ile"
-                     /anticodon=gat
+                     /note="anticodon sequence: gat"
      CDS             complement(780426..781433)
                      /locus_tag="BFDTYSCHFX_1_00814"
                      /codon_start=1
@@ -8342,7 +8342,7 @@ FEATURES             Location/Qualifiers
      tRNA            809722..809799
                      /locus_tag="BFDTYSCHFX_1_trna_008"
                      /product="tRNA-Arg"
-                     /anticodon=ccg
+                     /note="anticodon sequence: ccg"
      CDS             complement(809946..810905)
                      /locus_tag="BFDTYSCHFX_1_00850"
                      /codon_start=1
@@ -8366,7 +8366,7 @@ FEATURES             Location/Qualifiers
      tRNA            812542..812618
                      /locus_tag="BFDTYSCHFX_1_trna_009"
                      /product="tRNA-Ala"
-                     /anticodon=cgc
+                     /note="anticodon sequence: cgc"
      CDS             812643..813767
                      /locus_tag="BFDTYSCHFX_1_00852"
                      /codon_start=1
@@ -8844,7 +8844,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(857665..857749)
                      /locus_tag="BFDTYSCHFX_1_trna_037"
                      /product="tRNA-Leu"
-                     /anticodon=gag
+                     /note="anticodon sequence: gag"
      CDS             857846..858814
                      /locus_tag="BFDTYSCHFX_1_00903"
                      /codon_start=1
@@ -9358,11 +9358,11 @@ FEATURES             Location/Qualifiers
      tRNA            903162..903239
                      /locus_tag="BFDTYSCHFX_1_trna_010"
                      /product="tRNA-Ala"
-                     /anticodon=ggc
+                     /note="anticodon sequence: ggc"
      tRNA            903252..903329
                      /locus_tag="BFDTYSCHFX_1_trna_011"
                      /product="tRNA-Val"
-                     /anticodon=gac
+                     /note="anticodon sequence: gac"
      CDS             complement(903354..903572)
                      /locus_tag="BFDTYSCHFX_1_00961"
                      /codon_start=1
@@ -9551,7 +9551,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(919664..919809)
                      /locus_tag="BFDTYSCHFX_1_trna_036"
                      /product="tRNA-Trp"
-                     /anticodon=cca
+                     /note="anticodon sequence: cca"
      CDS             919905..921158
                      /locus_tag="BFDTYSCHFX_1_00981"
                      /codon_start=1
@@ -10788,7 +10788,7 @@ FEATURES             Location/Qualifiers
      tRNA            1036856..1036933
                      /locus_tag="BFDTYSCHFX_1_trna_012"
                      /product="tRNA-Tyr"
-                     /anticodon=gta
+                     /note="anticodon sequence: gta"
      CDS             1036972..1038171
                      /locus_tag="BFDTYSCHFX_1_01109"
                      /codon_start=1
@@ -11444,7 +11444,7 @@ FEATURES             Location/Qualifiers
      tRNA            1103638..1103715
                      /locus_tag="BFDTYSCHFX_1_trna_013"
                      /product="tRNA-Gly"
-                     /anticodon=ccc
+                     /note="anticodon sequence: ccc"
      CDS             1103737..1104972
                      /locus_tag="BFDTYSCHFX_1_01172"
                      /codon_start=1
@@ -12360,7 +12360,7 @@ FEATURES             Location/Qualifiers
      tRNA            1187037..1187124
                      /locus_tag="BFDTYSCHFX_1_trna_014"
                      /product="tRNA-Leu"
-                     /anticodon=tag
+                     /note="anticodon sequence: tag"
      CDS             complement(1187213..1187524)
                      /locus_tag="BFDTYSCHFX_1_01271"
                      /codon_start=1
@@ -13287,11 +13287,11 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1270625..1270699)
                      /locus_tag="BFDTYSCHFX_1_trna_035"
                      /product="tRNA-Met"
-                     /anticodon=cat
+                     /note="anticodon sequence: cat"
      tRNA            complement(1270709..1270781)
                      /locus_tag="BFDTYSCHFX_1_trna_034"
                      /product="tRNA-Asn"
-                     /anticodon=gtt
+                     /note="anticodon sequence: gtt"
      CDS             1271128..1271361
                      /locus_tag="BFDTYSCHFX_1_01372"
                      /codon_start=1
@@ -13339,7 +13339,7 @@ FEATURES             Location/Qualifiers
      tRNA            1275149..1275235
                      /locus_tag="BFDTYSCHFX_1_trna_015"
                      /product="tRNA-Ser"
-                     /anticodon=gga
+                     /note="anticodon sequence: gga"
      CDS             complement(1275327..1276229)
                      /locus_tag="BFDTYSCHFX_1_01377"
                      /codon_start=1
@@ -13405,7 +13405,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1281258..1281364)
                      /locus_tag="BFDTYSCHFX_1_trna_033"
                      /product="tRNA-Met"
-                     /anticodon=cat
+                     /note="anticodon sequence: cat"
      CDS             1281448..1282251
                      /locus_tag="BFDTYSCHFX_1_01383"
                      /codon_start=1
@@ -14381,7 +14381,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1371430..1371504)
                      /locus_tag="BFDTYSCHFX_1_trna_032"
                      /product="tRNA-Lys"
-                     /anticodon=ctt
+                     /note="anticodon sequence: ctt"
      CDS             1371612..1371908
                      /locus_tag="BFDTYSCHFX_1_01485"
                      /codon_start=1
@@ -14502,15 +14502,15 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1380455..1380529)
                      /locus_tag="BFDTYSCHFX_1_trna_031"
                      /product="tRNA-Cys"
-                     /anticodon=gca
+                     /note="anticodon sequence: gca"
      tRNA            complement(1380549..1380632)
                      /locus_tag="BFDTYSCHFX_1_trna_030"
                      /product="tRNA-Ser"
-                     /anticodon=gct
+                     /note="anticodon sequence: gct"
      tRNA            complement(1380678..1380754)
                      /locus_tag="BFDTYSCHFX_1_trna_029"
                      /product="tRNA-Thr"
-                     /anticodon=cgt
+                     /note="anticodon sequence: cgt"
      CDS             1381127..1381546
                      /locus_tag="BFDTYSCHFX_1_01499"
                      /codon_start=1
@@ -14989,7 +14989,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1426949..1427033)
                      /locus_tag="BFDTYSCHFX_1_trna_028"
                      /product="tRNA-Leu"
-                     /anticodon=taa
+                     /note="anticodon sequence: taa"
      CDS             complement(1427457..1427798)
                      /locus_tag="BFDTYSCHFX_1_01547"
                      /codon_start=1
@@ -15196,7 +15196,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1446701..1446777)
                      /locus_tag="BFDTYSCHFX_1_trna_027"
                      /product="tRNA-Thr"
-                     /anticodon=ggt
+                     /note="anticodon sequence: ggt"
      CDS             complement(1446827..1447447)
                      /locus_tag="BFDTYSCHFX_1_01567"
                      /codon_start=1
@@ -15208,11 +15208,11 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1447473..1447547)
                      /locus_tag="BFDTYSCHFX_1_trna_026"
                      /product="tRNA-Pro"
-                     /anticodon=tgg
+                     /note="anticodon sequence: tgg"
      tRNA            complement(1447550..1447626)
                      /locus_tag="BFDTYSCHFX_1_trna_025"
                      /product="tRNA-Thr"
-                     /anticodon=tgt
+                     /note="anticodon sequence: tgt"
      CDS             complement(1447676..1448509)
                      /locus_tag="BFDTYSCHFX_1_01568"
                      /codon_start=1
@@ -15946,7 +15946,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1516389..1516462)
                      /locus_tag="BFDTYSCHFX_1_trna_024"
                      /product="tRNA-Pro"
-                     /anticodon=ggg
+                     /note="anticodon sequence: ggg"
      CDS             complement(1516489..1516686)
                      /locus_tag="BFDTYSCHFX_1_01645"
                      /codon_start=1
@@ -15977,7 +15977,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1518034..1518118)
                      /locus_tag="BFDTYSCHFX_1_trna_023"
                      /product="tRNA-Leu"
-                     /anticodon=cag
+                     /note="anticodon sequence: cag"
      CDS             complement(1518124..1518909)
                      /locus_tag="BFDTYSCHFX_1_01649"
                      /codon_start=1
@@ -16012,7 +16012,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1520401..1520484)
                      /locus_tag="BFDTYSCHFX_1_trna_022"
                      /product="tRNA-Ser"
-                     /anticodon=tga
+                     /note="anticodon sequence: tga"
      CDS             complement(1520470..1521108)
                      /locus_tag="BFDTYSCHFX_1_01653"
                      /codon_start=1
@@ -16246,7 +16246,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1541112..1541186)
                      /locus_tag="BFDTYSCHFX_1_trna_021"
                      /product="tRNA-Asp"
-                     /anticodon=gtc
+                     /note="anticodon sequence: gtc"
      rRNA            complement(1541199..1541319)
                      /locus_tag="BFDTYSCHFX_1_rrna_004"
                      /product="5S_rRNA"
@@ -16839,7 +16839,7 @@ FEATURES             Location/Qualifiers
      tRNA            1595046..1595123
                      /locus_tag="BFDTYSCHFX_1_trna_016"
                      /product="tRNA-Val"
-                     /anticodon=cac
+                     /note="anticodon sequence: cac"
      CDS             complement(1595188..1595592)
                      /locus_tag="BFDTYSCHFX_1_01739"
                      /codon_start=1
@@ -18186,7 +18186,7 @@ FEATURES             Location/Qualifiers
      tRNA            1714042..1714118
                      /locus_tag="BFDTYSCHFX_1_trna_017"
                      /product="tRNA-Val"
-                     /anticodon=tac
+                     /note="anticodon sequence: tac"
      CDS             complement(1714452..1714949)
                      /locus_tag="BFDTYSCHFX_1_01886"
                      /codon_start=1
@@ -19035,7 +19035,7 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1798281..1798355)
                      /locus_tag="BFDTYSCHFX_1_trna_020"
                      /product="tRNA-Pro"
-                     /anticodon=cgg
+                     /note="anticodon sequence: cgg"
      CDS             complement(1798395..1799093)
                      /locus_tag="BFDTYSCHFX_1_01969"
                      /codon_start=1
@@ -19195,7 +19195,7 @@ FEATURES             Location/Qualifiers
      tRNA            1811706..1811783
                      /locus_tag="BFDTYSCHFX_1_trna_018"
                      /product="tRNA-Arg"
-                     /anticodon=tcg
+                     /note="anticodon sequence: tcg"
      CDS             1812130..1812798
                      /locus_tag="BFDTYSCHFX_1_01987"
                      /codon_start=1
@@ -19550,7 +19550,7 @@ FEATURES             Location/Qualifiers
      tRNA            1844790..1844866
                      /locus_tag="BFDTYSCHFX_1_trna_019"
                      /product="tRNA-His"
-                     /anticodon=gtg
+                     /note="anticodon sequence: gtg"
      CDS             1845469..1846527
                      /locus_tag="BFDTYSCHFX_1_02024"
                      /codon_start=1
