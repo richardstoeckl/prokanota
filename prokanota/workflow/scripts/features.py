@@ -26,6 +26,7 @@ This module relies on external tools:
 
 # tRNAscan-SE is assumed to be available in the PATH
 import argparse
+import gzip
 import logging
 import platform
 import subprocess as sp
@@ -992,7 +993,8 @@ def parse_fasta_and_predict(
     contigs = {}
     contig_ids = set()
     current_header, current_sequence = None, []
-    with open(filename) as f:
+    opener = gzip.open if str(filename).lower().endswith(".gz") else open
+    with opener(filename, "rt") as f:
         for line in f:
             if line.startswith(">"):
                 if current_header is not None:
@@ -1436,7 +1438,9 @@ def process_protein_input(
     if not faa_path or not tsv_path:
         raise ValueError("Protein input requires --faa_path and --tsv_path.")
 
-    protein_records = list(SeqIO.parse(filename, "fasta"))
+    opener = gzip.open if str(filename).lower().endswith(".gz") else open
+    with opener(filename, "rt") as handle:
+        protein_records = list(SeqIO.parse(handle, "fasta"))
     if not protein_records:
         raise ValueError(f"Input FASTA '{filename}' contains no sequences.")
     protein_id = generate_prokanota_id(

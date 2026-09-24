@@ -13,6 +13,7 @@ FASTA_EXTENSIONS = [
     ".faa",
     ".ffn",
 ]
+FASTA_EXTENSIONS += [ext + ".gz" for ext in FASTA_EXTENSIONS]
 
 
 def normalize_filename(filename):
