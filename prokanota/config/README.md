@@ -6,6 +6,8 @@ To configure this workflow, modify `config/config.yaml` and `config/metadata.csv
 
 To successfully run the annotation pipeline, you will need to configure the paths to the databases and the output directories in the `config/config.yaml` file.
 
+> **Note on database updates:** Prokanota does not automatically detect changes to the contents of prepared databases. If you update or rebuild a database at the same path, please force the affected search rules to rerun, or set both `global.results` and `global.interim` to fresh directories, so your annotations reflect the update. Keeping each database release at its own path also helps you reproduce earlier runs.
+
 ### Optional feature prediction settings
 
 You can optionally add a `features` section in `config/config.yaml` to control global feature prediction behavior:

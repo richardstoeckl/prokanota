@@ -208,6 +208,8 @@ Here you need to tell prokanota which databases to use for annotation and how. A
 
 > **Note:** For a detailed database setup protocol, see the [Benchmark Github repository](https://github.com/richardstoeckl/prokanota-bench), and the [publication](https://f1000research.com/articles/15-1421) ([DOI:10.12688/f1000research.188674.1](https://doi.org/10.12688/f1000research.188674.1))
 
+> **Note:** Prokanota does not automatically detect changes to the contents of prepared databases. If you update or rebuild a database at the same path, please force the affected search rules to rerun, or choose fresh results and intermediate directories, so your annotations reflect the update. Keeping each database release at its own path also helps you reproduce earlier runs.
+
 #### Trusted protein references
 
 Some species use very specific terminology in their protein naming, and sometimes you might have have good quality reference genomes/proteomes and want to ensure the naming is consistent across closely related genomes.
