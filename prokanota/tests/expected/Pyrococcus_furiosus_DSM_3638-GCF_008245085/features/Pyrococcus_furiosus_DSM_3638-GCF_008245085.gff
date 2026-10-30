@@ -1008,7 +1008,7 @@ BFDTYSCHFX_1	Pyrodigal	CDS	916902	917495	.	+	0	ID=BFDTYSCHFX_1_00977;partial=00;
 BFDTYSCHFX_1	Pyrodigal	CDS	917497	918447	.	+	0	ID=BFDTYSCHFX_1_00978;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	918456	918974	.	+	0	ID=BFDTYSCHFX_1_00979;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	918971	919657	.	+	0	ID=BFDTYSCHFX_1_00980;partial=00;transl_table=11
-BFDTYSCHFX_1	tRNAscan-SE	tRNA	919664	919809	62.2	-	.	ID=BFDTYSCHFX_1_trna_036;product=tRNA-Trp;anticodon=cca
+BFDTYSCHFX_1	tRNAscan-SE	tRNA	919664	919809	62.2	-	.	ID=BFDTYSCHFX_1_trna_036;product=tRNA-Trp;anticodon=cca;Note=predicted intron at 919699-919769 (1-based contig coordinates)
 BFDTYSCHFX_1	Pyrodigal	CDS	919905	921158	.	+	0	ID=BFDTYSCHFX_1_00981;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	921115	921675	.	-	0	ID=BFDTYSCHFX_1_00982;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	921712	922461	.	-	0	ID=BFDTYSCHFX_1_00983;partial=00;transl_table=11
@@ -1419,7 +1419,7 @@ BFDTYSCHFX_1	Pyrodigal	CDS	1276745	1277815	.	+	0	ID=BFDTYSCHFX_1_01379;partial=0
 BFDTYSCHFX_1	Pyrodigal	CDS	1277826	1279715	.	+	0	ID=BFDTYSCHFX_1_01380;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	1279720	1280154	.	-	0	ID=BFDTYSCHFX_1_01381;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	1280168	1281208	.	-	0	ID=BFDTYSCHFX_1_01382;partial=00;transl_table=11
-BFDTYSCHFX_1	tRNAscan-SE	tRNA	1281258	1281364	71.8	-	.	ID=BFDTYSCHFX_1_trna_033;product=tRNA-Met;anticodon=cat
+BFDTYSCHFX_1	tRNAscan-SE	tRNA	1281258	1281364	71.8	-	.	ID=BFDTYSCHFX_1_trna_033;product=tRNA-Met;anticodon=cat;Note=predicted intron at 1281294-1281325 (1-based contig coordinates)
 BFDTYSCHFX_1	Pyrodigal	CDS	1281448	1282251	.	+	0	ID=BFDTYSCHFX_1_01383;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	1282257	1282631	.	+	0	ID=BFDTYSCHFX_1_01384;partial=00;transl_table=11
 BFDTYSCHFX_1	Pyrodigal	CDS	1282632	1283222	.	+	0	ID=BFDTYSCHFX_1_01385;partial=00;transl_table=11

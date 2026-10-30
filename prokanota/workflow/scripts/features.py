@@ -33,6 +33,7 @@ import subprocess as sp
 import sys
 from collections import Counter
 from pathlib import Path
+from urllib.parse import quote
 
 import gb_io
 import pybarrnap
@@ -221,6 +222,7 @@ class RNAPrediction:
         sequence (str): RNA sequence
         score (float, optional): Prediction score
         anti_codon (str, optional): Anti-codon sequence (only for tRNAs)
+        note (str, optional): Predictor notes, including genomic intron coordinates
     """
 
     def __init__(
@@ -234,6 +236,7 @@ class RNAPrediction:
         sequence="",
         score=None,
         anti_codon=None,
+        note="",
     ):
         self.contig_id = contig_id
         self.rna_id = rna_id
@@ -244,6 +247,7 @@ class RNAPrediction:
         self.sequence = sequence
         self.score = score
         self.anti_codon = anti_codon
+        self.note = note
 
     @property
     def length(self):
@@ -384,10 +388,13 @@ def write_gff(
         rows.append((contig_order.get(record.contig_id, 0), record.start, row))
 
     for rna in rrna_records:
+        attrs = f"ID={rna.rna_id};product={rna.rna_type}"
+        if rna.note:
+            attrs += f";Note={quote(rna.note, safe=' ()')}"
         row = (
             f"{rna.contig_id}\tpybarrnap\trRNA\t"
             f"{rna.start}\t{rna.end}\t.\t"
-            f"{rna.strand}\t.\tID={rna.rna_id};product={rna.rna_type}"
+            f"{rna.strand}\t.\t{attrs}"
         )
         rows.append((contig_order.get(rna.contig_id, 0), rna.start, row))
 
@@ -396,6 +403,8 @@ def write_gff(
         attrs = f"ID={rna.rna_id};product={rna.rna_type}"
         if rna.anti_codon:
             attrs += f";anticodon={rna.anti_codon}"
+        if rna.note:
+            attrs += f";Note={quote(rna.note, safe=' ()')}"
         row = (
             f"{rna.contig_id}\ttRNAscan-SE\ttRNA\t"
             f"{rna.start}\t{rna.end}\t{score_col}\t"
@@ -520,6 +529,8 @@ def write_gbk(
                     Qualifier(key="locus_tag", value=rna.rna_id),
                     Qualifier(key="product", value=rna.rna_type),
                 ]
+                if rna.note:
+                    qualifiers.append(Qualifier(key="note", value=rna.note))
                 adjusted_start = rna.start - 1
                 if rna.strand == "+":
                     location = gb_io.Range(start=adjusted_start, end=rna.end)
@@ -540,6 +551,8 @@ def write_gbk(
                     Qualifier(key="locus_tag", value=rna.rna_id),
                     Qualifier(key="product", value=rna.rna_type),
                 ]
+                if rna.note:
+                    qualifiers.append(Qualifier(key="note", value=rna.note))
                 if rna.anti_codon:
                     qualifiers.append(
                         Qualifier(
@@ -654,7 +667,8 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
 def write_rna_tsv(rna_records, tsv_path):
     """
     Writes a TSV file summarizing RNA (rRNA and tRNA) predictions.
-    Columns: contig_id, rna_id, rna_type, start, end, strand, length, score, anti_codon, sequence.
+    Columns: contig_id, rna_id, rna_type, start, end, strand, length, score,
+             anti_codon, note, sequence.
 
     Args:
         rna_records (list): List of RNAPrediction objects
@@ -667,7 +681,7 @@ def write_rna_tsv(rna_records, tsv_path):
 
     with open(tsv_path, "w") as tsv_file:
         tsv_file.write(
-            "contig_id\trna_id\trna_type\tstart\tend\tstrand\tlength\tscore\tanti_codon\tsequence\n"
+            "contig_id\trna_id\trna_type\tstart\tend\tstrand\tlength\tscore\tanti_codon\tnote\tsequence\n"
         )
         for rna in sorted_records:
             # Use "." for empty score and anti_codon fields in rRNA records
@@ -677,7 +691,7 @@ def write_rna_tsv(rna_records, tsv_path):
             tsv_file.write(
                 f"{rna.contig_id}\t{rna.rna_id}\t{rna.rna_type}\t"
                 f"{rna.start}\t{rna.end}\t{rna.strand}\t{rna.length}\t"
-                f"{score}\t{anti_codon}\t{rna.sequence}\n"
+                f"{score}\t{anti_codon}\t{rna.note or '.'}\t{rna.sequence}\n"
             )
 
 
@@ -828,7 +842,7 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
     # Skip the first 3 header lines and process the rest
     for line in lines[3:]:
         if line.strip():  # Skip empty lines
-            fields = line.strip().split("\t")
+            fields = [field.strip() for field in line.rstrip("\r\n").split("\t")]
             contig_id = fields[0].strip()
             trna_number = fields[1]
             start = int(fields[2])
@@ -836,6 +850,22 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
             trna_type = fields[4]
             anti_codon = fields[5].lower()
             score = float(fields[8])
+            notes = []
+            for intron_start, intron_end in zip(
+                fields[6].split(","), fields[7].split(","), strict=True
+            ):
+                first, last = sorted((int(intron_start), int(intron_end)))
+                if first > 0:
+                    notes.append(
+                        f"predicted intron at {first}-{last} (1-based contig coordinates)"
+                    )
+            if len(fields) > 9 and fields[9]:
+                notes.extend(
+                    "possible pseudogene (tRNAscan-SE)"
+                    if note.strip() == "pseudo"
+                    else note.strip()
+                    for note in fields[9].split(",")
+                )
 
             # Handle reverse strand
             if start > end:
@@ -863,6 +893,7 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
                     sequence=sequence,
                     score=score,
                     anti_codon=anti_codon,
+                    note="; ".join(notes),
                 )
             )
     return trna_records
@@ -1175,6 +1206,12 @@ def parse_fasta_and_predict(
                 end = feature.location.end
                 strand = "+" if getattr(feature.location, "strand", 1) >= 0 else "-"
                 seq = str(feature.extract(str(record.seq)))
+                notes = list(feature.qualifiers.get("note", []))
+                if any(
+                    "(partial)" in product
+                    for product in feature.qualifiers.get("product", [])
+                ):
+                    notes.insert(0, "partial")
                 rrna_records.append(
                     RNAPrediction(
                         contig_id=contig_id,
@@ -1184,6 +1221,7 @@ def parse_fasta_and_predict(
                         strand=strand,
                         rna_type=rna_type,
                         sequence=seq,
+                        note="; ".join(notes),
                     )
                 )
         rrna_logger.info(f"Predicted {len(rrna_records)} rRNAs")

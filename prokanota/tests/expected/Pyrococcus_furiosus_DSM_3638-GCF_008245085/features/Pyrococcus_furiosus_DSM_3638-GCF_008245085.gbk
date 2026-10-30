@@ -9551,6 +9551,8 @@ FEATURES             Location/Qualifiers
      tRNA            complement(919664..919809)
                      /locus_tag="BFDTYSCHFX_1_trna_036"
                      /product="tRNA-Trp"
+                     /note="predicted intron at 919699-919769 (1-based contig
+                     coordinates)"
                      /note="anticodon sequence: cca"
      CDS             919905..921158
                      /locus_tag="BFDTYSCHFX_1_00981"
@@ -13405,6 +13407,8 @@ FEATURES             Location/Qualifiers
      tRNA            complement(1281258..1281364)
                      /locus_tag="BFDTYSCHFX_1_trna_033"
                      /product="tRNA-Met"
+                     /note="predicted intron at 1281294-1281325 (1-based contig
+                     coordinates)"
                      /note="anticodon sequence: cat"
      CDS             1281448..1282251
                      /locus_tag="BFDTYSCHFX_1_01383"
