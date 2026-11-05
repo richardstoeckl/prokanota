@@ -26,7 +26,6 @@ This module relies on external tools:
 
 # tRNAscan-SE is assumed to be available in the PATH
 import argparse
-import gzip
 import logging
 import platform
 import subprocess as sp
@@ -38,7 +37,6 @@ from urllib.parse import quote
 import gb_io
 import pybarrnap
 import pyrodigal
-from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from feature_utils import (
@@ -48,6 +46,7 @@ from feature_utils import (
     reverse_complement,
 )
 from gb_io import Feature, Qualifier, Record
+from io_utils import check_source_proteins, read_fasta, tsv_writer, write_fasta_record
 from logging_utils import (
     log_file_paths,
     log_parameters,
@@ -329,7 +328,7 @@ def write_faa(genome_id, gene_records, faa_path):
                     "CDS %s contains an internal stop codon; retaining it as a QC condition.",
                     record.gene_id,
                 )
-            faa_file.write(f">{record.gene_id}\n{record.protein_seq}\n")
+            write_fasta_record(faa_file, record.gene_id, record.protein_seq)
 
 
 def write_gff(
@@ -440,9 +439,7 @@ def write_gff(
         # Append genomic sequences in FASTA format (Bakta/Prokka convention)
         gff_file.write("##FASTA\n")
         for contig_id, sequence in contigs.items():
-            gff_file.write(f">{contig_id}\n")
-            for i in range(0, len(sequence), 60):
-                gff_file.write(f"{sequence[i : i + 60]}\n")
+            write_fasta_record(gff_file, contig_id, sequence, width=60)
 
 
 def write_gbk(
@@ -622,7 +619,7 @@ def write_fna(genome_id, gene_records, fna_path):
                 corrected_seq = reverse_complement(record.dna_seq)
             else:
                 corrected_seq = record.dna_seq
-            fna_file.write(f">{record.gene_id}\n{corrected_seq}\n")
+            write_fasta_record(fna_file, record.gene_id, corrected_seq)
 
 
 def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
@@ -637,11 +634,22 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
         tsv_path (str): The output path for the TSV file.
     """
     log.debug(f"Writing {len(gene_records)} gene locations to {tsv_path}")
-    with open(tsv_path, "w") as tsv_file:
-        # Write header with the new columns
-        tsv_file.write(
-            "sample_id\torig_cont_header\tcontig_id\tcontig_length\t"
-            "gene_id\tstart\tend\tstrand\tgene_length\tprotein_length\tprotein_mw_kDa\n"
+    with open(tsv_path, "w", encoding="utf-8", newline="") as tsv_file:
+        writer = tsv_writer(tsv_file)
+        writer.writerow(
+            [
+                "sample_id",
+                "orig_cont_header",
+                "contig_id",
+                "contig_length",
+                "gene_id",
+                "start",
+                "end",
+                "strand",
+                "gene_length",
+                "protein_length",
+                "protein_mw_kDa",
+            ]
         )
         for contig_tag, header_id in contig_mapping.items():
             contig_length = len(contigs[contig_tag])
@@ -657,10 +665,20 @@ def write_tsv(sample_id, contigs, gene_records, contig_mapping, tsv_path):
                     mw_da = protein_molecular_weight(gene.protein_seq)
                     mw_kda = mw_da / 1000.0
 
-                    tsv_file.write(
-                        f"{sample_id}\t{header_id}\t{contig_tag}\t{contig_length}\t"
-                        f"{gene.gene_id}\t{gene.start}\t{gene.end}\t{gene.strand}\t"
-                        f"{gene_length}\t{protein_length}\t{mw_kda:.1f}\n"
+                    writer.writerow(
+                        [
+                            sample_id,
+                            header_id,
+                            contig_tag,
+                            contig_length,
+                            gene.gene_id,
+                            gene.start,
+                            gene.end,
+                            gene.strand,
+                            gene_length,
+                            protein_length,
+                            f"{mw_kda:.1f}",
+                        ]
                     )
 
 
@@ -743,7 +761,7 @@ def write_crispr_fasta(crispr_records, fasta_path):
                 for i, region in enumerate(entries, 1)
             ]
             for region, kind, i in sorted(regions, key=lambda entry: entry[0].start):
-                handle.write(f">{record.crispr_id}_{kind}_{i:03d}\n{region}\n")
+                write_fasta_record(handle, f"{record.crispr_id}_{kind}_{i:03d}", region)
 
 
 def write_genome(genome_id, tagged_contigs, genome_path):
@@ -759,10 +777,7 @@ def write_genome(genome_id, tagged_contigs, genome_path):
     log.debug(f"Writing {len(tagged_contigs)} contigs to {genome_path}")
     with open(genome_path, "w") as genome_file:
         for contig_tag, sequence in tagged_contigs.items():
-            genome_file.write(f">{contig_tag}\n")
-            # Write sequence in lines of 60 characters
-            for i in range(0, len(sequence), 60):
-                genome_file.write(f"{sequence[i : i + 60]}\n")
+            write_fasta_record(genome_file, contig_tag, sequence, width=60)
 
 
 # ---------------------------
@@ -796,7 +811,7 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
     tmp_fasta = Path(tmp_dir) / "input.fasta"
     with open(tmp_fasta, "w") as f:
         for contig_id, seq in tagged_contigs.items():
-            f.write(f">{contig_id}\n{seq}\n")
+            write_fasta_record(f, contig_id, seq)
 
     # Run tRNAscan-SE
     txt_output = Path(tmp_dir) / "trna.tsv"
@@ -826,7 +841,7 @@ def predict_trnas(tagged_contigs, tmp_dir, threads):
     # Load all sequences from FASTA output into a dictionary for quick lookup
     fasta_sequences = {}
     if fasta_output.exists():
-        for record in SeqIO.parse(str(fasta_output), "fasta"):
+        for record in read_fasta(fasta_output, allow_empty=True):
             fasta_sequences[record.id] = str(record.seq)
 
     # Parse results
@@ -1020,32 +1035,7 @@ def parse_fasta_and_predict(
     log.info(f"Using {threads} threads for RNA predictions.")
     log.info(f"Using minimum gene length cutoff of {minimum_gene_length} bp.")
 
-    # Read the FASTA file to build a dict {original_header: sequence}.
-    contigs = {}
-    contig_ids = set()
-    current_header, current_sequence = None, []
-    opener = gzip.open if str(filename).lower().endswith(".gz") else open
-    with opener(filename, "rt") as f:
-        for line in f:
-            if line.startswith(">"):
-                if current_header is not None:
-                    contigs[current_header] = "".join(current_sequence)
-                current_header = line.strip()[1:]
-                header_id = current_header.split()[0] if current_header else ""
-                if not header_id:
-                    raise ValueError("FASTA contig headers must contain an ID.")
-                if header_id in contig_ids:
-                    raise ValueError(f"Duplicate FASTA contig ID '{header_id}'.")
-                contig_ids.add(header_id)
-                current_sequence = []
-            else:
-                seq_line = line.strip().upper()
-                current_sequence.append(seq_line)
-        if current_header is not None:
-            contigs[current_header] = "".join(current_sequence)
-
-    if not contigs:
-        raise ValueError(f"Input FASTA '{filename}' contains no sequences.")
+    contigs = {record.description: str(record.seq) for record in read_fasta(filename)}
 
     genome_id = generate_prokanota_id(
         sample_id=sample_id,
@@ -1476,11 +1466,8 @@ def process_protein_input(
     if not faa_path or not tsv_path:
         raise ValueError("Protein input requires --faa_path and --tsv_path.")
 
-    opener = gzip.open if str(filename).lower().endswith(".gz") else open
-    with opener(filename, "rt") as handle:
-        protein_records = list(SeqIO.parse(handle, "fasta"))
-    if not protein_records:
-        raise ValueError(f"Input FASTA '{filename}' contains no sequences.")
+    protein_records = read_fasta(filename)
+    check_source_proteins(filename, protein_records)
     protein_id = generate_prokanota_id(
         sample_id=sample_id,
         mode="protein",
@@ -1493,10 +1480,25 @@ def process_protein_input(
     tsv_out.parent.mkdir(parents=True, exist_ok=True)
 
     protein_count = 0
-    with open(faa_out, "w") as faa_file, open(tsv_out, "w") as tsv_file:
-        tsv_file.write(
-            "sample_id\torig_cont_header\tcontig_id\tcontig_length\t"
-            "gene_id\tstart\tend\tstrand\tgene_length\tprotein_length\tprotein_mw_kDa\n"
+    with (
+        open(faa_out, "w", encoding="utf-8") as faa_file,
+        open(tsv_out, "w", encoding="utf-8", newline="") as tsv_file,
+    ):
+        writer = tsv_writer(tsv_file)
+        writer.writerow(
+            [
+                "sample_id",
+                "orig_cont_header",
+                "contig_id",
+                "contig_length",
+                "gene_id",
+                "start",
+                "end",
+                "strand",
+                "gene_length",
+                "protein_length",
+                "protein_mw_kDa",
+            ]
         )
 
         for idx, record in enumerate(protein_records, start=1):
@@ -1519,11 +1521,21 @@ def process_protein_input(
             orig_cont_header = record.description
             missing_value = "*"
 
-            faa_file.write(f">{gene_id}\n{protein_seq_no_stop}\n")
-            tsv_file.write(
-                f"{sample_id}\t{orig_cont_header}\t{missing_value}\t{missing_value}\t"
-                f"{gene_id}\t{missing_value}\t{missing_value}\t{missing_value}\t"
-                f"{missing_value}\t{protein_length}\t{mw_kda:.1f}\n"
+            write_fasta_record(faa_file, gene_id, protein_seq_no_stop)
+            writer.writerow(
+                [
+                    sample_id,
+                    orig_cont_header,
+                    missing_value,
+                    missing_value,
+                    gene_id,
+                    missing_value,
+                    missing_value,
+                    missing_value,
+                    missing_value,
+                    protein_length,
+                    f"{mw_kda:.1f}",
+                ]
             )
 
     # Log statistics

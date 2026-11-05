@@ -27,6 +27,7 @@ import psutil
 import pyhmmer
 import pyhmmer.easel
 import pyhmmer.plan7
+from io_utils import read_fasta
 from logging_utils import (
     build_part,
     log_file_paths,
@@ -113,8 +114,10 @@ def main():
         logger.error(f"FASTA file {args.faa} does not exist")
         sys.exit(1)
 
+    records = read_fasta(args.faa, allow_empty=True)
+
     # Handle empty input
-    if os.path.getsize(args.faa) == 0:
+    if not records:
         logger.warning("Input FASTA file is empty")
         for output_path in (args.tblout, args.allresults, args.domtblout):
             if output_path:
@@ -136,8 +139,21 @@ def main():
         )
 
     logger.info("Loading sequences...")
-    with pyhmmer.easel.SequenceFile(args.faa, digital=True) as seq_file:
-        sequences = seq_file.read_block()
+    alphabet = pyhmmer.easel.Alphabet.amino()
+    sequences = pyhmmer.easel.DigitalSequenceBlock(
+        alphabet,
+        (
+            pyhmmer.easel.TextSequence(
+                name=record.id,
+                description=record.description.split(maxsplit=1)[1]
+                if len(record.description.split(maxsplit=1)) == 2
+                else "",
+                sequence=str(record.seq),
+            ).digitize(alphabet)
+            for record in records
+        ),
+    )
+    del records
 
     seq_count = len(sequences)
     logger.info(f"Input sequences loaded: {seq_count}")

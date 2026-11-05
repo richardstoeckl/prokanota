@@ -18,6 +18,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from io_utils import iter_fasta
 from logging_utils import (
     build_part,
     log_command,
@@ -31,12 +32,7 @@ from logging_utils import (
 
 def count_fasta_sequences(fasta_path: str) -> int:
     """Count the number of sequences in a FASTA file."""
-    count = 0
-    with open(fasta_path) as f:
-        for line in f:
-            if line.startswith(">"):
-                count += 1
-    return count
+    return sum(1 for _ in iter_fasta(fasta_path, allow_empty=True))
 
 
 def count_tabular_hits(tsv_path: str) -> int:

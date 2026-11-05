@@ -8,22 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added optional shell completion for Bash, Zsh, and Fish via `prokanota completion show` and `prokanota completion install`.
-- Added FASTA output for individual CRISPR repeats and spacers in `features/{id}_crispr.fasta`, with identifiers linking each sequence to its array.
-- Added regression tests for CRISPR FASTA sequences, identifiers, and empty output for protein-only samples.
 - Added "Trusted protein references" workflow. Use this if you want to ensure the naming is consistent across closely related genomes.
+- Added FASTA output for individual CRISPR repeats and spacers in `features/{id}_crispr.fasta`, with identifiers linking each sequence to its array.
+- Added optional shell completion for Bash, Zsh, and Fish via `prokanota completion show` and `prokanota completion install`.
+- Added regression tests for CRISPR FASTA sequences, identifiers, and empty output for protein-only samples.
 
 ### Changed
 - Changed the CLI to use all available threads by default. `--threads` accepts a positive count, or `all`, `0`, and `-1` for automatic CPU selection.
+- Updated the README with Bioconda installation instructions, publication and benchmark links, and database recommendations.
+- Unified FASTA parsing and validation across feature prediction, trusted references, and search backends. Input FASTA now follow the same whitespace policy: blank lines and line-edge padding are accepted; internal sequence whitespace is rejected.
 - Updated Pyrodigal to 3.7.1 and PyHMMER to 0.12.3.
+- Relaxed/standardized the affected workflow environments to Python >=3.11.
 - Simplified feature settings validation and default handling to use the configuration schema.
 - Simplified and unified the parsers to remove redundancy. Parsers can now be a tiny script using common utils and dont need to implement as much from scratch.
 - Removed unused workflow code and stale test fixtures, and applied linting fixes.
-- Updated the README with Bioconda installation instructions, publication and benchmark links, and database recommendations.
 
 ### Fixed
-- Fixed automated release asset uploads by explicitly specifying the GitHub repository.
+- Internal DNA whitespace can no longer silently alter sequence lengths, coordinates, or gene predictions.
 - Fixed relative file paths resolving inconsistently
+- pyhmmer uses an explicit protein alphabet, avoiding alphabet-detection failures on (very!!) short proteins with retained stops.
+- Tabs and quotes in FASTA descriptions are preserved in annotation tables.
+- Missing initial FASTA headers, missing or duplicate record IDs, empty sequences, embedded header markers, and non-ASCII sequence characters now produce explicit errors.
+- Source proteins containing only a terminal stop are rejected.
+- Fixed automated release asset uploads by explicitly specifying the GitHub repository.
 
 ## [2.0.0] - 2026-07-31
 

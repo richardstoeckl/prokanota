@@ -3,5 +3,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - python>=3.14
+  - python>=3.11
+  - biopython==1.88
   - mmseqs2==18.8cc5c

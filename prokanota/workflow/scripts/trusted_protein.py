@@ -5,6 +5,9 @@ import logging
 import subprocess
 from pathlib import Path
 
+from Bio import SeqIO
+from io_utils import check_source_proteins, open_text, read_fasta, write_fasta_record
+
 logger = logging.getLogger(__name__)
 TRUSTED_COLUMNS = [
     "trusted_reference_id",
@@ -19,73 +22,95 @@ TRUSTED_COLUMNS = [
 
 
 def prepare(reference, fasta, annotations):
-    # Reuse the sequence parsers already used by feature prediction.
-    from Bio import SeqIO
 
-    with open(reference) as handle:
-        first = next((line.strip() for line in handle if line.strip()), "")
-    if first and not first.startswith((">", "LOCUS")):
-        raise ValueError(f"Expected Bakta short-form FASTA or GenBank: {reference}")
-    records = SeqIO.parse(reference, "fasta" if first.startswith(">") else "genbank")
+    with open_text(reference) as handle:
+        line_number, first = next(
+            (
+                (number, line.strip())
+                for number, line in enumerate(handle, 1)
+                if line.strip()
+            ),
+            (1, ""),
+        )
+    if not first or not first.startswith((">", "LOCUS")):
+        raise ValueError(
+            f"Reference {reference}, line {line_number}: expected nonempty Bakta short-form FASTA or GenBank"
+        )
+    is_fasta = first.startswith(">")
+    if is_fasta:
+        records = read_fasta(reference)
+        check_source_proteins(reference, records)
+    else:
+        with open_text(reference) as handle:
+            records = list(SeqIO.parse(handle, "genbank"))
     seen = set()
     sequences = {}
     mapping = {}
-    with open(fasta, "w") as output:
-        for record in records:
-            proteins = []
-            if first.startswith(">"):
-                header = record.description.split(maxsplit=1)
-                fields = header[1].split("~~~") if len(header) == 2 else []
-                if len(fields) != 3 or not fields[1].strip():
-                    raise ValueError(
-                        f"Reference {record.id!r}: expected gene~~~product~~~dbxrefs "
-                        "with nonempty product; extended headers are unsupported"
-                    )
-                proteins.append(
-                    (record.id, fields[0].strip(), fields[1].strip(), str(record.seq))
+    output_records = []
+    for record in records:
+        proteins = []
+        if is_fasta:
+            header = record.description.split(maxsplit=1)
+            fields = header[1].split("~~~") if len(header) == 2 else []
+            if len(fields) != 3 or not fields[1].strip():
+                raise ValueError(
+                    f"Reference {reference}, record {record.id!r}, line "
+                    f"{record.annotations['fasta_line']}: expected gene~~~product~~~dbxrefs "
+                    "with nonempty product; extended headers are unsupported"
                 )
-            else:
-                for index, feature in enumerate(record.features, 1):
-                    q = feature.qualifiers
-                    if feature.type != "CDS" or "pseudo" in q or "pseudogene" in q:
-                        continue
-                    accession = q.get("locus_tag", [""])[0].strip()
-                    product = q.get("product", [""])[0].strip()
-                    sequence = q.get("translation", [""])[0]
-                    if not accession or not product or not sequence.strip():
-                        logger.warning(
-                            "Skipping %s CDS %s (%s): missing locus_tag, product or translation",
-                            record.id,
-                            index,
-                            accession,
-                        )
-                        continue
-                    proteins.append(
-                        (accession, q.get("gene", [""])[0].strip(), product, sequence)
-                    )
-            for accession, gene, product, sequence in proteins:
-                if accession in seen:
-                    raise ValueError(f"Duplicate trusted reference ID: {accession!r}")
-                seen.add(accession)
-                sequence = "".join(sequence.split()).upper().removesuffix("*")
-                if not sequence:
+            proteins.append(
+                (record.id, fields[0].strip(), fields[1].strip(), str(record.seq))
+            )
+        else:
+            for index, feature in enumerate(record.features, 1):
+                q = feature.qualifiers
+                if feature.type != "CDS" or "pseudo" in q or "pseudogene" in q:
+                    continue
+                accession = q.get("locus_tag", [""])[0].strip()
+                product = q.get("product", [""])[0].strip()
+                sequence = q.get("translation", [""])[0]
+                if not accession or not product or not sequence.strip():
                     logger.warning(
-                        "Skipping reference %r: empty protein sequence", accession
+                        "Skipping %s CDS %s (%s): missing locus_tag, product or translation",
+                        record.id,
+                        index,
+                        accession,
                     )
                     continue
-                if sequence in sequences:
-                    raise ValueError(
-                        f"Duplicate trusted protein sequence: {sequences[sequence]!r} and {accession!r}"
-                    )
-                sequences[sequence] = accession
-                # Opaque search IDs protect original accessions from DIAMOND ID parsing.
-                target = f"ref{len(mapping) + 1}"
-                mapping[target] = [accession, gene, product]
-                output.write(f">{target}\n{sequence}\n")
-    Path(annotations).write_text(json.dumps(mapping) + "\n")
-    logger.info("Imported %s trusted proteins from %s", len(mapping), reference)
+                proteins.append(
+                    (accession, q.get("gene", [""])[0].strip(), product, sequence)
+                )
+        for accession, gene, product, sequence in proteins:
+            if accession in seen:
+                raise ValueError(
+                    f"Duplicate trusted reference ID in {reference}: {accession!r}"
+                )
+            seen.add(accession)
+            sequence = "".join(sequence.split()).upper().removesuffix("*")
+            if not sequence:
+                logger.warning(
+                    "Skipping reference %r: empty protein sequence", accession
+                )
+                continue
+            if sequence in sequences:
+                location = (
+                    f", line {record.annotations['fasta_line']}" if is_fasta else ""
+                )
+                raise ValueError(
+                    f"Duplicate trusted protein sequence in {reference}{location}: {sequences[sequence]!r} and {accession!r}"
+                )
+            sequences[sequence] = accession
+            # Opaque search IDs protect original accessions from DIAMOND ID parsing.
+            target = f"ref{len(mapping) + 1}"
+            mapping[target] = [accession, gene, product]
+            output_records.append((target, sequence))
     if not mapping:
         raise ValueError(f"Trusted reference {reference} yields no usable proteins")
+    with open(fasta, "w", encoding="utf-8") as output:
+        for target, sequence in output_records:
+            write_fasta_record(output, target, sequence)
+    Path(annotations).write_text(json.dumps(mapping) + "\n", encoding="utf-8")
+    logger.info("Imported %s trusted proteins from %s", len(mapping), reference)
 
 
 def search(fasta, database, annotations, hits, output, version, threads):
