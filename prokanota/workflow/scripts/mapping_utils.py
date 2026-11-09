@@ -27,10 +27,6 @@ def _to_parser_dataframe(df: pd.DataFrame) -> Any:
         return df
 
 
-def _empty_mapping_df() -> Any:
-    return _to_parser_dataframe(pd.DataFrame(columns=MAPPING_COLUMNS))
-
-
 def _normalize_mapping_value(value: str | None) -> str:
     if value is None:
         return CANONICAL_EMPTY_VALUE
@@ -62,6 +58,7 @@ def parse_mapping_file(mapping_path: str | Path) -> Any:
     accession<TAB>short_name<TAB>description<TAB>category
 
     Rules:
+    - UTF-8 encoding and at least one nonblank record
     - No header
     - Exactly 4 tab-separated columns per non-empty line
     - Empty lines are ignored
@@ -81,44 +78,50 @@ def parse_mapping_file(mapping_path: str | Path) -> Any:
     seen_keys: dict[str, int] = {}
     records: list[dict[str, str]] = []
 
-    with open(mapping_path, encoding="utf-8", errors="replace") as handle:
-        for line_num, raw_line in enumerate(handle, 1):
-            line = raw_line.rstrip("\n\r")
+    try:
+        with open(mapping_path, encoding="utf-8", errors="strict") as handle:
+            for line_num, raw_line in enumerate(handle, 1):
+                line = raw_line.rstrip("\n\r")
 
-            if not line.strip():
-                continue
+                if not line.strip():
+                    continue
 
-            columns = line.split("\t")
-            if len(columns) != 4:
-                malformed_rows.append(
-                    f"Line {line_num}: Expected 4 columns, found {len(columns)}"
+                columns = line.split("\t")
+                if len(columns) != 4:
+                    malformed_rows.append(
+                        f"Line {line_num}: Expected 4 columns, found {len(columns)}"
+                    )
+                    continue
+
+                accession_raw, short_name_raw, description_raw, category_raw = columns
+                accession = _strip_wrapping_quotes(accession_raw)
+
+                if _is_missing_key(accession):
+                    malformed_rows.append(
+                        f"Line {line_num}: Column 1 (accession) must not be empty or a missing marker"
+                    )
+                    continue
+
+                if accession in seen_keys:
+                    malformed_rows.append(
+                        f"Line {line_num}: Duplicate accession '{accession}' (first seen at line {seen_keys[accession]})"
+                    )
+                    continue
+
+                seen_keys[accession] = line_num
+                records.append(
+                    {
+                        "accession": accession,
+                        "short_name": _normalize_mapping_value(short_name_raw),
+                        "description": _normalize_mapping_value(description_raw),
+                        "category": _normalize_mapping_value(category_raw),
+                    }
                 )
-                continue
-
-            accession_raw, short_name_raw, description_raw, category_raw = columns
-            accession = _strip_wrapping_quotes(accession_raw)
-
-            if _is_missing_key(accession):
-                malformed_rows.append(
-                    f"Line {line_num}: Column 1 (accession) must not be empty or a missing marker"
-                )
-                continue
-
-            if accession in seen_keys:
-                malformed_rows.append(
-                    f"Line {line_num}: Duplicate accession '{accession}' (first seen at line {seen_keys[accession]})"
-                )
-                continue
-
-            seen_keys[accession] = line_num
-            records.append(
-                {
-                    "accession": accession,
-                    "short_name": _normalize_mapping_value(short_name_raw),
-                    "description": _normalize_mapping_value(description_raw),
-                    "category": _normalize_mapping_value(category_raw),
-                }
-            )
+    except UnicodeDecodeError as exc:
+        raise ValueError(
+            f"Mapping file {mapping_path} is not valid UTF-8. "
+            "Save or convert the file to UTF-8 before running Prokanota."
+        ) from exc
 
     if malformed_rows:
         error_msg = f"Mapping file {mapping_path} has invalid structure:\n" + "\n".join(
@@ -129,7 +132,11 @@ def parse_mapping_file(mapping_path: str | Path) -> Any:
         raise ValueError(error_msg)
 
     if not records:
-        return _empty_mapping_df()
+        raise ValueError(
+            f"Mapping file {mapping_path} contains no records. "
+            "Expected at least one nonblank row with four tab-separated columns: "
+            "accession, short_name, description, category."
+        )
 
     mapping_df = pd.DataFrame.from_records(records, columns=MAPPING_COLUMNS)
     return _to_parser_dataframe(mapping_df)

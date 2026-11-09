@@ -161,10 +161,6 @@ def run_parser(
 
     logger.info("Parsing mapping file...")
     mapping_df = parse_mapping_file(Path(args.mapping))
-    if mapping_df.height == 0:
-        logger.warning(
-            "Mapping file %s is empty; returning no annotations", args.mapping
-        )
     mapping_count = len(mapping_df)
     logger.info(f"Mapping file rows read: {mapping_count}")
 
