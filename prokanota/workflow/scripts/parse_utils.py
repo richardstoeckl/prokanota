@@ -219,6 +219,13 @@ def run_parser(
             )
 
     logger.info("Formatting output...")
+    for col_def in columns_config:
+        if col_def["source"] not in joined_df.columns:
+            raise ValueError(
+                f"Database '{args.db_name}' ({tool_name}): output column "
+                f"'{col_def['name']}' requests unavailable source '{col_def['source']}'. "
+                f"Available sources: {', '.join(joined_df.columns)}"
+            )
     output_df = format_hits(joined_df, args.db_name, columns_config).sort("gene_id")
 
     # Write output
