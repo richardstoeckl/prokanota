@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing initial FASTA headers, missing or duplicate record IDs, empty sequences, embedded header markers, and non-ASCII sequence characters now produce explicit errors.
 - Source proteins containing only a terminal stop are rejected.
 - Fixed automated release asset uploads by explicitly specifying the GitHub repository.
+- Fixed metadata validation for duplicate column names, empty sample lists, and sample IDs ending in a newline. Input types are now case-insensitive.
 
 ## [2.0.0] - 2026-07-31
 

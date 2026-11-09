@@ -130,8 +130,8 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
-                  "description": "Output column name"
+                  "pattern": "^(?!trusted_)[a-zA-Z][a-zA-Z0-9_]*$",
+                  "description": "Output column name; the trusted_ prefix is reserved for the trusted protein workflow"
                 },
                 "source": {
                   "type": "string",
