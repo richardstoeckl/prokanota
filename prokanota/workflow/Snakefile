@@ -7,9 +7,11 @@ Distributed under the Boost Software License, Version 1.0.
 https://www.boost.org/LICENSE_1_0.txt)
 """
 
+import csv
 import os
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 import jsonschema
@@ -84,14 +86,29 @@ validate(
 )
 
 metadataFile = config["global"]["metadata"]
+with open(metadataFile, encoding="utf-8", newline="") as handle:
+    headers = next(csv.reader(handle), [])
+if not headers:
+    raise ValueError(f"Invalid metadata file {metadataFile}: missing header row")
+duplicate_headers = [name for name, count in Counter(headers).items() if count > 1]
+if duplicate_headers:
+    raise ValueError(
+        f"Invalid metadata file {metadataFile}: duplicate column header(s): {', '.join(duplicate_headers)}"
+    )
+
+metadata = pd.read_csv(metadataFile, sep=",", dtype=str, keep_default_na=False)
+if metadata.empty:
+    raise ValueError(
+        f"Invalid metadata file {metadataFile}: no samples; add at least one sample row after the header"
+    )
+if "input_type" in metadata.columns:
+    metadata["input_type"] = metadata["input_type"].str.lower()
 validate(
-    metadataFile,
+    metadata,
     schema=os.path.join(
         workflow.basedir, "../", "config", "schemas", "metadata.schema.json"
     ),
 )
-
-metadata = pd.read_csv(metadataFile, sep=",", dtype=str, keep_default_na=False)
 duplicate_sample_ids = metadata.loc[
     metadata["sample_id"].duplicated(keep=False), "sample_id"
 ].unique()
@@ -111,7 +128,7 @@ path = {
 }
 
 if "input_type" in metadata.columns:
-    input_type = metadata.input_type.fillna("dna").str.lower().to_dict()
+    input_type = metadata.input_type.fillna("dna").to_dict()
 else:
     input_type = {sample_id: "dna" for sample_id in NAMES}
 

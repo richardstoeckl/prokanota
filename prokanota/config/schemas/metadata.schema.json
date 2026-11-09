@@ -41,7 +41,7 @@
         "sample_id": {
             "type": "string",
             "description": "Filesystem-safe sample/genome identifier",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?![\\s\\S])"
         },
         "path": {
             "description": "Path to input FASTA file",

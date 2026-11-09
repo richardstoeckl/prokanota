@@ -13,6 +13,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from collections import Counter
 from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
@@ -233,6 +234,13 @@ def validate_metadata_csv(metadata_path):
                 raise click.ClickException(
                     f"Invalid metadata file {metadata_path}: missing header row"
                 )
+            duplicate_headers = [
+                name for name, count in Counter(reader.fieldnames).items() if count > 1
+            ]
+            if duplicate_headers:
+                raise click.ClickException(
+                    f"Invalid metadata file {metadata_path}: duplicate column header(s): {', '.join(duplicate_headers)}"
+                )
             missing = required_columns - set(reader.fieldnames)
             if missing:
                 raise click.ClickException(
@@ -241,15 +249,21 @@ def validate_metadata_csv(metadata_path):
 
             sample_id_rows = {}
             invalid_sample_ids = []
-            for row_number, row in enumerate(reader, start=2):
+            for row in reader:
+                row_number = reader.line_num
                 sample_id = row["sample_id"]
                 sample_id_rows.setdefault(sample_id, []).append(row_number)
                 if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", sample_id or ""):
                     invalid_sample_ids.append((sample_id, row_number))
 
+            if not sample_id_rows:
+                raise click.ClickException(
+                    f"Invalid metadata file {metadata_path}: no samples; add at least one sample row after the header"
+                )
+
             if invalid_sample_ids:
                 invalid_details = ", ".join(
-                    f"{sample_id!r} (row {row_number})"
+                    f"{sample_id!r} (record ending at line {row_number})"
                     for sample_id, row_number in invalid_sample_ids
                 )
                 raise click.ClickException(
@@ -265,7 +279,7 @@ def validate_metadata_csv(metadata_path):
             }
             if duplicates:
                 duplicate_details = ", ".join(
-                    f"{sample_id!r} (rows {', '.join(map(str, row_numbers))})"
+                    f"{sample_id!r} (records ending at lines {', '.join(map(str, row_numbers))})"
                     for sample_id, row_numbers in duplicates.items()
                 )
                 raise click.ClickException(
