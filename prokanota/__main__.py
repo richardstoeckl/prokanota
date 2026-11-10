@@ -378,10 +378,9 @@ Change defaults:    prokanota run ... --snake-default="-k --nolock"
 Add Snakemake args: prokanota run ... --dry-run --keep-going --touch
 Verbose output:     prokanota run ... --verbose
 Very verbose:       prokanota run ... --very-verbose
-Specify targets:    prokanota run ... all print_targets
+Specify targets:    prokanota run ... all
 Available targets:
     all             Run everything (default)
-    print_targets   List available targets
 """
 
 

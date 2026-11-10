@@ -118,6 +118,13 @@ def generate_metadata(input_dir, output_file, mode, comment="", force=False):
             )
 
         sample_id = make_unique_sample_id(sample_id_base, used_sample_ids)
+        if sample_id != sample_id_base:
+            print(
+                f"Warning: {fasta_file.name!r} normalizes to "
+                f"{sample_id_base!r}, which is already used; "
+                f"assigned {sample_id!r}.",
+                file=sys.stderr,
+            )
 
         # Always use absolute paths
         full_path = fasta_file.resolve()
