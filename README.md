@@ -282,6 +282,8 @@ Check out the [Benchmark Github repository](https://github.com/richardstoeckl/pr
   - Absolutely! While the pipeline was designed with archaeal annotation challenges in mind, it works equally well for bacterial genomes.
 - **What if I don't want to use a database for a specific run?**
   - Simply set `enabled: false` for any database in `config/databases.yaml`.
+- **Why are annotation files still there after I disabled the databases?**
+  - Prokanota keeps results from previous runs, so disabling a database does not delete its existing outputs. If all databases are disabled, only feature prediction runs; any annotation tables left in the results directory belong to an earlier run. When trying a different analysis configuration, we recommend using fresh `results`, `interim`, and `logs` directories to keep the runs easy to tell apart.
 - **How are relative paths resolved?**
   - Paths inside configuration, database, and metadata files resolve against the file containing them. Command-line paths resolve against the working directory; absolute paths remain absolute.
 
