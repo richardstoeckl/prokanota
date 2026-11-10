@@ -814,7 +814,7 @@ def test_duplicate_sample_ids_are_rejected(tmp_path):
 
 
 def test_path_unsafe_sample_id_is_rejected(tmp_path):
-    """Sample IDs that would create unsafe paths should identify their CSV row."""
+    """Unsafe sample IDs should identify the ending line of their CSV record."""
     pytest.importorskip("snaketool_utils")
     import click
 
@@ -827,6 +827,7 @@ def test_path_unsafe_sample_id_is_rejected(tmp_path):
     )
 
     with pytest.raises(
-        click.ClickException, match=r"ASCII letter or digit.*\.\./escape.*row 3"
+        click.ClickException,
+        match=r"ASCII letter or digit.*\.\./escape.*record ending at line 3",
     ):
         validate_metadata_csv(metadata_path)
